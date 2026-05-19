@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Class · Speak2GO.ai</title>
+  <title>口语课 · Speak2GO.ai</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23DC2626'/%3E%3Ctext x='32' y='44' font-family='Helvetica,Arial,sans-serif' font-size='30' font-weight='800' text-anchor='middle' fill='%23fff'%3EGO%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -167,7 +167,7 @@
     }
     .invite-btn:hover { background: var(--teal-50); color: var(--teal-600); transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,.1); }
     .invite-btn svg { width: 13px; height: 13px; }
-    /* sidebar 顶部：当前聊天室标题（极简版，无New按钮） */
+    /* sidebar 顶部：当前聊天室标题（极简版，无新建按钮） */
     .sidebar-room-title {
       width: 100%;
       padding: 10px 14px;
@@ -294,7 +294,7 @@
     }
     .todo-popup-item:hover .todo-popup-del { opacity: 1; }
     .todo-popup-del:hover { background: #fee; color: #c00; }
-    /* Edit态：可改名 + 行尾 ✕ + + New */
+    /* 编辑态：可改名 + 行尾 ✕ + + 新建 */
     .todo-section.editing .todo-pill,
     .todo-section.editing .todo-sub { cursor: default; }
     .todo-section.editing .todo-text[contenteditable="true"],
@@ -482,7 +482,7 @@
       text-overflow: ellipsis;
     }
     .room-item.active .room-name { color: var(--teal-800); }
-    /* 置顶:房间内任一 AI 消息处于单钩待二钩状态(一方 ✓ 等另一方Confirm) */
+    /* 置顶:房间内任一 AI 消息处于单钩待二钩状态(一方 ✓ 等另一方确认) */
     /* 中性灰底 + 小面积警示橙,适配任何主题色(绿/蓝/紫) */
     .room-item.pinned {
       background: rgba(0, 0, 0, .04);
@@ -493,7 +493,7 @@
       font-size: 11px;
       opacity: .9;
     }
-    /* OG hover Delete按钮 */
+    /* OG hover 删除按钮 */
     .room-del {
       flex-shrink: 0;
       width: 22px;
@@ -1062,7 +1062,7 @@
       0%   { box-shadow: 0 0 0 3px rgba(217, 119, 6, .55), 0 0 16px rgba(217, 119, 6, .25); }
       100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
     }
-    /* 单钩待二钩:current 题目胶囊的 checkbox 框显示半勾,表示已有 1 方Confirm */
+    /* 单钩待二钩:current 题目胶囊的 checkbox 框显示半勾,表示已有 1 方确认 */
     .todo-sub.half-checked .check { position: relative; }
     .todo-sub.half-checked .check::after {
       content: "✓";
@@ -1310,7 +1310,7 @@
     }
     .attach-preview:empty { display: none; }
 
-    /* 微信风「回复 X」小条：挂在输入框上方，Send时静默附 quote 到消息末尾 */
+    /* 微信风「回复 X」小条：挂在输入框上方，发送时静默附 quote 到消息末尾 */
     .quote-preview {
       display: flex;
       align-items: center;
@@ -1375,7 +1375,7 @@
     .attach-chip.uploading { opacity: 0.6; }
     .attach-chip.uploading .name::after { content: ' (上传中…)'; color: var(--text3); font-size: 10px; }
 
-    /* 已Send消息里的附件卡片 */
+    /* 已发送消息里的附件卡片 */
     .msg-attachments { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
     .msg-attachment {
       display: inline-flex;
@@ -1688,7 +1688,7 @@
     <button class="icon-btn" id="settingsBtn" onclick="openSettings()" title="设置" style="display:none;">
       <i class="ti ti-settings"></i>
     </button>
-    <button class="icon-btn" onclick="handleLogout()" title="Logout">
+    <button class="icon-btn" onclick="handleLogout()" title="退出">
       <i class="ti ti-logout"></i>
     </button>
   </div>
@@ -1714,7 +1714,7 @@
     <!-- 个人资料 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
       <h4 style="margin:0;font-size:14px;font-weight:600;">个人资料</h4>
-      <button class="btn-cancel" onclick="saveProfile()" style="flex:0 0 auto;padding:.45rem 1rem;font-size:13px;">Save</button>
+      <button class="btn-cancel" onclick="saveProfile()" style="flex:0 0 auto;padding:.45rem 1rem;font-size:13px;">保存</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.2rem;">
       <label style="font-size:12px;color:var(--text2);">显示名</label>
@@ -1744,9 +1744,9 @@
       </div>
 
       <div id="newKeyDisplay" style="display:none;margin-top:1rem;padding:1rem;background:#fef3c7;border-radius:8px;border:1px solid #f59e0b;">
-        <strong style="color:#92400e;font-size:13px;">⚠️ 这是你新生成的密钥，只此一次显示，请立即Save：</strong>
+        <strong style="color:#92400e;font-size:13px;">⚠️ 这是你新生成的密钥，只此一次显示，请立即保存：</strong>
         <pre id="newKeyValue" style="margin:.5rem 0;padding:.5rem;background:#fff;border-radius:4px;overflow-x:auto;font-size:11px;font-family:'SF Mono',Monaco,monospace;"></pre>
-        <button onclick="copyNewKey()" style="padding:.4rem .8rem;cursor:pointer;font-size:12px;">Copy密钥</button>
+        <button onclick="copyNewKey()" style="padding:.4rem .8rem;cursor:pointer;font-size:12px;">复制密钥</button>
         <p style="margin:.5rem 0 0;font-size:12px;color:var(--text2);line-height:1.7;">
           安装步骤:<br>
           ① <code style="background:#fff;padding:.1rem .3rem;border-radius:3px;">pip install -e ~/chat2go-agent</code><br>
@@ -1769,7 +1769,7 @@
     </div>
     <div class="todo-section" id="todoSection">
       <div class="todo-head" id="todoHead">
-        <button type="button" class="todo-head-btn" id="todoEditBtn" title="Edit方案" onclick="toggleTodoEditing()">
+        <button type="button" class="todo-head-btn" id="todoEditBtn" title="编辑方案" onclick="toggleTodoEditing()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
         </button>
         <span class="todo-head-name" id="todoHeadName">Todo</span>
@@ -1779,7 +1779,7 @@
       </div>
       <div class="todo-popup" id="todoPopup" style="display:none;"></div>
       <div class="todo-body" id="todoBody"></div>
-      <div class="todo-add-group" onclick="addTodoGroup()">+ New分组</div>
+      <div class="todo-add-group" onclick="addTodoGroup()">+ 新建分组</div>
     </div>
     <!-- 极简版：sidebar 不再渲染聊天室列表，房间在右侧主区自动打开 -->
     <div class="rooms-list" id="roomsList" style="display:none;"></div>
@@ -1794,7 +1794,7 @@
         <div class="presence-row" style="position:relative;">
           <div id="presenceRow" style="display:flex;align-items:center;gap:6px;"></div>
           <div id="memberListPopover" class="member-list-popover"></div>
-          <button id="inviteBtn" class="invite-btn" title="Copy邀请链接" onclick="copyInviteLink()" style="display:none;">
+          <button id="inviteBtn" class="invite-btn" title="复制邀请链接" onclick="copyInviteLink()" style="display:none;">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M6.5 9.5a3 3 0 0 0 4.5 0l2-2a3 3 0 0 0-4.5-4.5l-1 1"/>
               <path d="M9.5 6.5a3 3 0 0 0-4.5 0l-2 2a3 3 0 0 0 4.5 4.5l1-1"/>
@@ -1852,12 +1852,12 @@
       <div class="input-area">
         <!-- 待上传的附件预览 -->
         <div class="attach-preview" id="attachPreview"></div>
-        <!-- 待Send引用预览（微信样式：Send时静默附在消息末尾） -->
+        <!-- 待发送引用预览（微信样式：发送时静默附在消息末尾） -->
         <div class="quote-preview" id="quotePreview" style="display:none;">
           <i class="ti ti-corner-up-left"></i>
           <span class="qp-sender" id="qpSender"></span>
           <span class="qp-body" id="qpBody"></span>
-          <button class="qp-x" title="Cancel引用" onclick="clearPendingQuote()"><i class="ti ti-x"></i></button>
+          <button class="qp-x" title="取消引用" onclick="clearPendingQuote()"><i class="ti ti-x"></i></button>
         </div>
 
         <div class="input-wrap" style="position:relative;">
@@ -1899,13 +1899,13 @@
 
 <div class="modal-overlay" id="newRoomModal" onclick="closeNewRoomModal(event)">
   <div class="modal" onclick="event.stopPropagation()">
-    <h3>New Chat</h3>
+    <h3>新建 Chat</h3>
     <div class="field">
       <label>Chat 名称</label>
       <input type="text" id="newRoomName" placeholder="例：森山大道san命理教室">
     </div>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeNewRoomModal()">Cancel</button>
+      <button class="btn-cancel" onclick="closeNewRoomModal()">取消</button>
       <button class="btn-create" id="createRoomBtn" onclick="createRoom()">创建</button>
     </div>
   </div>
@@ -1934,7 +1934,7 @@
            style="width:100%;padding:.6rem .8rem;font-size:14px;border:0.5px solid var(--border2);border-radius:6px;background:#fff;outline:none;">
     <div id="inviteError" style="font-size:12px;color:#DC2626;margin-top:.4rem;display:none;"></div>
     <div class="modal-actions" style="margin-top:1.2rem;">
-      <button class="btn-cancel" onclick="dismissInvite()">Cancel</button>
+      <button class="btn-cancel" onclick="dismissInvite()">取消</button>
       <button class="btn-cancel" id="inviteSubmitBtn" onclick="submitInvite()" style="background:var(--teal);color:#fff;border-color:var(--teal);">进入</button>
     </div>
   </div>
@@ -1951,7 +1951,7 @@
   let currentRoom = null
   let currentRoomRole = null  // 'expert' | 'focal' | 'audience' | 'none'，每次 openRoom 刷新
   let realtimeChannel = null
-  let pendingAttachments = []  // 待Send的附件 [{name, url, size, mime_type, storage_path}]
+  let pendingAttachments = []  // 待发送的附件 [{name, url, size, mime_type, storage_path}]
   let currentDisplayName = '' // 自己的 display_name，用于消息头展示
   const profilesByUid = {}    // 房间内成员 display_name 缓存 {user_id: name}
   let currentChannel = 'main'  // 当前消息频道: 'main' | 'expert_user'
@@ -1960,7 +1960,7 @@
   async function init() {
     const inviteToken = new URLSearchParams(location.search).get('invite')
     const { data: { session } } = await sb.auth.getSession()
-    // 无 session 且带 invite token → 匿名进场流程；否则按老逻辑去Login
+    // 无 session 且带 invite token → 匿名进场流程；否则按老逻辑去登录
     if (!session) {
       if (inviteToken) {
         showInviteModal(inviteToken)
@@ -1968,20 +1968,20 @@
       }
       window.location.href = '/login.html'; return
     }
-    // 已Login + URL 带 invite token：邀请进入 = 加入新房的主动动作，
-    // 不论是否已有 display_name 都弹昵称 modal 让Confirm（input 预填现有名，可改可直进）
-    // 注意OG自己点自己的邀请链接也会被弹，少见但无害（点Cancel会跳 login.html，刷新走老逻辑）
+    // 已登录 + URL 带 invite token：邀请进入 = 加入新房的主动动作，
+    // 不论是否已有 display_name 都弹昵称 modal 让确认（input 预填现有名，可改可直进）
+    // 注意OG自己点自己的邀请链接也会被弹，少见但无害（点取消会跳 login.html，刷新走老逻辑）
     if (inviteToken) {
       try {
         const { data: profile } = await sb.from('profiles')
           .select('role,display_name').eq('user_id', session.user.id).maybeSingle()
         const dn = (profile?.display_name || '').trim()
         // OG账号点邀请链接：不弹昵称 modal，避免误改OG display_name 污染数据
-        // （比如OG在浏览器Copy了自己房间的邀请链接给小白测试，结果自己先点了）
+        // （比如OG在浏览器复制了自己房间的邀请链接给小白测试，结果自己先点了）
         if (profile?.role === 'expert') {
           const { roomId } = await tryJoinByInviteToken(inviteToken)
           if (roomId) history.replaceState({}, '', `/chat.html?room=${roomId}`)
-          // 继续走老Login逻辑（不 return），让 init 后续渲染设置 currentUser/currentRole 等
+          // 继续走老登录逻辑（不 return），让 init 后续渲染设置 currentUser/currentRole 等
         } else {
           showInviteModal(inviteToken, 'existing', dn)
           return
@@ -2122,13 +2122,13 @@
   async function deleteRoom(roomId, btnEl) {
     const room = btnEl?.closest('.room-item')
     const name = room?.querySelector('.room-name')?.textContent || '这个 Chat'
-    if (!confirm(`OKDelete「${name}」？\n所有消息、计费记录都会一起Delete，不可恢复。`)) return
+    if (!confirm(`确定删除「${name}」？\n所有消息、计费记录都会一起删除，不可恢复。`)) return
     try {
       // .select() 让 PostgREST 返回被删的行，能区分「RLS 拦截」vs「真的删了」
       const { data, error } = await sb.from('rooms').delete().eq('id', roomId).select()
       if (error) throw error
       if (!data || data.length === 0) {
-        showToast('Delete失败：没有权限（RLS 拦截）或房间已不存在')
+        showToast('删除失败：没有权限（RLS 拦截）或房间已不存在')
         return
       }
       // 如果删的是当前打开的房间，清掉聊天面板
@@ -2138,10 +2138,10 @@
         document.getElementById('welcomeState').style.display = ''
       }
       await loadRooms()
-      showToast('已Delete')
+      showToast('已删除')
     } catch (e) {
       console.warn('[delete room]', e)
-      showToast('Delete失败：' + (e.message || e))
+      showToast('删除失败：' + (e.message || e))
     }
   }
 
@@ -2165,7 +2165,7 @@
       showToast('AI 名字已更新')
     } catch (e) {
       console.warn('[ai_name save]', e)
-      showToast('Save失败：' + (e.message || e))
+      showToast('保存失败：' + (e.message || e))
     }
   }
 
@@ -2182,18 +2182,18 @@
       document.querySelectorAll('.msg-sender[data-own="1"]').forEach(el => {
         el.textContent = name
       })
-      // 同时Save当前房间标题（如果可见）
+      // 同时保存当前房间标题（如果可见）
       const roomSection = document.getElementById('roomTitleSection')
       if (roomSection && roomSection.style.display !== 'none' && currentRoom && isExpert(currentRoom)) {
         await saveRoomSidebarTitle(name)
       } else {
-        showToast('资料已Save')
+        showToast('资料已保存')
       }
-      // Save成功后自动关 modal（极简；想Cancel改动可点 modal 外部）
+      // 保存成功后自动关 modal（极简；想取消改动可点 modal 外部）
       document.getElementById('settingsModal').classList.remove('show')
     } catch (e) {
       console.warn('[profile save]', e)
-      showToast('Save失败：' + (e.message || e))
+      showToast('保存失败：' + (e.message || e))
     }
   }
 
@@ -2250,13 +2250,13 @@
     const key = window._lastKey
     if (!key) return
     navigator.clipboard.writeText(key).then(
-      () => alert('已Copy到剪贴板'),
-      () => alert('Copy失败，请手动选择文本Copy')
+      () => alert('已复制到剪贴板'),
+      () => alert('复制失败，请手动选择文本复制')
     )
   }
 
   async function revokeKey(id) {
-    if (!confirm('撤销后这把密钥立即失效，OK？')) return
+    if (!confirm('撤销后这把密钥立即失效，确定？')) return
     try {
       const { error } = await sb.rpc('revoke_agent_key', { p_id: id })
       if (error) throw error
@@ -2275,7 +2275,7 @@
   }
 
   // tradego 子目录:行业锁口语训练,product='tradego' 跟主站 rooms 隔离
-  const DEMO_INDUSTRY = 'Spoken English'
+  const DEMO_INDUSTRY = '英语口语'
   const DEMO_PRODUCT = 'speak2go'
 
   // admin 邮箱白名单（与 admin.html / is_admin() RPC 保持一致）
@@ -2356,13 +2356,13 @@
     }
   }
 
-  // ── OG：首次Login自动建一个房（每个OG固定 1 个）──
+  // ── OG：首次登录自动建一个房（每个OG固定 1 个）──
   async function ensureExpertRoom() {
     const { data: existing, error } = await sb
       .from('rooms').select('id').eq('expert_id', currentUser.id).eq('product', DEMO_PRODUCT).limit(1)
     if (error) { console.warn('[ensureExpertRoom] check failed:', error); return }
     if (existing && existing.length > 0) return
-    const name = (currentDisplayName ? `${currentDisplayName} 's Chat` : 'My Chat')
+    const name = (currentDisplayName ? `${currentDisplayName} 的 Chat` : '我的 Chat')
     const { error: insErr } = await sb.from('rooms').insert({
       expert_id: currentUser.id,
       name,
@@ -2468,7 +2468,7 @@
 
   // ── Invite landing：匿名进场填昵称 → 进群 ──
   let _pendingInviteToken = null
-  let _inviteMode = 'anon'  // 'anon' (无 session 走 signInAnonymously) | 'existing' (已Login走 update display_name)
+  let _inviteMode = 'anon'  // 'anon' (无 session 走 signInAnonymously) | 'existing' (已登录走 update display_name)
   function showInviteModal(token, mode = 'anon', prefilledName = '') {
     _pendingInviteToken = token
     _inviteMode = mode
@@ -2496,13 +2496,13 @@
     submitBtn.disabled = true
     submitBtn.textContent = '进入中...'
     try {
-      // 'anon' 模式：先匿名Login；'existing' 模式：已Login用户只补 display_name
+      // 'anon' 模式：先匿名登录；'existing' 模式：已登录用户只补 display_name
       if (_inviteMode === 'anon') {
         const { error: signErr } = await sb.auth.signInAnonymously({
           options: { data: { display_name: nickname } }
         })
         if (signErr) {
-          err.textContent = '匿名Login失败：' + (signErr.message || signErr.code)
+          err.textContent = '匿名登录失败：' + (signErr.message || signErr.code)
                          + '（管理员需在 Supabase Dashboard 打开 Anonymous Sign-Ins）'
           err.style.display = 'block'
           return
@@ -2516,7 +2516,7 @@
           const { error: pErr } = await sb.from('profiles')
             .upsert({ user_id: user.id, role: 'user', display_name: nickname }, { onConflict: 'user_id' })
           if (pErr) {
-            err.textContent = 'Save昵称失败：' + (pErr.message || pErr.code)
+            err.textContent = '保存昵称失败：' + (pErr.message || pErr.code)
             err.style.display = 'block'
             return
           }
@@ -2526,7 +2526,7 @@
             .update({ display_name: nickname })
             .eq('user_id', user.id)
           if (pErr) {
-            err.textContent = 'Save昵称失败：' + (pErr.message || pErr.code)
+            err.textContent = '保存昵称失败：' + (pErr.message || pErr.code)
             err.style.display = 'block'
             return
           }
@@ -2537,7 +2537,7 @@
       if (joinErr || !roomId) {
         const msg = joinErr?.message || ''
         if (msg.includes('already consumed') || msg.includes('invite_used') || msg.includes('focal already locked')) {
-          err.textContent = '这个邀请链接已被使用,请向 OG 索要新的链接(每次点Copy都是新链接)'
+          err.textContent = '这个邀请链接已被使用,请向 OG 索要新的链接(每次点复制都是新链接)'
         } else if (msg.includes('invalid') || msg.includes('not room owner')) {
           err.textContent = '邀请链接无效或已失效'
         } else {
@@ -2562,7 +2562,7 @@
     const { data: room, error: e1 } = await sb
       .from('rooms').select('id').eq('expert_id', expertId).eq('product', DEMO_PRODUCT).limit(1).maybeSingle()
     if (e1 || !room) {
-      showToast('找不到OG's Chat')
+      showToast('找不到OG的 Chat')
       btnEl.disabled = false
       return
     }
@@ -2574,7 +2574,7 @@
       btnEl.disabled = false
       return
     }
-    showToast('已加入OG's Chat')
+    showToast('已加入OG的 Chat')
     await loadRooms()
     await openRoomById(room.id)
   }
@@ -2592,8 +2592,8 @@
     const isOwner = isExpert(room)
     el.innerHTML = `
       <div class="room-name" ${isOwner ? `ondblclick="event.stopPropagation(); renameRoom('${room.id}', this)"` : ''}>${escHtml(room.name)}</div>
-      ${isOwner ? `<button class="room-edit" title="Rename Chat" onclick="event.stopPropagation(); renameRoom('${room.id}', this)"><i class="ti ti-pencil"></i></button>` : ''}
-      ${isOwner ? `<button class="room-del" title="Delete该 Chat" onclick="event.stopPropagation(); deleteRoom('${room.id}', this)">×</button>` : ''}
+      ${isOwner ? `<button class="room-edit" title="重命名 Chat" onclick="event.stopPropagation(); renameRoom('${room.id}', this)"><i class="ti ti-pencil"></i></button>` : ''}
+      ${isOwner ? `<button class="room-del" title="删除该 Chat" onclick="event.stopPropagation(); deleteRoom('${room.id}', this)">×</button>` : ''}
     `
     el.onclick = () => openRoom(room)
     list.appendChild(el)
@@ -2603,7 +2603,7 @@
     const item = btnEl?.closest('.room-item')
     const nameEl = item?.querySelector('.room-name')
     const cur = nameEl?.textContent || ''
-    const input = prompt('Rename Chat：', cur)
+    const input = prompt('重命名 Chat：', cur)
     if (input === null) return
     const name = input.trim()
     if (!name) { showToast('名字不能为空'); return }
@@ -2615,10 +2615,10 @@
       if (error) throw error
       if (nameEl) nameEl.textContent = name
       if (currentRoom?.id === roomId) currentRoom.name = name
-      showToast('已Rename')
+      showToast('已重命名')
     } catch (e) {
       console.warn('[renameRoom]', e)
-      showToast('Save失败：' + (e.message || e))
+      showToast('保存失败：' + (e.message || e))
     }
   }
 
@@ -2633,13 +2633,13 @@
     const { error } = await sb.from('rooms')
       .update({ sidebar_title: newTitle || null })
       .eq('id', currentRoom.id)
-    if (error) { showToast('Save失败：' + (error.message || error.code)); return }
+    if (error) { showToast('保存失败：' + (error.message || error.code)); return }
     currentRoom.sidebar_title = newTitle || null
     const titleTextEl = document.getElementById('sidebarRoomTitleText')
     if (titleTextEl) {
       titleTextEl.textContent = newTitle || (fallbackName || '').trim() || 'Chat'
     }
-    showToast('已Save')
+    showToast('已保存')
   }
 
   async function openRoom(room) {
@@ -2663,7 +2663,7 @@
     })
 
     // sidebar 顶部房间标题：rooms.sidebar_title 优先，否则 fallback 到 expert.display_name
-    // Edit入口在「设置 → 当前房间标题」（仅OG在房间内可见）
+    // 编辑入口在「设置 → 当前房间标题」（仅OG在房间内可见）
     const titleTextEl = document.getElementById('sidebarRoomTitleText')
     if (titleTextEl) {
       let title = (room.sidebar_title || '').trim()
@@ -2687,7 +2687,7 @@
     const inviteBtn = document.getElementById('inviteBtn')
     if (inviteBtn) {
       inviteBtn.style.display = (currentRoomRole === 'expert' || currentRoomRole === 'focal') ? '' : 'none'
-      inviteBtn.title = currentRoomRole === 'expert' ? 'Copy邀请链接（发给小白）' : 'Copy邀请链接（发给路人）'
+      inviteBtn.title = currentRoomRole === 'expert' ? '复制邀请链接（发给小白）' : '复制邀请链接（发给路人）'
     }
     // 重置按钮仅OG看到
     const resetBtn = document.getElementById('resetRoomBtn')
@@ -2806,7 +2806,7 @@
       }
       token = newToken
       tag = '小白邀请链接'
-      hint = '每个链接限一位小白,可多次点Copy邀请多人'
+      hint = '每个链接限一位小白,可多次点复制邀请多人'
     } else {
       token = currentRoom.audience_invite_token
       if (!token) { showToast('当前房间无邀请 token'); return }
@@ -2814,7 +2814,7 @@
       hint = '可分享给多个路人'
     }
     const url = `${location.origin}/chat.html?invite=${token}`
-    const msg = tag + '已Copy(' + hint + ')'
+    const msg = tag + '已复制(' + hint + ')'
     if (navigator.clipboard && window.isSecureContext) {
       try { await navigator.clipboard.writeText(url); showToast(msg); return } catch (e) {}
     }
@@ -2827,7 +2827,7 @@
       document.body.removeChild(ta)
       if (ok) { showToast(msg); return }
     } catch (e) {}
-    window.prompt('Copy下面的' + tag + ':', url)
+    window.prompt('复制下面的' + tag + ':', url)
   }
 
   function updateInputPlaceholder() {
@@ -2865,16 +2865,16 @@
   // 某条 AI 消息的 messages.ratings 里 'up' >= 2 → pass 一题，指针前进。
   // sidebar 子项 [0..passed-1] 标 done；第 passed 项 highlight 为「当前题」。
   const DEFAULT_TODO_PAYLOAD = [
-    { label: 'Placement Test', items: [{ label: 'Listening Pretest' }, { label: 'Speaking Pretest' }, { label: 'Vocabulary Assessment' }] },
-    { label: 'Learning Goals', items: [{ label: 'Short-term (1-2 wk)' }, { label: 'Long-term (3-6 mo)' }, { label: 'Interest Areas' }] },
-    { label: 'Materials Setup', items: [{ label: 'Textbook Pick' }, { label: 'Difficulty Match' }, { label: 'Practice Materials' }] },
-    { label: 'Pronunciation', items: [{ label: 'Vowels' }, { label: 'Consonants' }, { label: 'Linking & Reductions' }] },
-    { label: 'Vocabulary', items: [{ label: 'Topic Set A' }, { label: 'Topic Set B' }, { label: 'Vocab Review' }] },
-    { label: 'Sentence Drills', items: [{ label: 'Pattern 5-10' }, { label: 'Substitution' }, { label: 'Combo Sentences' }] },
-    { label: 'Conversation', items: [{ label: 'Scenario Dialog' }, { label: 'Role Play' }, { label: 'Free Speech' }] },
-    { label: 'Listening', items: [{ label: 'Intensive Listening' }, { label: 'Extensive Listening' }, { label: 'Listening Notes' }] },
-    { label: 'Stage Quiz', items: [{ label: 'Speaking Mini-test' }, { label: 'Listening Quiz' }, { label: 'Vocab Quiz' }] },
-    { label: 'Next Level', items: [{ label: 'Stage Review' }, { label: 'Next Direction' }, { label: 'Showcase' }] },
+    { label: '水平测评', items: [{ label: '听力初测' }, { label: '口语初测' }, { label: '词汇量评估' }] },
+    { label: '学习目标', items: [{ label: '短期目标(1-2 周)' }, { label: '长期目标(3-6 月)' }, { label: '兴趣领域确认' }] },
+    { label: '教材选定', items: [{ label: '教材推荐' }, { label: '难度匹配' }, { label: '练习材料备齐' }] },
+    { label: '发音纠正', items: [{ label: '元音重点' }, { label: '辅音重点' }, { label: '连读/弱读' }] },
+    { label: '单词积累', items: [{ label: '主题词汇 A' }, { label: '主题词汇 B' }, { label: '词汇本回顾' }] },
+    { label: '句型操练', items: [{ label: '常用句型 5-10' }, { label: '替换练习' }, { label: '组合造句' }] },
+    { label: '口语对话', items: [{ label: '情景对话' }, { label: '角色扮演' }, { label: '自由表达' }] },
+    { label: '听力训练', items: [{ label: '精听材料' }, { label: '泛听材料' }, { label: '听力笔记' }] },
+    { label: '阶段测验', items: [{ label: '口语 mini 测' }, { label: '听力测' }, { label: '词汇测' }] },
+    { label: '进阶规划', items: [{ label: '上阶段复盘' }, { label: '下阶段方向' }, { label: '阶段成果展示' }] },
   ]
   let currentTemplate = null  // {id, name, payload} —— 当前房间挂的方案（小白也持有副本，仅OG可改）
   let todoPopupOpen = false
@@ -2883,7 +2883,7 @@
   function renderTodos(payload) {
     const body = document.getElementById('todoBody')
     if (!body) return
-    // 重渲染保留每组展开状态（addTodoSub 等Edit操作会触发 rerender，
+    // 重渲染保留每组展开状态（addTodoSub 等编辑操作会触发 rerender，
     // 否则用户在非首组加子项时该组会被默认折叠逻辑收起）
     const prevExpanded = new Set()
     body.querySelectorAll('.todo-group.expanded').forEach(g => prevExpanded.add(g.dataset.group))
@@ -2894,7 +2894,7 @@
       const groupEl = document.createElement('div')
       groupEl.className = 'todo-group'
       // 首次渲染默认锁住 gi>0 的组,避免 refreshQuizState 跑完前的解锁闪烁;
-      // Edit态不锁;refreshQuizState 之后会按真实 passed 重算
+      // 编辑态不锁;refreshQuizState 之后会按真实 passed 重算
       if (!sectionEditing && gi > 0) groupEl.classList.add('locked')
       groupEl.dataset.group = `g${gi}`
       groupEl.dataset.groupStart = String(idx)
@@ -2904,8 +2904,8 @@
           <div class="todo-sub" data-quiz-idx="${cur}" onclick="scrollToAiMessage(this.dataset.aiMsgId)">
             <span class="check">&#10003;</span>
             <span class="todo-text" data-text="sub" data-gi="${gi}" data-ii="${ii}">${escHtml(it.label || '')}</span>
-            <span class="todo-await" aria-hidden="true" title="等待另一方Confirm">❗</span>
-            <button type="button" class="todo-row-del" title="Delete" onclick="event.stopPropagation();deleteTodoItem(${gi},${ii})">×</button>
+            <span class="todo-await" aria-hidden="true" title="等待另一方确认">❗</span>
+            <button type="button" class="todo-row-del" title="删除" onclick="event.stopPropagation();deleteTodoItem(${gi},${ii})">×</button>
           </div>`
       }).join('')
       // gi=0 永远不锁,不渲染锁图标;gi>0 渲染左侧 lock-state(红挂锁/绿开锁,CSS 按 .locked 切换)
@@ -2919,11 +2919,11 @@
           ${lockHtml}
           <button type="button" class="todo-toggle" onclick="event.stopPropagation();toggleTodoGroup(this)">+</button>
           <span class="todo-text" data-text="group" data-gi="${gi}">${escHtml(group.label || '')}</span>
-          <button type="button" class="todo-row-del" title="Delete分组" onclick="event.stopPropagation();deleteTodoGroup(${gi})">×</button>
+          <button type="button" class="todo-row-del" title="删除分组" onclick="event.stopPropagation();deleteTodoGroup(${gi})">×</button>
         </div>
         <div class="todo-children">
           ${subsHtml}
-          <div class="todo-add-sub" onclick="addTodoSub(${gi})">+ New</div>
+          <div class="todo-add-sub" onclick="addTodoSub(${gi})">+ 新建</div>
         </div>`
       body.appendChild(groupEl)
     })
@@ -2941,7 +2941,7 @@
     const sec = document.getElementById('todoSection')
     if (!sec) return
     const editing = sec.classList.contains('editing')
-    // Edit态:OG要能改任何大题,先把所有 .locked 清掉(LogoutEdit时 saveCurrentTemplate → refreshQuizState 会重算)
+    // 编辑态:OG要能改任何大题,先把所有 .locked 清掉(退出编辑时 saveCurrentTemplate → refreshQuizState 会重算)
     if (editing) sec.querySelectorAll('.todo-group.locked').forEach(g => g.classList.remove('locked'))
     sec.querySelectorAll('.todo-text[data-text]').forEach(el => {
       if (editing) el.setAttribute('contenteditable', 'true')
@@ -2953,10 +2953,10 @@
       if (editing) nameEl.setAttribute('contenteditable', 'true')
       else nameEl.removeAttribute('contenteditable')
     }
-    // Edit按钮在Edit态变成对勾「Confirm/Save」
+    // 编辑按钮在编辑态变成对勾「确认/保存」
     const btn = document.getElementById('todoEditBtn')
     if (btn) {
-      btn.title = editing ? '完成Edit（Save）' : 'Edit方案'
+      btn.title = editing ? '完成编辑（保存）' : '编辑方案'
       btn.innerHTML = editing
         ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'
         : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'
@@ -2976,7 +2976,7 @@
     if (existing?.length) return existing[0].id
     const { data: created, error: insErr } = await sb
       .from('expert_todo_templates')
-      .insert({ owner_id: ownerId, name: 'Spoken English Basic', product: DEMO_PRODUCT, payload: DEFAULT_TODO_PAYLOAD })
+      .insert({ owner_id: ownerId, name: '英语口语基础', product: DEMO_PRODUCT, payload: DEFAULT_TODO_PAYLOAD })
       .select('id')
       .single()
     if (insErr) { console.warn('[seed templates insert]', insErr); return null }
@@ -3053,8 +3053,8 @@
     const { error } = await sb.from('expert_todo_templates')
       .update({ payload: currentTemplate.payload, name: currentTemplate.name })
       .eq('id', currentTemplate.id)
-    if (error) { console.warn('[save template]', error); showToast('Save失败：' + (error.message || error.code)); return }
-    showToast('已Save')
+    if (error) { console.warn('[save template]', error); showToast('保存失败：' + (error.message || error.code)); return }
+    showToast('已保存')
     await refreshQuizState()
   }
 
@@ -3078,7 +3078,7 @@
   function deleteTodoGroup(gi) {
     const g = currentTemplate?.payload?.[gi]
     if (!g) return
-    if (!confirm(`Delete分组「${g.label}」及其所有子项？`)) return
+    if (!confirm(`删除分组「${g.label}」及其所有子项？`)) return
     currentTemplate.payload.splice(gi, 1)
     renderTodos(currentTemplate.payload)
   }
@@ -3111,13 +3111,13 @@
     const items = (data || []).map(t => `
       <div class="todo-popup-item ${t.id === currentTemplate?.id ? 'active' : ''}" onclick="switchActiveTemplate('${t.id}')">
         <span class="dot"></span><span>${escHtml(t.name)}</span>
-        <button type="button" class="todo-popup-del" title="Delete方案" onclick="event.stopPropagation();deleteTemplate('${t.id}')">×</button>
+        <button type="button" class="todo-popup-del" title="删除方案" onclick="event.stopPropagation();deleteTemplate('${t.id}')">×</button>
       </div>`).join('')
     popup.innerHTML = `
       ${items || '<div class="todo-popup-item" style="color:var(--text3);cursor:default;">还没有方案</div>'}
       <div class="todo-popup-divider"></div>
       <div class="todo-popup-item todo-popup-add" onclick="createNewTemplate()">
-        <span class="dot"></span><span>+ New方案</span>
+        <span class="dot"></span><span>+ 新建方案</span>
       </div>`
     // 跟随 caret 按钮定位（fixed → 视口坐标），右对齐 caret 右沿
     const r = caret.getBoundingClientRect()
@@ -3150,12 +3150,12 @@
     if (!currentRoom) return
     const t = _todoPopupTemplates.find(x => x.id === templateId)
     const name = t?.name || '该方案'
-    if (!confirm(`Delete方案「${name}」？\n所有引用它的房间会回到默认 todo。`)) return
+    if (!confirm(`删除方案「${name}」？\n所有引用它的房间会回到默认 todo。`)) return
     hideTodoPopup()
     const wasActive = (currentRoom.active_todo_template_id === templateId)
     const { error } = await sb.from('expert_todo_templates').delete().eq('id', templateId)
-    if (error) { showToast('Delete失败：' + (error.message || error.code)); return }
-    showToast('已Delete')
+    if (error) { showToast('删除失败：' + (error.message || error.code)); return }
+    showToast('已删除')
     if (wasActive) {
       // rooms.active_todo_template_id 已被 fk on delete set null
       currentRoom.active_todo_template_id = null
@@ -3173,7 +3173,7 @@
       .insert({ owner_id: currentRoom.expert_id, name, product: DEMO_PRODUCT, payload: [] })
       .select('id')
       .single()
-    if (error) { showToast('New失败：' + (error.message || error.code)); return }
+    if (error) { showToast('新建失败：' + (error.message || error.code)); return }
     await switchActiveTemplate(data.id)
     document.getElementById('todoSection')?.classList.add('editing')
     applyEditingMode()
@@ -3232,7 +3232,7 @@
       if (isCurrent && currentAiMsgId) sub.dataset.aiMsgId = currentAiMsgId
       else delete sub.dataset.aiMsgId
     })
-    // 大题解锁：当前组的「起始题号」<= passed 才解锁，Edit态强制全解锁
+    // 大题解锁：当前组的「起始题号」<= passed 才解锁，编辑态强制全解锁
     const editing = document.getElementById('todoSection')?.classList.contains('editing')
     document.querySelectorAll('.todo-group').forEach(g => {
       const start = Number(g.dataset.groupStart || 0)
@@ -3600,10 +3600,10 @@
     const roleLabels = { user: '小白', audience: '路人', expert: 'OG', ai: aiName }
     const roleLabel = roleLabels[displayRole] || displayRole
     const avText = displayRole === 'ai' ? 'AI' : displayRole === 'expert' ? 'OG' : displayRole === 'audience' ? '路' : '白'
-    // 头像点击：AI 头像(仅OG)→Edit AI 名；自己头像(非 AI)→进设置；其它头像不可点
+    // 头像点击：AI 头像(仅OG)→编辑 AI 名；自己头像(非 AI)→进设置；其它头像不可点
     let avClick = ''
     if (role === 'ai' && isExpert(currentRoom)) {
-      avClick = ' onclick="editAIName()" title="点击Edit AI 名字" style="cursor:pointer;"'
+      avClick = ' onclick="editAIName()" title="点击编辑 AI 名字" style="cursor:pointer;"'
     } else if (isOwn && role !== 'ai') {
       avClick = ' onclick="openSettings()" title="点击进入设置" style="cursor:pointer;"'
     }
@@ -3645,7 +3645,7 @@
         }).join('')}
       </div>` : ''
 
-    const isPlaceholderMsg = attachments.length > 0 && /^\[Send了 \d+ 个文件\]$/.test(msg.content)
+    const isPlaceholderMsg = attachments.length > 0 && /^\[发送了 \d+ 个文件\]$/.test(msg.content)
 
     // 微信风：抽出尾部 markdown 引用块，渲染成气泡下的灰色卡片（只对非 markdown 消息做）
     let displayContent = msg.content || ''
@@ -3673,7 +3673,7 @@
               ? `<div class="msg-bubble ${role}">${highlightMentions(escHtml(displayContent))}</div>`
               : ''))
 
-    // 把原始文本存起来供Copy（HTML 转义后再 unescape 不可靠，直接 base64 编码绕过）
+    // 把原始文本存起来供复制（HTML 转义后再 unescape 不可靠，直接 base64 编码绕过）
     const rawB64 = btoa(unescape(encodeURIComponent(msg.content || '')))
 
     const quoteSender = escHtml(senderName).replace(/'/g, "&#39;")
@@ -3701,7 +3701,7 @@
           <span class="msg-sender ${displayRole}"${isOwn && role !== 'ai' ? ' data-own="1"' : ''}>${senderName}</span>
           <span class="msg-ts">${ts}</span>
           <div class="msg-actions">
-            <button class="msg-action-btn" title="Copy" onclick="copyMessage(this, '${rawB64}')">
+            <button class="msg-action-btn" title="复制" onclick="copyMessage(this, '${rawB64}')">
               <i class="ti ti-copy"></i>
             </button>
           </div>
@@ -3763,10 +3763,10 @@
   ]
   function pickPhrase(arr) { return arr[Math.floor(Math.random() * arr.length)] }
 
-  // 记录上次 rate 自动 prepend 的字符串，便于下次 rate（切换 ✓/✗ 或Cancel）时先剥掉
+  // 记录上次 rate 自动 prepend 的字符串，便于下次 rate（切换 ✓/✗ 或取消）时先剥掉
   let lastRatePrepend = ''
 
-  // 待Send引用（微信样式：输入框里看不到，Send时静默附在消息末尾）
+  // 待发送引用（微信样式：输入框里看不到，发送时静默附在消息末尾）
   // { b64, sender, preview } | null
   let pendingQuote = null
 
@@ -3809,7 +3809,7 @@
     try { ratings = JSON.parse(group?.dataset.ratings || '{}') } catch (e) {}
     const oldUp = Object.values(ratings).filter(v => v === 'up').length
     const cur = ratings[myUid] || ''
-    const next = (cur === val) ? '' : val   // 再点Cancel
+    const next = (cur === val) ? '' : val   // 再点取消
     const { data, error } = await sb.rpc('rate_message', { p_msg_id: msgId, p_val: next })
     if (error) { showToast('评价失败：' + error.message); return }
     applyRatingsToMsg(msgId, data || {})
@@ -4087,7 +4087,7 @@
     input.value = ''
     autoResize(input)
     lastRatePrepend = ''
-    // 清空语音识别的累积缓存，防止录音中Send后旧文本被 onresult 写回
+    // 清空语音识别的累积缓存，防止录音中发送后旧文本被 onresult 写回
     voiceTextBefore = ''
     // 把当前为止的所有 result 都标记为「已发」，后续 onresult 跳过它们（防 interim→final 延迟写回）
     voiceSkipBeforeIdx = voiceLastResultsLen
@@ -4107,7 +4107,7 @@
     const hadQuote = !!pendingQuote
     const isExpertQuoteCorrection = hadQuote && role === 'expert'
     const targetChannel = isExpertQuoteCorrection ? 'expert_user' : currentChannel
-    const finalContent = bodyContent || `[Send了 ${pendingAttachments.length} 个文件]`
+    const finalContent = bodyContent || `[发送了 ${pendingAttachments.length} 个文件]`
     clearPendingQuote()
     const attachments = pendingAttachments.map(a => ({
       name: a.name, url: a.url, size: a.size, mime_type: a.mime_type, storage_path: a.storage_path
@@ -4124,7 +4124,7 @@
 
     if (error) {
       console.error('insert message failed:', error)
-      showToast('Send失败：' + (error.message || error.details || JSON.stringify(error)).slice(0, 100))
+      showToast('发送失败：' + (error.message || error.details || JSON.stringify(error)).slice(0, 100))
       sendBtn.disabled = false
       return
     }
@@ -4190,7 +4190,7 @@
     _bridgeHeartbeatTimer = setInterval(refreshBridgeStatus, 6000)
   }
 
-  // 点击图标 → 请求 bridge 重启（落入 bridge_state.restart_requested_at，bridge 下一轮自我Logout，launchd 拉起）
+  // 点击图标 → 请求 bridge 重启（落入 bridge_state.restart_requested_at，bridge 下一轮自我退出，launchd 拉起）
   async function requestBridgeRestart() {
     if (currentRoomRole !== 'expert') { showToast('只有OG能重启 AI'); return }
     const ok = confirm('AI 桥接重启一次？（适用于 AI 不响应）')
@@ -4202,25 +4202,25 @@
     refreshBridgeStatus()
   }
 
-  // typing verb pool (English, ~100 entries). Mix of assessment / teaching / drilling / progress / encouragement.
+  // Claude Code 风 typing 词池(中文,3-5 字,~100 个)。口语老师场景:评测 / 讲解 / 训练 / 归纳 / 接地气混搭。
   const TYPING_VERBS = [
-    // Assessment & Listening(25)
-    'Listening...', 'Detecting...', 'Testing...', 'Measuring...', 'Parsing...', 'Comparing...', 'Diagnosing...', 'Calibrating...', 'Verifying...', 'Profiling...',
-    'Probing...', 'Scoring...', 'Mapping...', 'Charting...', 'Tracking...', 'Ranking...', 'Auditing...', 'Sampling...', 'Benchmarking...', 'Gauging...',
-    'Spotting...', 'Tallying...', 'Logging...', 'Counting...', 'Surveying...',
-    // Teaching & Explaining(25)
-    'Explaining...', 'Teaching...', 'Clarifying...', 'Illustrating...', 'Demonstrating...', 'Defining...', 'Translating...', 'Decoding...', 'Annotating...', 'Highlighting...',
-    'Showing...', 'Modeling...', 'Quoting...', 'Citing...', 'Referencing...', 'Storyboarding...', 'Visualizing...', 'Outlining...', 'Restating...', 'Paraphrasing...',
-    'Recapping...', 'Summarizing...', 'Bridging...', 'Linking...', 'Connecting...',
-    // Drill & Practice(25)
-    'Drilling...', 'Practicing...', 'Coaching...', 'Rehearsing...', 'Repeating...', 'Reviewing...', 'Quizzing...', 'Polling...', 'Prompting...', 'Eliciting...',
-    'Correcting...', 'Polishing...', 'Tuning...', 'Refining...', 'Sharpening...', 'Pairing...', 'Grouping...', 'Rotating...', 'Mixing...', 'Switching...',
-    'Recording...', 'Playing back...', 'Looping...', 'Shadowing...', 'Mirroring...',
-    // Progress & Notes(15)
-    'Updating...', 'Saving...', 'Pinning...', 'Filing...', 'Tagging...', 'Indexing...', 'Sorting...', 'Filtering...', 'Snapping...', 'Capturing...',
-    'Compiling...', 'Reporting...', 'Posting...', 'Pushing...', 'Syncing...',
-    // Encouragement(10)
-    'Cheering...', 'Nudging...', 'Encouraging...', 'Boosting...', 'Hyping...', 'Reassuring...', 'Affirming...', 'Praising...', 'High-fiving...', 'Clapping...',
+    // 评测听辨(25)
+    '听辨中', '测听力', '辨发音', '测词汇', '量水平', '听节奏', '辨连读', '判口音', '排错音', '校元音',
+    '校辅音', '听重音', '查弱读', '测语流', '判语速', '辨吞音', '听爆破', '听同化', '量流利度', '测准确度',
+    '看停顿', '抓气口', '校升降调', '辨方言', '校口型',
+    // 教学讲解(25)
+    '讲单词', '讲句型', '解语法', '编例句', '改作业', '挑词头', '指语义', '辨语境', '讲搭配', '列同近义',
+    '讲反义', '排陷阱', '讲文化', '点习语', '解隐喻', '比中英', '讲构词', '讲词根', '讲词缀', '抽真题',
+    '推教材', '排课表', '配练习', '编对话', '编情景',
+    // 训练操练(25)
+    '排训练', '设难度', '配进度', '催复习', '催背单词', '督练习', '催造句', '催听写', '催跟读', '催复述',
+    '督角色扮演', '催自由说', '催记笔记', '督朗读', '促模仿', '促复述', '促开口', '组队练', '配对练', '小组练',
+    '抓重点', '抓难点', '抓易错', '催 review', '催 quiz',
+    // 进度归纳(15)
+    '查进度', '量掌握', '看曲线', '盯薄弱', '记词本', '编笔记', '整知识点', '归错题', '汇本周', '比上周',
+    '排重练', '提阶段', '画进度', '同步学情', '更新进度条',
+    // 接地气搞笑(10)
+    '催开口', '哄一哄', '夸一夸', '鼓一鼓', '逗一逗', '听咬字', '听口音', '听磕巴', '听口吃', '听结巴',
   ]
   let _typingVerbTimer = null
   let _typingElapsedTimer = null
@@ -4326,7 +4326,7 @@
   }
 
   function handleKey(e) {
-    // 中文输入法组词时按回车是"Confirm候选词"，不应触发Send
+    // 中文输入法组词时按回车是"确认候选词"，不应触发发送
     if (e.isComposing || e.keyCode === 229) return
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -4457,7 +4457,7 @@
   let recognition = null
   let isRecording = false
   let voiceTextBefore = ''       // 开始录音前输入框已有的内容
-  let voiceLastResultsLen = 0    // 上次 onresult 看到的 results.length（Send时用作分水岭）
+  let voiceLastResultsLen = 0    // 上次 onresult 看到的 results.length（发送时用作分水岭）
   let voiceSkipBeforeIdx = 0     // 任何 < 这个 idx 的 result 都视为「已发过」，跳过
 
   function getRecognition() {
@@ -4482,7 +4482,7 @@
       const input = document.getElementById('msgInput')
       input.value = (voiceTextBefore + finalText + interimText).trim()
       autoResize(input)
-      // 累积已Confirm的部分
+      // 累积已确认的部分
       if (finalText) voiceTextBefore = (voiceTextBefore + finalText).trim() + ' '
     }
 
@@ -4531,7 +4531,7 @@
   }
 
   function quoteMessage(b64, sender) {
-    // 微信样式：不再往 input.value 里塞，挂到上方小条，Send时静默附 trailer
+    // 微信样式：不再往 input.value 里塞，挂到上方小条，发送时静默附 trailer
     setPendingQuote(b64, sender)
     const input = document.getElementById('msgInput')
     if (input) input.focus()
@@ -4546,7 +4546,7 @@
       await navigator.clipboard.writeText(text)
       btn.classList.add('copied')
       btn.innerHTML = '<i class="ti ti-check"></i>'
-      showToast('已Copy')
+      showToast('已复制')
       setTimeout(() => {
         btn.classList.remove('copied')
         btn.innerHTML = '<i class="ti ti-copy"></i>'
@@ -4558,8 +4558,8 @@
       ta.style.position = 'fixed'; ta.style.opacity = '0'
       document.body.appendChild(ta)
       ta.select()
-      try { document.execCommand('copy'); showToast('已Copy') }
-      catch { showToast('Copy失败') }
+      try { document.execCommand('copy'); showToast('已复制') }
+      catch { showToast('复制失败') }
       ta.remove()
     }
   }
