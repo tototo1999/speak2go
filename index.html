@@ -6,9 +6,9 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Speak2GO.ai · 英语口语 AI 调试室</title>
+  <title>Speak2GO.ai · Spoken English AI Lab</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23DC2626'/%3E%3Ctext x='32' y='44' font-family='Helvetica,Arial,sans-serif' font-size='30' font-weight='800' text-anchor='middle' fill='%23fff'%3EGO%3C/text%3E%3C/svg%3E">
-  <meta name="description" content="口语OG × AI，带你做好 PI / Invoice / 训练邮件。">
+  <meta name="description" content="SpeakingOG × AI，带你做好 PI / Invoice / 训练邮件。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
@@ -293,17 +293,17 @@
   <nav>
     <a href="/" class="logo">Speak2<span>GO</span><span class="logo-tld">.ai</span></a>
     <div class="nav-right" id="navRight" style="visibility:hidden;">
-      <button class="btn-login" onclick="location.href='/login.html'">登录</button>
+      <button class="btn-login" onclick="location.href='/login.html'">Login</button>
     </div>
   </nav>
 
   <main>
-    <div class="tagline">真人口语OG × AI，<em>陪你跑完 PI / Invoice</em></div>
+    <div class="tagline">RealSpeakingOG × AI，<em>陪你跑完 PI / Invoice</em></div>
 
     <div class="expert-grid">
       <div class="expert-card" onclick="location.href='/chat.html'" style="cursor:pointer;">
         <div class="expert-tag">trade ops</div>
-        <div class="expert-name">口语OG 试跑版</div>
+        <div class="expert-name">SpeakingOG 试跑版</div>
       </div>
 
       <div class="expert-card disabled">
@@ -429,7 +429,7 @@
       modal.classList.add('open')
       const { data: { session } } = await sb.auth.getSession()
       if (!session) {
-        body.innerHTML = '<div class="follower-empty">登录后可查看 follower 列表<br><br><a href="/login.html" style="color:var(--teal)">去登录</a></div>'
+        body.innerHTML = '<div class="follower-empty">Login后可查看 follower 列表<br><br><a href="/login.html" style="color:var(--teal)">去Login</a></div>'
         return
       }
       const { data, error } = await sb.rpc('get_expert_followers', { p_expert_id: expertId })
