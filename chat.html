@@ -4297,30 +4297,34 @@
   }
 
   // Claude Code 风 typing 词池(中文,3-5 字,~100 个)。口语老师场景:评测 / 讲解 / 训练 / 归纳 / 接地气混搭。
-  // NYC-flavored present-participle verbs (5-10 chars). 100 items for an American
-  // English teacher vibe — gritty, direct, casual.
+  // NYC-flavored short phrases (2-4 words) for an American English teacher vibe.
+  // 100 items, 5 groups: Listening / Teaching / Drilling / Tracking / Street slang.
   const TYPING_VERBS = [
-    // Listening / assessment (25)
-    'listening', 'clocking', 'tuning', 'catching', 'spotting', 'sussing', 'probing', 'gauging',
-    'weighing', 'timing', 'tracking', 'tracing', 'mapping', 'peeking', 'checking', 'testing',
-    'quizzing', 'scoring', 'grading', 'tallying', 'ranking', 'judging', 'flagging', 'snapping',
-    'sampling',
-    // Teaching / explaining (25)
-    'teaching', 'breaking', 'unpacking', 'parsing', 'framing', 'drafting', 'sketching', 'building',
-    'wiring', 'etching', 'spelling', 'drawing', 'showing', 'linking', 'bridging', 'citing',
-    'quoting', 'flexing', 'naming', 'tagging', 'labeling', 'sorting', 'filing', 'listing',
-    'logging',
-    // Drilling / training (25)
-    'drilling', 'rolling', 'spinning', 'pacing', 'nudging', 'coaxing', 'pushing', 'pulling',
-    'tossing', 'fielding', 'lobbing', 'pitching', 'swinging', 'shadowing', 'mirroring', 'echoing',
-    'looping', 'tweaking', 'polishing', 'buffing', 'trimming', 'tightening', 'shaping', 'forging',
-    'hammering',
-    // Progress / tracking (15)
-    'noting', 'charting', 'graphing', 'updating', 'syncing', 'plotting', 'archiving', 'saving',
-    'stashing', 'stacking', 'wrapping', 'capping', 'summing', 'boiling', 'condensing',
-    // NYC slang / street vibe (10)
-    'hustling', 'vibing', 'riffing', 'noodling', 'wrangling', 'schlepping', 'winging', 'bouncing',
-    'cracking', 'nailing',
+    // Listening / reading the room (20)
+    'on it', 'tuning in', 'spotting it', 'catching the drift', 'reading the room',
+    'clocking it', 'checking the tape', 'tracking it', 'running the math', 'weighing it',
+    'sussing it', 'gauging the vibe', 'scanning quick', 'flagging it', 'tagging that',
+    'lining it up', 'ranking em', 'scoring it', 'tallying it', 'sizing it up',
+    // Teaching / explaining (20)
+    'breaking it down', 'spelling it out', 'drawing it up', 'framing it', 'wiring it together',
+    'stitching it', 'sketching it out', 'building it', 'calling it out', 'pointing it out',
+    'showing my work', 'linking the dots', 'bridging it', 'citing chapter', 'quoting back',
+    'flipping the script', 'running it slow', 'spelling out the rule', 'drilling the point', 'naming names',
+    // Drilling / pushing (20)
+    'rolling it back', 'spinning it up', 'running it again', 'kicking the tires', 'putting it to the test',
+    'tossing a curve', 'lobbing it', 'pitching slow', 'shadowing the line', 'echoing back',
+    'looping it', 'tweaking the angle', 'polishing it', 'buffing it up', 'trimming the fat',
+    'tightening the bolt', 'shaping the swing', 'hammering it', 'drilling deep', 'nudging it',
+    // Progress / tracking (20)
+    'logging it', 'noting it down', 'charting it', 'mapping the route', 'plotting it',
+    'graphing the trend', 'syncing the books', 'stacking the wins', 'filing it', 'stashing it',
+    'wrapping it', 'capping it', 'summing it up', 'boiling it down', 'condensing the play',
+    'marking the spot', 'calling the score', 'totaling it', 'running the totals', 'closing the loop',
+    // NYC slang / street vibe (20)
+    'hustling now', 'vibing with it', 'riffing on it', 'noodling on this', 'wrangling that',
+    'schlepping it', 'winging it', 'bouncing ideas', 'cracking the code', 'nailing it',
+    'kicking it', 'rolling deep', 'running the play', 'calling the shot', 'stretching it',
+    'doing the work', 'punching up', 'leaning in', 'stomping through', 'fielding it',
   ]
   let _typingVerbTimer = null
   let _typingElapsedTimer = null
