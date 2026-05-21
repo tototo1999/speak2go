@@ -4353,9 +4353,12 @@
     el.dataset.ratings = JSON.stringify(msg.ratings || {})
 
     const attachments = Array.isArray(msg.attachments) ? msg.attachments : []
-    const attachHtml = attachments.length ? `
+    // 过滤掉纯 _event marker(后端用来给前端发信号,如 todo_proposal / todos_updated / transcribe_progress)
+    // 它们没 name/url,不该渲染成附件卡片(否则显示 "undefined 0B")
+    const visibleAttachments = attachments.filter(a => a && (a.name || a.url))
+    const attachHtml = visibleAttachments.length ? `
       <div class="msg-attachments">
-        ${attachments.map(a => {
+        ${visibleAttachments.map(a => {
           const isImage = (a.mime_type || '').startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp)$/i.test(a.name || '')
           if (isImage) {
             return `<img class="msg-image" src="${escHtml(a.url)}" alt="${escHtml(a.name)}" onclick="openImageLightbox('${escHtml(a.url)}')">`
