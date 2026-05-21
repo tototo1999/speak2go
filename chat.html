@@ -1833,6 +1833,16 @@
         <button type="button" class="todo-head-btn" id="todoCaretBtn" title="切换方案" onclick="toggleTodoPopup()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
+        <button type="button" class="todo-head-btn" id="todoExtractBtn" title="从最近一段课堂录音里提取待办,装进左侧 todo 分组" onclick="extractTodosFromLatestRecording()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="9" y="2" width="6" height="11" rx="3"/>
+            <line x1="9.5" y1="5.5" x2="14.5" y2="5.5"/>
+            <line x1="9.5" y1="8" x2="14.5" y2="8"/>
+            <path d="M5 10v2a7 7 0 0 0 14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="8" y1="22" x2="16" y2="22"/>
+          </svg>
+        </button>
       </div>
       <div class="todo-popup" id="todoPopup" style="display:none;"></div>
       <div class="todo-body" id="todoBody"></div>
@@ -3066,6 +3076,35 @@
     renderTodos(currentTemplate ? currentTemplate.payload : DEFAULT_TODO_PAYLOAD)
   }
 
+  // 老师点 mic 按钮 → 写一条 message_type='extract_todos' 给 Hermes 路由 → 后端拉最近
+  // source='asr' 的转写 → Haiku 抽 todo items → append 到当前模板 → 写 AI 回复(带
+  // attachments _event 标记)→ 前端 Realtime INSERT 检测到该标记 → reload 模板
+  async function extractTodosFromLatestRecording() {
+    if (!currentRoom || !currentUser) { showToast('请先选房间'); return }
+    try {
+      const { data } = await sb.from('messages')
+        .select('id').eq('room_id', currentRoom.id)
+        .eq('source', 'asr').limit(1).maybeSingle()
+      if (!data) {
+        showToast('没找到课堂录音转写,先上传一段课堂录音再试')
+        return
+      }
+      const { error } = await sb.from('messages').insert({
+        room_id: currentRoom.id,
+        user_id: currentUser.id,
+        role: 'user',
+        type: 'text',
+        content: '请从最近这段录音里整理 todo',
+        message_type: 'extract_todos',
+      })
+      if (error) { showToast('触发失败:' + error.message); return }
+      showToast('AI 正在听...大概 10-15s 出结果')
+    } catch (e) {
+      console.error('[extract_todos]', e)
+      showToast('触发失败:' + (e.message || e))
+    }
+  }
+
   async function toggleTodoEditing() {
     if (!currentRoom || !isExpert(currentRoom) || !currentTemplate) return
     const sec = document.getElementById('todoSection')
@@ -3492,6 +3531,13 @@
             // AI 回复完成 → bridge 刚写完 model_usage 行 → 刷新成本徽章
             // 延迟 500ms 等 model_usage insert 落地
             setTimeout(() => loadRoomCost(roomId), 500)
+            // 后端抽完 todo 会带 attachments[*]._event='todos_updated' 标记 → reload 模板
+            try {
+              const atts = payload.new.attachments || []
+              if (Array.isArray(atts) && atts.some(a => a && a._event === 'todos_updated')) {
+                loadActiveTodoTemplate(currentRoom)
+              }
+            } catch (_) {}
           }
           if (inCurChannel) {
             appendMessage(payload.new)
