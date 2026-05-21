@@ -970,6 +970,62 @@
     .msg-translation:hover { background: var(--bg2); }
     .msg-translation.loading::before { content: '⟳ '; }
 
+    /* 课中 10-min review banner: 淡灰 + 默认折叠 + 点击展开 */
+    .msg-review-banner {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 12px; margin: 4px 0;
+      background: rgba(0,0,0,.035);
+      border-left: 2px solid rgba(0,0,0,.12);
+      border-radius: 6px;
+      font-size: 12px; color: var(--text3);
+      cursor: pointer;
+      user-select: none;
+    }
+    .msg-review-banner:hover { background: rgba(0,0,0,.06); }
+    .msg-review-banner .rb-icon { flex-shrink: 0; font-size: 14px; }
+    .msg-review-banner .rb-label { flex: 1; font-weight: 500; }
+    .msg-review-banner .rb-toggle { color: var(--text3); font-size: 11px; }
+    .msg-review-body {
+      display: none;
+      padding: 8px 14px 10px;
+      margin-top: -2px;
+      background: rgba(0,0,0,.025);
+      border-left: 2px solid rgba(0,0,0,.12);
+      border-radius: 0 0 6px 6px;
+      font-size: 13px; line-height: 1.6; color: var(--text);
+    }
+    .msg-review-body.show { display: block; }
+    .msg-review-body p:first-child { margin-top: 0; }
+
+    /* 课后 todo 提议 卡片: 群聊里出现,带 ✓ Apply / ✕ Discard 按钮 */
+    .msg-todo-proposal {
+      padding: 12px 14px;
+      background: rgba(245, 158, 11, .06);
+      border: 1px solid rgba(245, 158, 11, .25);
+      border-radius: 8px;
+      margin: 6px 0;
+    }
+    .msg-todo-proposal .tp-title {
+      font-weight: 600; color: #b45309; font-size: 13px; margin-bottom: 8px;
+    }
+    .msg-todo-proposal .tp-items {
+      margin: 6px 0 10px;
+      font-size: 13px; line-height: 1.7; color: var(--text);
+    }
+    .msg-todo-proposal .tp-actions {
+      display: flex; gap: 8px; justify-content: flex-end;
+    }
+    .msg-todo-proposal button {
+      padding: 5px 12px; font-size: 12px; border-radius: 6px;
+      border: 1px solid var(--border2); background: #fff;
+      cursor: pointer;
+    }
+    .msg-todo-proposal .tp-apply { background: var(--teal); color: #fff; border-color: var(--teal); }
+    .msg-todo-proposal .tp-apply:hover { background: var(--teal-600); }
+    .msg-todo-proposal .tp-discard:hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+    .msg-todo-proposal.done { opacity: .55; }
+    .msg-todo-proposal.done .tp-actions { display: none; }
+
     /* AI message footer ✓ / ✗ rating buttons */
     .msg-rate-bar {
       display: flex;
@@ -3722,6 +3778,17 @@
     // System marker message: double-check pass tells bridge to advance to next question; not rendered on frontend
     if (msg.content === '__SYS_ADVANCE_QUIZ__') return
     if (msg.content === '__SYS_TRANSLATE__') return  // Translation trigger message
+    if (msg.content === '__SYS_TIMED_REVIEW__') return  // Timed-review trigger (hidden)
+    // ── timed_review / todo_proposal 特殊渲染(在 translation_result 分支之前) ──
+    try {
+      const _atts = msg.attachments || []
+      if (msg.role === 'ai' && Array.isArray(_atts)) {
+        const _tr = _atts.find(a => a && a._event === 'timed_review')
+        if (_tr) { _renderReviewBanner(msg, _tr); return }
+        const _tp = _atts.find(a => a && a._event === 'todo_proposal')
+        if (_tp) { _renderTodoProposal(msg, _tp); return }
+      }
+    } catch (_) {}
     // Translation result message (AI + attachments._event=translation_result): during loadMessages history replay,
     // fill the gray text under the source message — not rendered as its own bubble
     try {
@@ -3926,6 +3993,81 @@
 
   // Remember the last auto-prepended string so the next rate (✓/✗ switch or cancel) can strip it first
   let lastRatePrepend = ''
+
+  // ─── timed_review / todo_proposal 渲染 helpers ──────────────────────────
+  // banner 默认折叠;点击切展开
+  function _renderReviewBanner(msg, meta) {
+    const list = document.getElementById('messagesList')
+    const wrap = document.createElement('div')
+    wrap.className = 'msg-group review-banner-group'
+    wrap.dataset.msgId = msg.id
+    const ts = formatTime(msg.created_at)
+    const looksMd = (msg.type === 'markdown') || looksLikeMarkdown(msg.content || '')
+    const bodyHtml = looksMd ? (window.marked ? marked.parse(msg.content || '') : escHtml(msg.content || '').replace(/\n/g, '<br>')) : escHtml(msg.content || '').replace(/\n/g, '<br>')
+    wrap.innerHTML = `
+      <div class="msg-review-banner" onclick="this.nextElementSibling.classList.toggle('show'); this.querySelector('.rb-toggle').textContent = this.nextElementSibling.classList.contains('show') ? '收起' : '展开'">
+        <span class="rb-icon">📋</span>
+        <span class="rb-label">10-min review · ${ts}</span>
+        <span class="rb-toggle">展开</span>
+      </div>
+      <div class="msg-review-body">${bodyHtml}</div>
+    `
+    list.appendChild(wrap)
+  }
+  // todo proposal 卡片 + Apply/Discard
+  function _renderTodoProposal(msg, meta) {
+    const list = document.getElementById('messagesList')
+    const wrap = document.createElement('div')
+    wrap.className = 'msg-group todo-proposal-group'
+    wrap.dataset.msgId = msg.id
+    const items = Array.isArray(meta.items) ? meta.items : []
+    const bullets = items.map(it => `<div>• ${escHtml(it.label || '')}</div>`).join('')
+    wrap.innerHTML = `
+      <div class="msg-todo-proposal" data-proposal-id="${msg.id}">
+        <div class="tp-title">📚 课后 TODO 草稿 · 确认后才更新左侧</div>
+        <div class="tp-items">${bullets}</div>
+        <div class="tp-actions">
+          <button class="tp-discard" onclick="discardTodoProposal('${msg.id}', this)">✕ Discard</button>
+          <button class="tp-apply" onclick="applyTodoProposal('${msg.id}', this)">✓ Apply</button>
+        </div>
+      </div>
+    `
+    list.appendChild(wrap)
+  }
+  // Apply 触发 confirm_todo_apply,后端 append items + 写 todos_updated 让 sidebar reload
+  async function applyTodoProposal(msgId, btn) {
+    if (!currentRoom || !currentUser) return
+    btn.disabled = true; btn.textContent = 'Applying…'
+    try {
+      const { data: src } = await sb.from('messages').select('attachments').eq('id', msgId).maybeSingle()
+      const items = (src?.attachments || []).find(a => a && a._event === 'todo_proposal')?.items || []
+      if (!items.length) { showToast('No items to apply'); btn.disabled = false; btn.textContent = '✓ Apply'; return }
+      const { error } = await sb.from('messages').insert({
+        room_id: currentRoom.id, user_id: currentUser.id,
+        role: 'user', type: 'text',
+        content: '__SYS_CONFIRM_TODO__',
+        message_type: 'confirm_todo_apply',
+        attachments: [{ items }],
+      })
+      if (error) { showToast('Apply failed: ' + error.message); btn.disabled = false; btn.textContent = '✓ Apply'; return }
+      // 卡片置灰
+      const card = document.querySelector(`[data-proposal-id="${msgId}"]`)
+      if (card) card.classList.add('done')
+      showToast('Applying… sidebar will update')
+    } catch (e) { showToast('Error: ' + (e.message || e)); btn.disabled = false; btn.textContent = '✓ Apply' }
+  }
+  async function discardTodoProposal(msgId, btn) {
+    const card = document.querySelector(`[data-proposal-id="${msgId}"]`)
+    if (card) card.classList.add('done')
+    try {
+      await sb.from('messages').insert({
+        room_id: currentRoom.id, user_id: currentUser.id,
+        role: 'user', type: 'text',
+        content: '__SYS_DISCARD_TODO__',
+        message_type: 'discard_todo_proposal',
+      })
+    } catch (e) { console.warn('[discard]', e) }
+  }
 
   // Pending quote (WeChat style: invisible in the input box; silently appended on send)
   // { b64, sender, preview } | null
@@ -4941,6 +5083,7 @@ window.Classroom = (function() {
     if (msg.type === 'lesson_ack') {
       // Three-role cleanup: no voiceprint registration, start recording directly
       startCapture()
+      _startReviewTimer()  // T+10/20/30/.../60 min review
     } else if (msg.type === 'segment_ack') {
       setStatus(`Transcribing (${msg.latency_ms}ms)`, null)
       setTimeout(() => setStatus('Listening to class…', null), 1500)
@@ -5049,6 +5192,8 @@ window.Classroom = (function() {
   function cleanup() {
     if (_segIdleTimer) { clearTimeout(_segIdleTimer); _segIdleTimer = null }
     _segBuffer = []; _segBufferSec = 0
+    if (_reviewTimer) { clearInterval(_reviewTimer); _reviewTimer = null }
+    _lastReviewAt = null
     if (vadInstance) {
       try { vadInstance.pause(); vadInstance.destroy && vadInstance.destroy() } catch {}
       vadInstance = null
@@ -5056,6 +5201,35 @@ window.Classroom = (function() {
     if (ws) { try { ws.close() } catch {}; ws = null; wsReady = false }
     lesson = null; segSeq = 0
     stopTimer(); setBar(false); setBtnActive(false)
+  }
+
+  // ─── 课中每 10 分钟 review 定时器 ─────────────────────────────────────────
+  // 课开始 → 每 10 min 写一条隐藏的 message_type='timed_review' 触发消息,
+  // 携带 since/until ISO 时间戳;后端 Hermes 拉这个窗口的 ASR → Haiku 总结 → 写群聊 AI 消息。
+  const REVIEW_INTERVAL_MS = 10 * 60 * 1000
+  let _reviewTimer = null
+  let _lastReviewAt = null  // ISO string, 上一次 review 的 until(下次的 since)
+  function _startReviewTimer() {
+    if (_reviewTimer) clearInterval(_reviewTimer)
+    _lastReviewAt = new Date().toISOString()
+    _reviewTimer = setInterval(async () => {
+      if (!lesson || !currentRoom || !currentUser) return
+      const now = new Date().toISOString()
+      try {
+        await sb.from('messages').insert({
+          room_id: currentRoom.id,
+          user_id: currentUser.id,
+          role: 'user',
+          type: 'text',
+          content: '__SYS_TIMED_REVIEW__',
+          message_type: 'timed_review',
+          attachments: [{ since: _lastReviewAt, until: now }],
+        })
+        _lastReviewAt = now
+      } catch (e) {
+        console.warn('[timed_review trigger]', e)
+      }
+    }, REVIEW_INTERVAL_MS)
   }
 
   async function toggle() {
