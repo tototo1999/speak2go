@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>口语课 · Speak2GO.ai</title>
+  <title>Speak2GO.ai · English lesson assistant</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23DC2626'/%3E%3Ctext x='32' y='44' font-family='Helvetica,Arial,sans-serif' font-size='30' font-weight='800' text-anchor='middle' fill='%23fff'%3EGO%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1430,7 +1430,7 @@
     }
     .attach-chip .x:hover { background: var(--gray-100); color: var(--text); }
     .attach-chip.uploading { opacity: 0.6; }
-    .attach-chip.uploading .name::after { content: ' (上传中…)'; color: var(--text3); font-size: 10px; }
+    .attach-chip.uploading .name::after { content: ' (uploading…)'; color: var(--text3); font-size: 10px; }
 
     /* 已发送消息里的附件卡片 */
     .msg-attachments { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
@@ -1742,10 +1742,10 @@
     <a href="/" class="logo">Speak2<span>GO</span><span class="logo-tld">.ai</span></a>
   </div>
   <div class="nav-right">
-    <button class="icon-btn" id="settingsBtn" onclick="openSettings()" title="设置" style="display:none;">
+    <button class="icon-btn" id="settingsBtn" onclick="openSettings()" title="Settings" style="display:none;">
       <i class="ti ti-settings"></i>
     </button>
-    <button class="icon-btn" onclick="handleLogout()" title="退出">
+    <button class="icon-btn" onclick="handleLogout()" title="Log out">
       <i class="ti ti-logout"></i>
     </button>
   </div>
@@ -1754,11 +1754,11 @@
 <!-- Settings Modal（仅OG可见，含 Agent Keys 管理）-->
 <div class="modal-overlay" id="settingsModal" onclick="closeSettings(event)">
   <div class="modal" style="max-width:640px;" onclick="event.stopPropagation()">
-    <h3 id="settingsTitle">设置</h3>
+    <h3 id="settingsTitle">Settings</h3>
 
     <!-- 管理员入口（仅白名单邮箱可见）—— 置顶，避免拉到底 -->
     <div id="adminSection" style="display:none;margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:0.5px solid var(--border);">
-      <h4 style="margin:0 0 .5rem;font-size:14px;font-weight:600;">管理员</h4>
+      <h4 style="margin:0 0 .5rem;font-size:14px;font-weight:600;">Admin</h4>
       <p style="margin:0 0 .8rem;font-size:13px;color:var(--text2);">
         访问站点后台：用户/房间/Bridge 状态、计费汇总。
       </p>
@@ -1770,44 +1770,44 @@
 
     <!-- 个人资料 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
-      <h4 style="margin:0;font-size:14px;font-weight:600;">个人资料</h4>
-      <button class="btn-cancel" onclick="saveProfile()" style="flex:0 0 auto;padding:.45rem 1rem;font-size:13px;">保存</button>
+      <h4 style="margin:0;font-size:14px;font-weight:600;">Profile</h4>
+      <button class="btn-cancel" onclick="saveProfile()" style="flex:0 0 auto;padding:.45rem 1rem;font-size:13px;">Save</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.2rem;">
-      <label style="font-size:12px;color:var(--text2);">显示名</label>
-      <input type="text" id="profileDisplayName" placeholder="给自己起个名字" style="padding:.5rem;font-size:13px;">
-      <label style="font-size:12px;color:var(--text2);margin-top:.3rem;">邮箱</label>
+      <label style="font-size:12px;color:var(--text2);">Display name</label>
+      <input type="text" id="profileDisplayName" placeholder="Pick a display name" style="padding:.5rem;font-size:13px;">
+      <label style="font-size:12px;color:var(--text2);margin-top:.3rem;">Email</label>
       <input type="text" id="profileEmail" disabled style="padding:.5rem;font-size:13px;background:var(--bg);color:var(--text3);">
 
       <!-- 当前房间标题 inline；仅OG在自己房间内时显示 -->
       <div id="roomTitleSection" style="display:none;flex-direction:column;gap:.3rem;margin-top:.3rem;">
-        <label style="font-size:12px;color:var(--text2);">当前房间标题（最多 13 字，留空用昵称兜底）</label>
-        <input type="text" id="roomSidebarTitle" maxlength="13" placeholder="留空则用昵称" style="padding:.5rem;font-size:13px;">
+        <label style="font-size:12px;color:var(--text2);">Room title (max 13 chars, blank falls back to display name)</label>
+        <input type="text" id="roomSidebarTitle" maxlength="13" placeholder="Blank falls back to display name" style="padding:.5rem;font-size:13px;">
       </div>
     </div>
 
     <!-- Agent Keys（仅OG可见） -->
     <div id="agentKeysSection" style="display:none;">
-      <h4 style="margin:0 0 .5rem;font-size:14px;font-weight:600;">Agent 连接密钥</h4>
+      <h4 style="margin:0 0 .5rem;font-size:14px;font-weight:600;">Agent connect keys</h4>
       <p style="margin:0 0 1rem;font-size:13px;color:var(--text2);">
         把本地 chat2go-agent 接入这个账号。每把密钥独立可撤销，建议每台机器一把。
       </p>
 
-      <div id="agentKeysList" style="font-size:13px;">加载中...</div>
+      <div id="agentKeysList" style="font-size:13px;">Loading…</div>
 
       <div style="margin-top:1rem;display:flex;gap:.5rem;">
-        <input type="text" id="newKeyName" placeholder="密钥名称（如：我的 Mac）" style="flex:1;">
-        <button class="btn-cancel" onclick="generateKey()" style="padding:.5rem 1rem;white-space:nowrap;">生成新密钥</button>
+        <input type="text" id="newKeyName" placeholder="Key name (e.g. My MacBook)" style="flex:1;">
+        <button class="btn-cancel" onclick="generateKey()" style="padding:.5rem 1rem;white-space:nowrap;">Generate new key</button>
       </div>
 
       <div id="newKeyDisplay" style="display:none;margin-top:1rem;padding:1rem;background:#fef3c7;border-radius:8px;border:1px solid #f59e0b;">
-        <strong style="color:#92400e;font-size:13px;">⚠️ 这是你新生成的密钥，只此一次显示，请立即保存：</strong>
+        <strong style="color:#92400e;font-size:13px;">⚠️ Your new key — shown only once, save it now:</strong>
         <pre id="newKeyValue" style="margin:.5rem 0;padding:.5rem;background:#fff;border-radius:4px;overflow-x:auto;font-size:11px;font-family:'SF Mono',Monaco,monospace;"></pre>
-        <button onclick="copyNewKey()" style="padding:.4rem .8rem;cursor:pointer;font-size:12px;">复制密钥</button>
+        <button onclick="copyNewKey()" style="padding:.4rem .8rem;cursor:pointer;font-size:12px;">Copy key</button>
         <p style="margin:.5rem 0 0;font-size:12px;color:var(--text2);line-height:1.7;">
           安装步骤:<br>
           ① <code style="background:#fff;padding:.1rem .3rem;border-radius:3px;">pip install -e ~/chat2go-agent</code><br>
-          ② <code style="background:#fff;padding:.1rem .3rem;border-radius:3px;">chat2go-agent connect &lt;粘贴密钥&gt;</code><br>
+          ② <code style="background:#fff;padding:.1rem .3rem;border-radius:3px;">chat2go-agent connect &lt;paste your key&gt;</code><br>
           ③ 启动 bridge（launchd / start.sh）
         </p>
       </div>
@@ -1826,14 +1826,14 @@
     </div>
     <div class="todo-section" id="todoSection">
       <div class="todo-head" id="todoHead">
-        <button type="button" class="todo-head-btn" id="todoEditBtn" title="编辑方案" onclick="toggleTodoEditing()">
+        <button type="button" class="todo-head-btn" id="todoEditBtn" title="Edit plan" onclick="toggleTodoEditing()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
         </button>
         <span class="todo-head-name" id="todoHeadName">Todo</span>
-        <button type="button" class="todo-head-btn" id="todoCaretBtn" title="切换方案" onclick="toggleTodoPopup()">
+        <button type="button" class="todo-head-btn" id="todoCaretBtn" title="Switch plan" onclick="toggleTodoPopup()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-        <button type="button" class="todo-head-btn" id="todoExtractBtn" title="从最近一段课堂录音里提取待办,装进左侧 todo 分组" onclick="extractTodosFromLatestRecording()">
+        <button type="button" class="todo-head-btn" id="todoExtractBtn" title="Pull todos from the latest class recording into the sidebar" onclick="extractTodosFromLatestRecording()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="9" y="2" width="6" height="11" rx="3"/>
             <line x1="9.5" y1="5.5" x2="14.5" y2="5.5"/>
@@ -1846,7 +1846,7 @@
       </div>
       <div class="todo-popup" id="todoPopup" style="display:none;"></div>
       <div class="todo-body" id="todoBody"></div>
-      <div class="todo-add-group" onclick="addTodoGroup()">+ 新建分组</div>
+      <div class="todo-add-group" onclick="addTodoGroup()">+ New group</div>
     </div>
     <!-- 极简版：sidebar 不再渲染聊天室列表，房间在右侧主区自动打开 -->
     <div class="rooms-list" id="roomsList" style="display:none;"></div>
@@ -1861,13 +1861,13 @@
         <div class="presence-row" style="position:relative;">
           <div id="presenceRow" style="display:flex;align-items:center;gap:6px;"></div>
           <div id="memberListPopover" class="member-list-popover"></div>
-          <button id="inviteBtn" class="invite-btn" title="复制邀请链接" onclick="copyInviteLink()" style="display:none;">
+          <button id="inviteBtn" class="invite-btn" title="Copy invite link" onclick="copyInviteLink()" style="display:none;">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M6.5 9.5a3 3 0 0 0 4.5 0l2-2a3 3 0 0 0-4.5-4.5l-1 1"/>
               <path d="M9.5 6.5a3 3 0 0 0-4.5 0l-2 2a3 3 0 0 0 4.5 4.5l1-1"/>
             </svg>
           </button>
-          <button id="resetRoomBtn" class="invite-btn" title="重置房间（踢光小白/路人 + 清消息 + 重新发邀请）" onclick="resetRoom()" style="display:none;">
+          <button id="resetRoomBtn" class="invite-btn" title="Reset room (kick all members + wipe messages + new invite link)" onclick="resetRoom()" style="display:none;">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9"/>
               <path d="M13.5 2.5v3h-3"/>
@@ -1881,16 +1881,16 @@
               <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-opacity="0.25" stroke-width="4"/>
               <circle id="chatTokensRingFill" cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="87.96" stroke-dashoffset="87.96" transform="rotate(-90 16 16)"/>
             </svg>
-            <span id="chatRoomTokens" title="本轮 context 已用 / 房间预算">0 / 10.00M Token</span>
+            <span id="chatRoomTokens" title="Context used this turn / room budget">0 / 10.00M Token</span>
             <span class="ctx-pct" id="chatCtxWrap" style="display:none;">
               <span id="chatRoomCtx"></span>
               <i class="ctx-battery"><i id="ctxBatteryFill"></i></i>
             </span>
           </div>
           <div class="chat-status">
-            <div class="status-item offline" id="bridgeStatus" title="AI 未连接 · 点击请求重启" onclick="requestBridgeRestart()" style="cursor:pointer;">
+            <div class="status-item offline" id="bridgeStatus" title="AI disconnected — click to request restart" onclick="requestBridgeRestart()" style="cursor:pointer;">
               <div class="dot"></div>
-              <span class="brain-badge" id="brainBadge" title="重启 hermes！">hermes</span>
+              <span class="brain-badge" id="brainBadge" title="Restart hermes">hermes</span>
               <span id="chatRoomModel">AI</span>
               <svg class="signal-online" width="14" height="11" viewBox="0 0 14 11" fill="currentColor" aria-hidden="true">
                 <rect x="1"   y="7" width="3" height="3" rx="0.5"/>
@@ -1911,7 +1911,7 @@
         <span class="typing-star"></span>
         <span class="typing-name" id="typingName">AI</span>
         <span class="typing-sep">·</span>
-        <span class="typing-verb" id="typingVerb">思考中</span>
+        <span class="typing-verb" id="typingVerb">thinking</span>
         <span class="typing-verb">…</span>
         <span class="typing-elapsed" id="typingElapsed">(0s)</span>
       </div>
@@ -1924,16 +1924,16 @@
           <i class="ti ti-corner-up-left"></i>
           <span class="qp-sender" id="qpSender"></span>
           <span class="qp-body" id="qpBody"></span>
-          <button class="qp-x" title="取消引用" onclick="clearPendingQuote()"><i class="ti ti-x"></i></button>
+          <button class="qp-x" title="Clear quote" onclick="clearPendingQuote()"><i class="ti ti-x"></i></button>
         </div>
 
         <div class="input-wrap" style="position:relative;">
           <!-- @ 提及候选弹层（输入 @ 时显示） -->
           <div class="mention-popover" id="mentionPopover"></div>
           <div class="role-badge-wrap">
-            <div class="role-badge" id="roleBadge" title="你的身份" onclick="onRoleBadgeClick()">—</div>
+            <div class="role-badge" id="roleBadge" title="Your role" onclick="onRoleBadgeClick()">—</div>
           </div>
-          <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="上传文件给 AI 看">
+          <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Upload a file for the AI to read">
             <i class="ti ti-paperclip"></i>
           </button>
           <input type="file" id="fileInput" multiple style="display:none"
@@ -1951,7 +1951,7 @@
             onpaste="onPasteImage(event)"
           ></textarea>
           <button class="classroom-btn" id="classroomBtn" onclick="Classroom.toggle()"
-                  title="开始课堂录音（1v1 实时转写 + AI 助教）" style="display:none">
+                  title="Start class recording (live transcription + AI assistant)" style="display:none">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="9" y="2" width="6" height="11" rx="3"/>
               <line x1="9.5" y1="5.5" x2="14.5" y2="5.5"/>
@@ -1969,10 +1969,10 @@
         <!-- 课堂录音状态条（开课后显示） -->
         <div class="classroom-bar" id="classroomBar">
           <span class="cb-dot" id="cbDot"></span>
-          <span class="cb-status" id="cbStatus">连接中…</span>
+          <span class="cb-status" id="cbStatus">Connecting…</span>
           <span class="cb-timer" id="cbTimer">00:00</span>
-          <button class="cb-btn" id="cbKnowledgeBtn" onclick="Classroom.markKnowledgeEnd()" title="老师讲完一个知识点点这里，AI 助教会出三段 tips">📍 此节完结</button>
-          <button class="cb-btn warn" id="cbEndBtn" onclick="Classroom.endLesson()" title="结束课堂，生成课后作业和下节课规划">结束课堂</button>
+          <button class="cb-btn" id="cbKnowledgeBtn" onclick="Classroom.markKnowledgeEnd()" title="Click when you finish a unit — AI assistant drops three short tips">📍 End unit</button>
+          <button class="cb-btn warn" id="cbEndBtn" onclick="Classroom.endLesson()" title="End class — AI generates homework + plan for next class">End class</button>
         </div>
         <div class="input-hint" id="roleHint" style="display:none"></div>
       </div>
@@ -1983,14 +1983,14 @@
 
 <div class="modal-overlay" id="newRoomModal" onclick="closeNewRoomModal(event)">
   <div class="modal" onclick="event.stopPropagation()">
-    <h3>新建 Chat</h3>
+    <h3>New chat</h3>
     <div class="field">
-      <label>Chat 名称</label>
-      <input type="text" id="newRoomName" placeholder="例：森山大道san命理教室">
+      <label>Chat name</label>
+      <input type="text" id="newRoomName" placeholder="e.g. Sarah's English Class">
     </div>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeNewRoomModal()">取消</button>
-      <button class="btn-create" id="createRoomBtn" onclick="createRoom()">创建</button>
+      <button class="btn-cancel" onclick="closeNewRoomModal()">Cancel</button>
+      <button class="btn-create" id="createRoomBtn" onclick="createRoom()">Create</button>
     </div>
   </div>
 </div>
@@ -2009,17 +2009,17 @@
 <!-- Invite landing：?invite=<token> 触发，匿名进场填昵称 -->
 <div class="modal-overlay" id="inviteModal" style="z-index:2000;">
   <div class="modal" style="max-width:380px;" onclick="event.stopPropagation()">
-    <h3 style="margin:0 0 1rem;">欢迎进入聊天室</h3>
+    <h3 style="margin:0 0 1rem;">Welcome to the chat room</h3>
     <p style="margin:0 0 1rem;font-size:13px;color:var(--text2);line-height:1.6;">
       给自己起个昵称，进入OG的房间。
     </p>
-    <input type="text" id="inviteNickname" placeholder="昵称（如：小明）" maxlength="20"
+    <input type="text" id="inviteNickname" placeholder="Display name (e.g. Sarah)" maxlength="20"
            onkeydown="if(event.key==='Enter'){event.preventDefault();submitInvite()}"
            style="width:100%;padding:.6rem .8rem;font-size:14px;border:0.5px solid var(--border2);border-radius:6px;background:#fff;outline:none;">
     <div id="inviteError" style="font-size:12px;color:#DC2626;margin-top:.4rem;display:none;"></div>
     <div class="modal-actions" style="margin-top:1.2rem;">
-      <button class="btn-cancel" onclick="dismissInvite()">取消</button>
-      <button class="btn-cancel" id="inviteSubmitBtn" onclick="submitInvite()" style="background:var(--teal);color:#fff;border-color:var(--teal);">进入</button>
+      <button class="btn-cancel" onclick="dismissInvite()">Cancel</button>
+      <button class="btn-cancel" id="inviteSubmitBtn" onclick="submitInvite()" style="background:var(--teal);color:#fff;border-color:var(--teal);">Enter</button>
     </div>
   </div>
 </div>
@@ -2095,8 +2095,8 @@
       // 输入区身份徽章: OG → 咖, 小白 → 白
       const badge = document.getElementById('roleBadge')
       if (badge) {
-        badge.textContent = currentRole === 'expert' ? 'OG' : '白'
-        badge.title = currentRole === 'expert' ? 'OG · 点击查看待审 follow' : '小白 · 点击修改资料'
+        badge.textContent = currentRole === 'expert' ? 'OG' : 'Me'
+        badge.title = currentRole === 'expert' ? 'OG · click to view pending follows' : 'Student · click to edit profile'
       }
       // OG 或 admin 都看得到设置入口
       if (currentRole === 'expert' || ADMIN_EMAILS.includes(currentUser?.email)) {
@@ -2159,7 +2159,7 @@
     document.getElementById('settingsModal').classList.add('show')
     // 标题随角色变化
     document.getElementById('settingsTitle').textContent =
-      currentRole === 'expert' ? 'OG设置' : '小白设置'
+      currentRole === 'expert' ? 'OG settings' : 'Student settings'
     // 邮箱（只读）
     document.getElementById('profileEmail').value = currentUser?.email || ''
     // 拉当前 display_name（并同步到全局 currentDisplayName，修复 init 时 fetch 失败的情况）
@@ -2173,7 +2173,7 @@
       if (dn && dn !== currentDisplayName) {
         currentDisplayName = dn
         document.querySelectorAll('.msg-sender[data-own="1"]').forEach(el => {
-          if (el.textContent === '我') el.textContent = dn
+          if (el.textContent === 'Me') el.textContent = dn
         })
       }
     } catch (e) { console.warn('[profile load]', e) }
@@ -2202,14 +2202,14 @@
   }
   async function deleteRoom(roomId, btnEl) {
     const room = btnEl?.closest('.room-item')
-    const name = room?.querySelector('.room-name')?.textContent || '这个 Chat'
-    if (!confirm(`确定删除「${name}」？\n所有消息、计费记录都会一起删除，不可恢复。`)) return
+    const name = room?.querySelector('.room-name')?.textContent || 'this chat'
+    if (!confirm(`Delete "${name}"?\nAll messages and billing records go with it. Cannot be undone.`)) return
     try {
       // .select() 让 PostgREST 返回被删的行，能区分「RLS 拦截」vs「真的删了」
       const { data, error } = await sb.from('rooms').delete().eq('id', roomId).select()
       if (error) throw error
       if (!data || data.length === 0) {
-        showToast('删除失败：没有权限（RLS 拦截）或房间已不存在')
+        showToast('Delete failed: no permission (RLS) or room is gone')
         return
       }
       // 如果删的是当前打开的房间，清掉聊天面板
@@ -2219,17 +2219,17 @@
         document.getElementById('welcomeState').style.display = ''
       }
       await loadRooms()
-      showToast('已删除')
+      showToast('Deleted')
     } catch (e) {
       console.warn('[delete room]', e)
-      showToast('删除失败：' + (e.message || e))
+      showToast('Delete failed: ' + (e.message || e))
     }
   }
 
   async function editAIName() {
     if (!currentRoom || !isExpert(currentRoom)) return
     const cur = currentRoom.ai_name || ''
-    const name = prompt('给本房间的 AI 助手起个名字（留空恢复默认）：', cur)
+    const name = prompt("Pick a name for this room's AI assistant (blank resets to default):", cur)
     if (name === null) return
     const newName = name.trim()
     try {
@@ -2238,21 +2238,21 @@
         .eq('id', currentRoom.id)
       if (error) throw error
       currentRoom.ai_name = newName || null
-      const displayName = newName || 'AI 助手'
+      const displayName = newName || 'AI assistant'
       // 当前已渲染的 AI sender 全部刷新
       document.querySelectorAll('.msg-sender.ai').forEach(el => {
         el.textContent = displayName
       })
-      showToast('AI 名字已更新')
+      showToast('AI name updated')
     } catch (e) {
       console.warn('[ai_name save]', e)
-      showToast('保存失败：' + (e.message || e))
+      showToast('Save failed: ' + (e.message || e))
     }
   }
 
   async function saveProfile() {
     const name = document.getElementById('profileDisplayName').value.trim()
-    if (!name) { showToast('显示名不能为空'); return }
+    if (!name) { showToast('Display name cannot be empty'); return }
     try {
       const { error } = await sb.from('profiles')
         .update({ display_name: name })
@@ -2268,28 +2268,28 @@
       if (roomSection && roomSection.style.display !== 'none' && currentRoom && isExpert(currentRoom)) {
         await saveRoomSidebarTitle(name)
       } else {
-        showToast('资料已保存')
+        showToast('Profile saved')
       }
       // 保存成功后自动关 modal（极简；想取消改动可点 modal 外部）
       document.getElementById('settingsModal').classList.remove('show')
     } catch (e) {
       console.warn('[profile save]', e)
-      showToast('保存失败：' + (e.message || e))
+      showToast('Save failed: ' + (e.message || e))
     }
   }
 
   async function loadAgentKeys() {
     const el = document.getElementById('agentKeysList')
-    el.innerHTML = '加载中...'
+    el.innerHTML = 'Loading…'
     try {
       const { data, error } = await sb.rpc('list_agent_keys')
       if (error) throw error
       if (!data || data.length === 0) {
-        el.innerHTML = '<div style="padding:1rem;color:var(--text3);text-align:center;">还没有密钥，点下方"生成新密钥"创建第一把</div>'
+        el.innerHTML = '<div style="padding:1rem;color:var(--text3);text-align:center;">No keys yet — click "Generate new key" below to create your first one</div>'
         return
       }
       el.innerHTML = data.map(k => {
-        const status = k.revoked_at ? '已撤销' : (k.last_used_at ? `上次使用：${formatRelativeTime(k.last_used_at)}` : '从未使用')
+        const status = k.revoked_at ? 'Revoked' : (k.last_used_at ? `Last used: ${formatRelativeTime(k.last_used_at)}` : 'Never used')
         const ip = k.last_used_ip ? ` from ${k.last_used_ip}` : ''
         const isActive = !k.revoked_at
         return `
@@ -2299,11 +2299,11 @@
               <div style="font-size:11px;color:var(--text3);font-family:monospace;margin-top:2px;">${escHtml(k.prefix)}…</div>
               <div style="font-size:11px;color:var(--text3);margin-top:2px;">${status}${ip}</div>
             </div>
-            ${isActive ? `<button onclick="revokeKey('${k.id}')" style="padding:.3rem .6rem;font-size:12px;cursor:pointer;color:#dc2626;background:#fff;border:1px solid #fca5a5;border-radius:4px;">撤销</button>` : '<span style="font-size:11px;color:#dc2626;">REVOKED</span>'}
+            ${isActive ? `<button onclick="revokeKey('${k.id}')" style="padding:.3rem .6rem;font-size:12px;cursor:pointer;color:#dc2626;background:#fff;border:1px solid #fca5a5;border-radius:4px;">Revoke</button>` : '<span style="font-size:11px;color:#dc2626;">REVOKED</span>'}
           </div>`
       }).join('')
     } catch (e) {
-      el.innerHTML = `<div style="color:#dc2626;">加载失败：${escHtml(e.message || String(e))}</div>`
+      el.innerHTML = `<div style="color:#dc2626;">Load failed: ${escHtml(e.message || String(e))}</div>`
     }
   }
 
@@ -2314,7 +2314,7 @@
       const { data, error } = await sb.rpc('generate_agent_key', { p_name: name })
       if (error) throw error
       const row = (data || [])[0]
-      if (!row) throw new Error('RPC 没有返回新 key')
+      if (!row) throw new Error("RPC didn't return a new key")
 
       const display = document.getElementById('newKeyDisplay')
       display.style.display = ''
@@ -2323,7 +2323,7 @@
       nameInput.value = ''
       await loadAgentKeys()
     } catch (e) {
-      alert('生成失败：' + (e.message || String(e)))
+      alert('Generation failed: ' + (e.message || String(e)))
     }
   }
 
@@ -2331,32 +2331,32 @@
     const key = window._lastKey
     if (!key) return
     navigator.clipboard.writeText(key).then(
-      () => alert('已复制到剪贴板'),
-      () => alert('复制失败，请手动选择文本复制')
+      () => alert('Copied to clipboard'),
+      () => alert('Copy failed — please select the text and copy manually')
     )
   }
 
   async function revokeKey(id) {
-    if (!confirm('撤销后这把密钥立即失效，确定？')) return
+    if (!confirm('Revoking will invalidate this key immediately. Continue?')) return
     try {
       const { error } = await sb.rpc('revoke_agent_key', { p_id: id })
       if (error) throw error
       await loadAgentKeys()
     } catch (e) {
-      alert('撤销失败：' + (e.message || String(e)))
+      alert('Revoke failed: ' + (e.message || String(e)))
     }
   }
 
   function formatRelativeTime(iso) {
     const diff = (Date.now() - new Date(iso).getTime()) / 1000
-    if (diff < 60) return '刚刚'
-    if (diff < 3600) return Math.floor(diff/60) + ' 分钟前'
-    if (diff < 86400) return Math.floor(diff/3600) + ' 小时前'
-    return Math.floor(diff/86400) + ' 天前'
+    if (diff < 60) return 'just now'
+    if (diff < 3600) return Math.floor(diff/60) + ' min ago'
+    if (diff < 86400) return Math.floor(diff/3600) + ' hr ago'
+    return Math.floor(diff/86400) + ' days ago'
   }
 
   // tradego 子目录:行业锁口语训练,product='tradego' 跟主站 rooms 隔离
-  const DEMO_INDUSTRY = '英语口语'
+  const DEMO_INDUSTRY = 'English speaking'
   const DEMO_PRODUCT = 'speak2go'
   // 单例房模型:全站只一个房,所有账号登录都进它
   const SPEAK2GO_SINGLETON_ROOM_ID = '5b622bc4-88b4-47c1-9aa6-643c4b1e0f96'
@@ -2399,7 +2399,7 @@
       .maybeSingle()
     if (error || !room) {
       console.warn('[loadRooms] singleton room not found:', error)
-      list.innerHTML = `<div class="rooms-empty">房间未就绪</div>`
+      list.innerHTML = `<div class="rooms-empty">Room not ready</div>`
       return
     }
     renderRoomItem(room, false)
@@ -2416,7 +2416,7 @@
       .from('rooms').select('id').eq('expert_id', currentUser.id).eq('product', DEMO_PRODUCT).limit(1)
     if (error) { console.warn('[ensureExpertRoom] check failed:', error); return }
     if (existing && existing.length > 0) return
-    const name = (currentDisplayName ? `${currentDisplayName} 的 Chat` : '我的 Chat')
+    const name = (currentDisplayName ? `${currentDisplayName}'s Chat` : 'My Chat')
     const { error: insErr } = await sb.from('rooms').insert({
       expert_id: currentUser.id,
       name,
@@ -2460,7 +2460,7 @@
     requests.forEach(r => { pendingMap[r.expert_id] = r.status })
 
     if (experts.length === 0) {
-      list.innerHTML = `<div class="follow-experts"><div class="follow-experts-title">暂无OG</div></div>`
+      list.innerHTML = `<div class="follow-experts"><div class="follow-experts-title">No OGs yet</div></div>`
       return
     }
     const rows = experts.map(e => {
@@ -2469,14 +2469,14 @@
       const joined = status === 'approved'
       const pill = joined
         ? `<div class="follow-pill joined" data-expert="${e.user_id}">
-             <button class="pf-heart" disabled title="已加入">&#9829;</button>
+             <button class="pf-heart" disabled title="Joined">&#9829;</button>
              <span class="pf-divider"></span>
-             <button class="pf-count" title="查看 followers" onclick="openFollowersListChat('${e.user_id}', this)">·</button>
+             <button class="pf-count" title="View followers" onclick="openFollowersListChat('${e.user_id}', this)">·</button>
            </div>`
         : `<div class="follow-pill" data-expert="${e.user_id}">
-             <button class="pf-heart" title="关注OG" onclick="requestFollow('${e.user_id}', this)">&#9829;</button>
+             <button class="pf-heart" title="Follow OG" onclick="requestFollow('${e.user_id}', this)">&#9829;</button>
              <span class="pf-divider"></span>
-             <button class="pf-count" title="查看 followers" onclick="openFollowersListChat('${e.user_id}', this)">·</button>
+             <button class="pf-count" title="View followers" onclick="openFollowersListChat('${e.user_id}', this)">·</button>
            </div>`
       return `
         <div class="expert-row">
@@ -2486,8 +2486,8 @@
     }).join('')
     list.innerHTML = `
       <div class="follow-experts">
-        <div class="follow-experts-title">选位OG</div>
-        <div class="follow-experts-sub">选一位OG，进入对话</div>
+        <div class="follow-experts-title">Pick an OG</div>
+        <div class="follow-experts-sub">Pick an OG to start chatting</div>
         ${rows}
       </div>`
     // 异步填充每个OG的 follower 数
@@ -2501,13 +2501,13 @@
   async function openFollowersListChat(expertId, btnEl) {
     const modal = document.getElementById('followersListModal')
     const body = document.getElementById('followersListBody')
-    body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">加载中…</div>'
+    body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">Loading…</div>'
     modal.classList.add('show')
     const { data, error } = await sb.rpc('get_expert_followers', { p_expert_id: expertId })
-    if (error) { body.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">加载失败：${escHtml(error.message)}</div>`; return }
-    if (!data || !data.length) { body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">还没有 follower</div>'; return }
+    if (error) { body.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">Load failed: ${escHtml(error.message)}</div>`; return }
+    if (!data || !data.length) { body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">No followers yet</div>'; return }
     body.innerHTML = data.map(f => {
-      const name = escHtml(f.display_name || '小白')
+      const name = escHtml(f.display_name || 'Student')
       const initial = (f.display_name || '?').charAt(0).toUpperCase()
       return `<div style="display:flex;align-items:center;gap:12px;padding:10px 4px;font-size:13px;border-bottom:0.5px solid var(--border);">
         <span style="width:28px;height:28px;border-radius:50%;background:var(--teal-50);color:var(--teal-600);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">${escHtml(initial)}</span>
@@ -2545,10 +2545,10 @@
     const submitBtn = document.getElementById('inviteSubmitBtn')
     err.style.display = 'none'
     const nickname = (nickInput.value || '').trim()
-    if (!nickname) { err.textContent = '昵称不能空'; err.style.display = 'block'; return }
-    if (!_pendingInviteToken) { err.textContent = '邀请链接失效'; err.style.display = 'block'; return }
+    if (!nickname) { err.textContent = 'Display name cannot be empty'; err.style.display = 'block'; return }
+    if (!_pendingInviteToken) { err.textContent = 'Invite link expired'; err.style.display = 'block'; return }
     submitBtn.disabled = true
-    submitBtn.textContent = '进入中...'
+    submitBtn.textContent = 'Entering…'
     try {
       // 'anon' 模式：先匿名登录；'existing' 模式：已登录用户只补 display_name
       if (_inviteMode === 'anon') {
@@ -2556,8 +2556,8 @@
           options: { data: { display_name: nickname } }
         })
         if (signErr) {
-          err.textContent = '匿名登录失败：' + (signErr.message || signErr.code)
-                         + '（管理员需在 Supabase Dashboard 打开 Anonymous Sign-Ins）'
+          err.textContent = 'Anonymous sign-in failed: ' + (signErr.message || signErr.code)
+                         + ' (admin must enable Anonymous Sign-Ins in Supabase Dashboard)'
           err.style.display = 'block'
           return
         }
@@ -2570,7 +2570,7 @@
           const { error: pErr } = await sb.from('profiles')
             .upsert({ user_id: user.id, role: 'user', display_name: nickname }, { onConflict: 'user_id' })
           if (pErr) {
-            err.textContent = '保存昵称失败：' + (pErr.message || pErr.code)
+            err.textContent = 'Failed to save display name: ' + (pErr.message || pErr.code)
             err.style.display = 'block'
             return
           }
@@ -2580,7 +2580,7 @@
             .update({ display_name: nickname })
             .eq('user_id', user.id)
           if (pErr) {
-            err.textContent = '保存昵称失败：' + (pErr.message || pErr.code)
+            err.textContent = 'Failed to save display name: ' + (pErr.message || pErr.code)
             err.style.display = 'block'
             return
           }
@@ -2591,11 +2591,11 @@
       if (joinErr || !roomId) {
         const msg = joinErr?.message || ''
         if (msg.includes('already consumed') || msg.includes('invite_used') || msg.includes('focal already locked')) {
-          err.textContent = '这个邀请链接已被使用,请向 OG 索要新的链接(每次点复制都是新链接)'
+          err.textContent = "This invite link's already been used — ask the OG for a new one (each copy makes a new link)"
         } else if (msg.includes('invalid') || msg.includes('not room owner')) {
-          err.textContent = '邀请链接无效或已失效'
+          err.textContent = 'Invite link invalid or expired'
         } else {
-          err.textContent = '加入房间失败:' + (msg || '未知')
+          err.textContent = 'Failed to join room: ' + (msg || 'unknown')
         }
         err.style.display = 'block'
         return
@@ -2603,11 +2603,11 @@
       // 关 modal，刷新页面跳到房（避免重写 init 流程）
       location.href = `/chat.html?room=${roomId}`
     } catch (e) {
-      err.textContent = '出错：' + (e.message || e)
+      err.textContent = 'Error: ' + (e.message || e)
       err.style.display = 'block'
     } finally {
       submitBtn.disabled = false
-      submitBtn.textContent = '进入'
+      submitBtn.textContent = 'Enter'
     }
   }
 
@@ -2616,7 +2616,7 @@
     const { data: room, error: e1 } = await sb
       .from('rooms').select('id').eq('expert_id', expertId).eq('product', DEMO_PRODUCT).limit(1).maybeSingle()
     if (e1 || !room) {
-      showToast('找不到OG的 Chat')
+      showToast("Can't find OG's chat")
       btnEl.disabled = false
       return
     }
@@ -2624,11 +2624,11 @@
       room_id: room.id, user_id: currentUser.id,
     })
     if (e2 && e2.code !== '23505') {
-      showToast('加入失败：' + e2.message)
+      showToast('Join failed: ' + e2.message)
       btnEl.disabled = false
       return
     }
-    showToast('已加入OG的 Chat')
+    showToast("Joined OG's chat")
     await loadRooms()
     await openRoomById(room.id)
   }
@@ -2646,8 +2646,8 @@
     const isOwner = isExpert(room)
     el.innerHTML = `
       <div class="room-name" ${isOwner ? `ondblclick="event.stopPropagation(); renameRoom('${room.id}', this)"` : ''}>${escHtml(room.name)}</div>
-      ${isOwner ? `<button class="room-edit" title="重命名 Chat" onclick="event.stopPropagation(); renameRoom('${room.id}', this)"><i class="ti ti-pencil"></i></button>` : ''}
-      ${isOwner ? `<button class="room-del" title="删除该 Chat" onclick="event.stopPropagation(); deleteRoom('${room.id}', this)">×</button>` : ''}
+      ${isOwner ? `<button class="room-edit" title="Rename chat" onclick="event.stopPropagation(); renameRoom('${room.id}', this)"><i class="ti ti-pencil"></i></button>` : ''}
+      ${isOwner ? `<button class="room-del" title="Delete chat" onclick="event.stopPropagation(); deleteRoom('${room.id}', this)">×</button>` : ''}
     `
     el.onclick = () => openRoom(room)
     list.appendChild(el)
@@ -2657,10 +2657,10 @@
     const item = btnEl?.closest('.room-item')
     const nameEl = item?.querySelector('.room-name')
     const cur = nameEl?.textContent || ''
-    const input = prompt('重命名 Chat：', cur)
+    const input = prompt('Rename chat:', cur)
     if (input === null) return
     const name = input.trim()
-    if (!name) { showToast('名字不能为空'); return }
+    if (!name) { showToast('Name cannot be empty'); return }
     if (name === cur) return
     try {
       const { error } = await sb.from('rooms')
@@ -2669,10 +2669,10 @@
       if (error) throw error
       if (nameEl) nameEl.textContent = name
       if (currentRoom?.id === roomId) currentRoom.name = name
-      showToast('已重命名')
+      showToast('Renamed')
     } catch (e) {
       console.warn('[renameRoom]', e)
-      showToast('保存失败：' + (e.message || e))
+      showToast('Save failed: ' + (e.message || e))
     }
   }
 
@@ -2681,19 +2681,19 @@
   }
 
   async function saveRoomSidebarTitle(fallbackName) {
-    if (!currentRoom || !isExpert(currentRoom)) { showToast('只有当前房间的OG能改'); return }
+    if (!currentRoom || !isExpert(currentRoom)) { showToast("Only this room's OG can change this"); return }
     const inputEl = document.getElementById('roomSidebarTitle')
     const newTitle = (inputEl?.value || '').trim().slice(0, 13)  // 兜底再截 13 字，防绕过 maxlength
     const { error } = await sb.from('rooms')
       .update({ sidebar_title: newTitle || null })
       .eq('id', currentRoom.id)
-    if (error) { showToast('保存失败：' + (error.message || error.code)); return }
+    if (error) { showToast('Save failed: ' + (error.message || error.code)); return }
     currentRoom.sidebar_title = newTitle || null
     const titleTextEl = document.getElementById('sidebarRoomTitleText')
     if (titleTextEl) {
       titleTextEl.textContent = newTitle || (fallbackName || '').trim() || 'Chat'
     }
-    showToast('已保存')
+    showToast('Saved')
   }
 
   async function openRoom(room) {
@@ -2741,7 +2741,7 @@
     const inviteBtn = document.getElementById('inviteBtn')
     if (inviteBtn) {
       inviteBtn.style.display = (currentRoomRole === 'expert' || currentRoomRole === 'focal') ? '' : 'none'
-      inviteBtn.title = currentRoomRole === 'expert' ? '复制邀请链接（发给小白）' : '复制邀请链接（发给路人）'
+      inviteBtn.title = currentRoomRole === 'expert' ? 'Copy invite link (for student)' : 'Copy invite link (for guest)'
     }
     // 重置按钮仅OG看到
     const resetBtn = document.getElementById('resetRoomBtn')
@@ -2749,14 +2749,14 @@
     // 输入栏身份徽章按房内角色(expert/focal/audience)显示，跟消息头像保持一致
     const badge = document.getElementById('roleBadge')
     if (badge) {
-      const map = { expert: 'OG', focal: '白', audience: '路' }
-      badge.textContent = map[currentRoomRole] || '白'
+      const map = { expert: 'OG', focal: 'S', audience: 'G' }
+      badge.textContent = map[currentRoomRole] || 'S'
       const titleMap = {
-        expert: 'OG · 点击修改资料',
-        focal:  '小白 · 点击修改资料',
-        audience: '路人 · 点击修改资料',
+        expert: 'OG · click to edit profile',
+        focal:  'Student · click to edit profile',
+        audience: 'Guest · click to edit profile',
       }
-      badge.title = titleMap[currentRoomRole] || '点击修改资料'
+      badge.title = titleMap[currentRoomRole] || 'Click to edit profile'
     }
 
     await refreshRoomMembers()  // 拉群人数 + 成员列表（同时补 profilesByUid 让 @ 列表完整）
@@ -2822,7 +2822,7 @@
   function scrollToAiMessage(msgId) {
     if (!msgId) return
     const el = document.querySelector(`.msg-group[data-msg-id="${msgId}"]`)
-    if (!el) { showToast?.('该消息可能在另一个频道,切过去再试') || alert('该消息在另一个频道'); return }
+    if (!el) { showToast?.('Message might be in another channel — switch and retry') || alert('Message is in another channel'); return }
     el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     el.classList.add('flash-highlight')
     setTimeout(() => el.classList.remove('flash-highlight'), 1500)
@@ -2830,12 +2830,12 @@
 
   async function resetRoom() {
     if (!currentRoom) return
-    if (currentRoomRole !== 'expert') { showToast('只有OG能重置房间'); return }
-    const ok = confirm('重置这个房间？\n\n会做：\n• 踢掉所有小白和路人\n• 清空全部消息\n• 重新生成邀请链接（旧链接失效）\n\n不可恢复。')
+    if (currentRoomRole !== 'expert') { showToast('Only OG can reset the room'); return }
+    const ok = confirm('Reset this room?\n\n• Kick all members\n• Wipe all messages\n• Regenerate invite links (old ones invalidate)\n\nCannot be undone.')
     if (!ok) return
     const { error } = await sb.rpc('reset_room', { p_room_id: currentRoom.id })
-    if (error) { showToast('重置失败：' + (error.message || error.code)); return }
-    showToast('已重置，刷新中…')
+    if (error) { showToast('Reset failed: ' + (error.message || error.code)); return }
+    showToast('Reset done, reloading…')
     setTimeout(() => location.reload(), 800)
   }
 
@@ -2855,20 +2855,20 @@
     if (currentRoomRole === 'expert') {
       const { data: newToken, error } = await sb.rpc('create_invite_token', { p_room_id: currentRoom.id })
       if (error || !newToken) {
-        showToast('生成邀请链接失败' + (error ? ': ' + error.message : ''))
+        showToast('Failed to generate invite link' + (error ? ': ' + error.message : ''))
         return
       }
       token = newToken
-      tag = '小白邀请链接'
-      hint = '每个链接限一位小白,可多次点复制邀请多人'
+      tag = 'Student invite link'
+      hint = 'One student per link — click again to invite more'
     } else {
       token = currentRoom.audience_invite_token
-      if (!token) { showToast('当前房间无邀请 token'); return }
-      tag = '路人邀请链接'
-      hint = '可分享给多个路人'
+      if (!token) { showToast('No invite token for this room'); return }
+      tag = 'Guest invite link'
+      hint = 'Share with multiple guests'
     }
     const url = `${location.origin}/chat.html?invite=${token}`
-    const msg = tag + '已复制(' + hint + ')'
+    const msg = tag + ' copied (' + hint + ')'
     if (navigator.clipboard && window.isSecureContext) {
       try { await navigator.clipboard.writeText(url); showToast(msg); return } catch (e) {}
     }
@@ -2881,7 +2881,7 @@
       document.body.removeChild(ta)
       if (ok) { showToast(msg); return }
     } catch (e) {}
-    window.prompt('复制下面的' + tag + ':', url)
+    window.prompt('Copy the ' + tag + ' below:', url)
   }
 
   function updateInputPlaceholder() {
@@ -2919,16 +2919,16 @@
   // 某条 AI 消息的 messages.ratings 里 'up' >= 2 → pass 一题，指针前进。
   // sidebar 子项 [0..passed-1] 标 done；第 passed 项 highlight 为「当前题」。
   const DEFAULT_TODO_PAYLOAD = [
-    { label: '水平测评', items: [{ label: '听力初测' }, { label: '口语初测' }, { label: '词汇量评估' }] },
-    { label: '学习目标', items: [{ label: '短期目标(1-2 周)' }, { label: '长期目标(3-6 月)' }, { label: '兴趣领域确认' }] },
-    { label: '教材选定', items: [{ label: '教材推荐' }, { label: '难度匹配' }, { label: '练习材料备齐' }] },
-    { label: '发音纠正', items: [{ label: '元音重点' }, { label: '辅音重点' }, { label: '连读/弱读' }] },
-    { label: '单词积累', items: [{ label: '主题词汇 A' }, { label: '主题词汇 B' }, { label: '词汇本回顾' }] },
-    { label: '句型操练', items: [{ label: '常用句型 5-10' }, { label: '替换练习' }, { label: '组合造句' }] },
-    { label: '口语对话', items: [{ label: '情景对话' }, { label: '角色扮演' }, { label: '自由表达' }] },
-    { label: '听力训练', items: [{ label: '精听材料' }, { label: '泛听材料' }, { label: '听力笔记' }] },
-    { label: '阶段测验', items: [{ label: '口语 mini 测' }, { label: '听力测' }, { label: '词汇测' }] },
-    { label: '进阶规划', items: [{ label: '上阶段复盘' }, { label: '下阶段方向' }, { label: '阶段成果展示' }] },
+    { label: 'Level Check', items: [{ label: 'Listening baseline' }, { label: 'Speaking baseline' }, { label: 'Vocab size check' }] },
+    { label: 'Learning Goals', items: [{ label: 'Short-term (1-2 wks)' }, { label: 'Long-term (3-6 mos)' }, { label: 'Areas of interest' }] },
+    { label: 'Materials', items: [{ label: 'Textbook pick' }, { label: 'Level match' }, { label: 'Practice set ready' }] },
+    { label: 'Pronunciation', items: [{ label: 'Vowels focus' }, { label: 'Consonants focus' }, { label: 'Linking / reductions' }] },
+    { label: 'Vocab Building', items: [{ label: 'Theme set A' }, { label: 'Theme set B' }, { label: 'Vocab notebook review' }] },
+    { label: 'Sentence Drills', items: [{ label: 'Core patterns 5-10' }, { label: 'Substitution drills' }, { label: 'Build your own' }] },
+    { label: 'Conversation', items: [{ label: 'Role-play scenes' }, { label: 'Character work' }, { label: 'Free talk' }] },
+    { label: 'Listening', items: [{ label: 'Intensive listening' }, { label: 'Extensive listening' }, { label: 'Listening notes' }] },
+    { label: 'Stage Quiz', items: [{ label: 'Speaking mini-test' }, { label: 'Listening test' }, { label: 'Vocab test' }] },
+    { label: 'Next Stage', items: [{ label: 'Review last stage' }, { label: 'Set next direction' }, { label: 'Showcase wins' }] },
   ]
   let currentTemplate = null  // {id, name, payload} —— 当前房间挂的方案（小白也持有副本，仅OG可改）
   let todoPopupOpen = false
@@ -2958,8 +2958,8 @@
           <div class="todo-sub" data-quiz-idx="${cur}" onclick="scrollToAiMessage(this.dataset.aiMsgId)">
             <span class="check">&#10003;</span>
             <span class="todo-text" data-text="sub" data-gi="${gi}" data-ii="${ii}">${escHtml(it.label || '')}</span>
-            <span class="todo-await" aria-hidden="true" title="等待另一方确认">❗</span>
-            <button type="button" class="todo-row-del" title="删除" onclick="event.stopPropagation();deleteTodoItem(${gi},${ii})">×</button>
+            <span class="todo-await" aria-hidden="true" title="Waiting for the other side to confirm">❗</span>
+            <button type="button" class="todo-row-del" title="Delete" onclick="event.stopPropagation();deleteTodoItem(${gi},${ii})">×</button>
           </div>`
       }).join('')
       // gi=0 永远不锁,不渲染锁图标;gi>0 渲染左侧 lock-state(红挂锁/绿开锁,CSS 按 .locked 切换)
@@ -2973,11 +2973,11 @@
           ${lockHtml}
           <button type="button" class="todo-toggle" onclick="event.stopPropagation();toggleTodoGroup(this)">+</button>
           <span class="todo-text" data-text="group" data-gi="${gi}">${escHtml(group.label || '')}</span>
-          <button type="button" class="todo-row-del" title="删除分组" onclick="event.stopPropagation();deleteTodoGroup(${gi})">×</button>
+          <button type="button" class="todo-row-del" title="Delete group" onclick="event.stopPropagation();deleteTodoGroup(${gi})">×</button>
         </div>
         <div class="todo-children">
           ${subsHtml}
-          <div class="todo-add-sub" onclick="addTodoSub(${gi})">+ 新建</div>
+          <div class="todo-add-sub" onclick="addTodoSub(${gi})">+ Add</div>
         </div>`
       body.appendChild(groupEl)
     })
@@ -3010,7 +3010,7 @@
     // 编辑按钮在编辑态变成对勾「确认/保存」
     const btn = document.getElementById('todoEditBtn')
     if (btn) {
-      btn.title = editing ? '完成编辑（保存）' : '编辑方案'
+      btn.title = editing ? 'Done editing (save)' : 'Edit plan'
       btn.innerHTML = editing
         ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'
         : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'
@@ -3030,7 +3030,7 @@
     if (existing?.length) return existing[0].id
     const { data: created, error: insErr } = await sb
       .from('expert_todo_templates')
-      .insert({ owner_id: ownerId, name: '英语口语基础', product: DEMO_PRODUCT, payload: DEFAULT_TODO_PAYLOAD })
+      .insert({ owner_id: ownerId, name: 'English Speaking - Core', product: DEMO_PRODUCT, payload: DEFAULT_TODO_PAYLOAD })
       .select('id')
       .single()
     if (insErr) { console.warn('[seed templates insert]', insErr); return null }
@@ -3080,13 +3080,13 @@
   // source='asr' 的转写 → Haiku 抽 todo items → append 到当前模板 → 写 AI 回复(带
   // attachments _event 标记)→ 前端 Realtime INSERT 检测到该标记 → reload 模板
   async function extractTodosFromLatestRecording() {
-    if (!currentRoom || !currentUser) { showToast('请先选房间'); return }
+    if (!currentRoom || !currentUser) { showToast('Pick a room first'); return }
     try {
       const { data } = await sb.from('messages')
         .select('id').eq('room_id', currentRoom.id)
         .eq('source', 'asr').limit(1).maybeSingle()
       if (!data) {
-        showToast('没找到课堂录音转写,先上传一段课堂录音再试')
+        showToast('No class recording yet — upload one and retry')
         return
       }
       const { error } = await sb.from('messages').insert({
@@ -3094,14 +3094,14 @@
         user_id: currentUser.id,
         role: 'user',
         type: 'text',
-        content: '请从最近这段录音里整理 todo',
+        content: 'Pull todos from the latest recording',
         message_type: 'extract_todos',
       })
-      if (error) { showToast('触发失败:' + error.message); return }
-      showToast('AI 正在听...大概 10-15s 出结果')
+      if (error) { showToast('Trigger failed: ' + error.message); return }
+      showToast('AI is listening... ~10-15s')
     } catch (e) {
       console.error('[extract_todos]', e)
-      showToast('触发失败:' + (e.message || e))
+      showToast('Trigger failed: ' + (e.message || e))
     }
   }
 
@@ -3136,14 +3136,14 @@
     const { error } = await sb.from('expert_todo_templates')
       .update({ payload: currentTemplate.payload, name: currentTemplate.name })
       .eq('id', currentTemplate.id)
-    if (error) { console.warn('[save template]', error); showToast('保存失败：' + (error.message || error.code)); return }
-    showToast('已保存')
+    if (error) { console.warn('[save template]', error); showToast('Save failed: ' + (error.message || error.code)); return }
+    showToast('Saved')
     await refreshQuizState()
   }
 
   function addTodoGroup() {
     if (!currentTemplate) return
-    const label = (window.prompt('新分组名：', '') || '').trim()
+    const label = (window.prompt('New group name:', '') || '').trim()
     if (!label) return
     currentTemplate.payload.push({ label, items: [] })
     renderTodos(currentTemplate.payload)
@@ -3151,7 +3151,7 @@
 
   function addTodoSub(gi) {
     if (!currentTemplate?.payload?.[gi]) return
-    const label = (window.prompt('新子项名：', '') || '').trim()
+    const label = (window.prompt('New item name:', '') || '').trim()
     if (!label) return
     currentTemplate.payload[gi].items = currentTemplate.payload[gi].items || []
     currentTemplate.payload[gi].items.push({ label })
@@ -3161,7 +3161,7 @@
   function deleteTodoGroup(gi) {
     const g = currentTemplate?.payload?.[gi]
     if (!g) return
-    if (!confirm(`删除分组「${g.label}」及其所有子项？`)) return
+    if (!confirm(`Delete group "${g.label}" and all its items?`)) return
     currentTemplate.payload.splice(gi, 1)
     renderTodos(currentTemplate.payload)
   }
@@ -3189,18 +3189,18 @@
       .eq('owner_id', currentRoom.expert_id)
       .eq('product', DEMO_PRODUCT)
       .order('created_at', { ascending: true })
-    if (error) { console.warn('[load templates]', error); showToast('加载方案失败'); return }
+    if (error) { console.warn('[load templates]', error); showToast('Failed to load plan'); return }
     _todoPopupTemplates = data || []
     const items = (data || []).map(t => `
       <div class="todo-popup-item ${t.id === currentTemplate?.id ? 'active' : ''}" onclick="switchActiveTemplate('${t.id}')">
         <span class="dot"></span><span>${escHtml(t.name)}</span>
-        <button type="button" class="todo-popup-del" title="删除方案" onclick="event.stopPropagation();deleteTemplate('${t.id}')">×</button>
+        <button type="button" class="todo-popup-del" title="Delete plan" onclick="event.stopPropagation();deleteTemplate('${t.id}')">×</button>
       </div>`).join('')
     popup.innerHTML = `
-      ${items || '<div class="todo-popup-item" style="color:var(--text3);cursor:default;">还没有方案</div>'}
+      ${items || '<div class="todo-popup-item" style="color:var(--text3);cursor:default;">No plans yet</div>'}
       <div class="todo-popup-divider"></div>
       <div class="todo-popup-item todo-popup-add" onclick="createNewTemplate()">
-        <span class="dot"></span><span>+ 新建方案</span>
+        <span class="dot"></span><span>+ New plan</span>
       </div>`
     // 跟随 caret 按钮定位（fixed → 视口坐标），右对齐 caret 右沿
     const r = caret.getBoundingClientRect()
@@ -3223,7 +3223,7 @@
     const { error } = await sb.from('rooms')
       .update({ active_todo_template_id: templateId })
       .eq('id', currentRoom.id)
-    if (error) { showToast('切换失败：' + (error.message || error.code)); return }
+    if (error) { showToast('Switch failed: ' + (error.message || error.code)); return }
     currentRoom.active_todo_template_id = templateId
     await loadActiveTodoTemplate(currentRoom)
     await refreshQuizState()
@@ -3232,13 +3232,13 @@
   async function deleteTemplate(templateId) {
     if (!currentRoom) return
     const t = _todoPopupTemplates.find(x => x.id === templateId)
-    const name = t?.name || '该方案'
-    if (!confirm(`删除方案「${name}」？\n所有引用它的房间会回到默认 todo。`)) return
+    const name = t?.name || 'this plan'
+    if (!confirm(`Delete plan "${name}"?\nAll rooms using it will fall back to the default todo.`)) return
     hideTodoPopup()
     const wasActive = (currentRoom.active_todo_template_id === templateId)
     const { error } = await sb.from('expert_todo_templates').delete().eq('id', templateId)
-    if (error) { showToast('删除失败：' + (error.message || error.code)); return }
-    showToast('已删除')
+    if (error) { showToast('Delete failed: ' + (error.message || error.code)); return }
+    showToast('Deleted')
     if (wasActive) {
       // rooms.active_todo_template_id 已被 fk on delete set null
       currentRoom.active_todo_template_id = null
@@ -3250,13 +3250,13 @@
   async function createNewTemplate() {
     if (!currentRoom) return
     hideTodoPopup()
-    const name = (window.prompt('新方案名：', '') || '').trim()
+    const name = (window.prompt('New plan name:', '') || '').trim()
     if (!name) return
     const { data, error } = await sb.from('expert_todo_templates')
       .insert({ owner_id: currentRoom.expert_id, name, product: DEMO_PRODUCT, payload: [] })
       .select('id')
       .single()
-    if (error) { showToast('新建失败：' + (error.message || error.code)); return }
+    if (error) { showToast('Create failed: ' + (error.message || error.code)); return }
     await switchActiveTemplate(data.id)
     document.getElementById('todoSection')?.classList.add('editing')
     applyEditingMode()
@@ -3407,7 +3407,7 @@
       // 模型名
       const modelEl = document.getElementById('chatRoomModel')
       modelEl.textContent = shortModelName(model)
-      modelEl.title = model || '尚未对话'
+      modelEl.title = model || 'No conversation yet'
 
       // 已用 / 上限
       const tokensEl = document.getElementById('chatRoomTokens')
@@ -3453,7 +3453,7 @@
       .eq('channel', currentChannel)
       .order('created_at', { ascending: true })
 
-    if (error) { showToast('加载消息失败'); return }
+    if (error) { showToast('Failed to load messages'); return }
     if (msgs) msgs.forEach(m => appendMessage(m))
     refreshQuizState()
     scrollToBottom()
@@ -3482,7 +3482,7 @@
         const av = g.querySelector('.msg-av')
         if (av) {
           av.className = av.className.replace(/\b(user|audience)\b/g, '').trim() + ' ' + role
-          av.textContent = role === 'audience' ? '路' : '白'
+          av.textContent = role === 'audience' ? 'G' : 'S'
         }
         const sn = g.querySelector('.msg-sender')
         if (sn) sn.className = sn.className.replace(/\b(user|audience)\b/g, '').trim() + ' ' + role
@@ -3585,15 +3585,15 @@
     const peerCount = currentRoom?.focal_user_id ? 2 : 1
     const peerCountHtml = `<span class="group-count">${peerCount}</span>`
     const tabs = [
-      { cls: 'main', ch: 'main', title: `主窗（三方共聊，${aiName} 参与）`, iconHtml: groupCountHtml + groupIconSvg },
+      { cls: 'main', ch: 'main', title: `Main (group chat with ${aiName})`, iconHtml: groupCountHtml + groupIconSvg },
     ]
     // 私聊 tab 只对OG和八字主（focal）开放；路人看不到
     if (currentRoomRole === 'expert' || currentRoomRole === 'focal') {
       // 私聊：图标在左，数字在右
       const peerInner = `<i class="ti ti-user"></i>` + peerCountHtml
       tabs.push(isExp
-        ? { cls: 'peer-user',   ch: 'expert_user', title: '与小白私聊（AI 不参与）', iconHtml: peerInner }
-        : { cls: 'peer-expert', ch: 'expert_user', title: '与OG私聊（AI 不参与）', iconHtml: peerInner })
+        ? { cls: 'peer-user',   ch: 'expert_user', title: 'Private with student (AI not involved)', iconHtml: peerInner }
+        : { cls: 'peer-expert', ch: 'expert_user', title: 'Private with OG (AI not involved)', iconHtml: peerInner })
     }
     row.innerHTML = tabs.map(t => {
       const cls = `presence-tab ${t.cls}` + (t.ch === currentChannel ? ' active' : '')
@@ -3633,16 +3633,16 @@
   function openMemberListPopover() {
     const pop = document.getElementById('memberListPopover')
     if (!pop) return
-    const aiName = currentRoom?.ai_name || 'AI 助手'
+    const aiName = currentRoom?.ai_name || 'AI assistant'
     // AI 永远在场，单独加一行；点行 = @ 这个名字进输入框
     const rows = []
-    rows.push(`<div class="ml-row" data-mention="${escHtml(aiName)}"><span class="ml-av ai">AI</span><span class="ml-name">${escHtml(aiName)}</span><span class="ml-role">AI 助手</span></div>`)
+    rows.push(`<div class="ml-row" data-mention="${escHtml(aiName)}"><span class="ml-av ai">AI</span><span class="ml-name">${escHtml(aiName)}</span><span class="ml-role">AI assistant</span></div>`)
     _roomMembersCache.forEach(m => {
       // 自己不出现在 @ 列表里（避免 @ 自己）
       if (m.user_id === currentUser?.id) return
       const roleCls = m.role
-      const initial = m.role === 'expert' ? 'OG' : (m.role === 'audience' ? '路' : '白')
-      const roleLabel = m.role === 'expert' ? 'OG' : (m.role === 'focal' ? '小白' : '路人')
+      const initial = m.role === 'expert' ? 'OG' : (m.role === 'audience' ? 'G' : 'S')
+      const roleLabel = m.role === 'expert' ? 'OG' : (m.role === 'focal' ? 'Student' : 'Guest')
       rows.push(`<div class="ml-row" data-mention="${escHtml(m.display_name)}"><span class="ml-av ${roleCls}">${initial}</span><span class="ml-name">${escHtml(m.display_name)}</span><span class="ml-role">${roleLabel}</span></div>`)
     })
     pop.innerHTML = rows.join('')
@@ -3686,16 +3686,16 @@
     // 防止前端 currentRoom 数据 stale(trigger 在 DB 端锁了 focal 但前端没刷)误标头像
     const isFocal = msg.user_id && currentRoom?.focal_user_id && msg.user_id === currentRoom.focal_user_id
     const displayRole = (role === 'user' && currentRoom?.focal_user_id && !isFocal) ? 'audience' : role
-    const aiName = currentRoom?.ai_name || 'AI 助手'
-    const roleLabels = { user: '小白', audience: '路人', expert: 'OG', ai: aiName }
+    const aiName = currentRoom?.ai_name || 'AI assistant'
+    const roleLabels = { user: 'Student', audience: 'Guest', expert: 'OG', ai: aiName }
     const roleLabel = roleLabels[displayRole] || displayRole
-    const avText = displayRole === 'ai' ? 'AI' : displayRole === 'expert' ? 'OG' : displayRole === 'audience' ? '路' : '白'
+    const avText = displayRole === 'ai' ? 'AI' : displayRole === 'expert' ? 'OG' : displayRole === 'audience' ? 'G' : 'S'
     // 头像点击：AI 头像(仅OG)→编辑 AI 名；自己头像(非 AI)→进设置；其它头像不可点
     let avClick = ''
     if (role === 'ai' && isExpert(currentRoom)) {
-      avClick = ' onclick="editAIName()" title="点击编辑 AI 名字" style="cursor:pointer;"'
+      avClick = ' onclick="editAIName()" title="Click to edit AI name" style="cursor:pointer;"'
     } else if (isOwn && role !== 'ai') {
-      avClick = ' onclick="openSettings()" title="点击进入设置" style="cursor:pointer;"'
+      avClick = ' onclick="openSettings()" title="Click to open settings" style="cursor:pointer;"'
     }
     const aiAvClick = avClick
     // 显示名优先级：自己 → currentDisplayName；他人 → profilesByUid 缓存 → roleLabel
@@ -3711,8 +3711,8 @@
     }
     // ASR 实时转写来源加小标
     let asrBadge = ''
-    if (msg.source === 'asr') asrBadge = '<span class="asr-badge" title="实时转写">🎙</span>'
-    else if (msg.source === 'asr-unknown') asrBadge = '<span class="asr-badge unknown" title="说话人未识别">🎙?</span>'
+    if (msg.source === 'asr') asrBadge = '<span class="asr-badge" title="Live transcript">🎙</span>'
+    else if (msg.source === 'asr-unknown') asrBadge = '<span class="asr-badge unknown" title="Unknown speaker">🎙?</span>'
     const ts = formatTime(msg.created_at)
 
     const el = document.createElement('div')
@@ -3771,15 +3771,15 @@
     const rawB64 = btoa(unescape(encodeURIComponent(msg.content || '')))
 
     const quoteSender = escHtml(senderName).replace(/'/g, "&#39;")
-    const quoteBtnHtml = `<button class="msg-rate-btn quote" title="引用到输入框" onclick="quoteMessage('${rawB64}', '${quoteSender}')"><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="2" cy="5" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="8" cy="5" r="1"/></svg></button>`
+    const quoteBtnHtml = `<button class="msg-rate-btn quote" title="Quote in input" onclick="quoteMessage('${rawB64}', '${quoteSender}')"><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="2" cy="5" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="8" cy="5" r="1"/></svg></button>`
     // 同步到私聊按钮：只在主窗渲染时出现
     const syncBtnHtml = currentChannel === 'main'
-      ? `<button class="msg-rate-btn sync" title="同步到私聊" onclick="syncToPrivate('${msg.id}', this)"><svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v2.5A1.5 1.5 0 0 0 4.5 13h5A1.5 1.5 0 0 0 11 11.5V9"/><path d="M7 9V2"/><path d="M4 5l3-3 3 3"/></svg></button>`
+      ? `<button class="msg-rate-btn sync" title="Sync to private chat" onclick="syncToPrivate('${msg.id}', this)"><svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v2.5A1.5 1.5 0 0 0 4.5 13h5A1.5 1.5 0 0 0 11 11.5V9"/><path d="M7 9V2"/><path d="M4 5l3-3 3 3"/></svg></button>`
       : ''
     const rateBarHtml = role === 'ai' ? `
       <div class="msg-rate-bar" data-rate-msg-id="${msg.id}">
-        <button class="msg-rate-btn up" title="说得对 · 一键赞美 + 引用" onclick="rateMessage(this, '${msg.id}', 'up', '${rawB64}', '${quoteSender}')">&#10003;</button>
-        <button class="msg-rate-btn down" title="说错了 · 一键纠错 + 引用" onclick="rateMessage(this, '${msg.id}', 'down', '${rawB64}', '${quoteSender}')">&#10005;</button>
+        <button class="msg-rate-btn up" title="Correct — one-tap praise + quote" onclick="rateMessage(this, '${msg.id}', 'up', '${rawB64}', '${quoteSender}')">&#10003;</button>
+        <button class="msg-rate-btn down" title="Wrong — one-tap correct + quote" onclick="rateMessage(this, '${msg.id}', 'down', '${rawB64}', '${quoteSender}')">&#10005;</button>
         ${quoteBtnHtml}
         ${syncBtnHtml}
       </div>` : `
@@ -3795,7 +3795,7 @@
           <span class="msg-sender ${displayRole}"${isOwn && role !== 'ai' ? ' data-own="1"' : ''}>${asrBadge}${senderName}</span>
           <span class="msg-ts">${ts}</span>
           <div class="msg-actions">
-            <button class="msg-action-btn" title="复制" onclick="copyMessage(this, '${rawB64}')">
+            <button class="msg-action-btn" title="Copy" onclick="copyMessage(this, '${rawB64}')">
               <i class="ti ti-copy"></i>
             </button>
           </div>
@@ -3812,48 +3812,48 @@
 
   // 评 ✓ / ✗ 时自动 prepend 的赞美 / 纠错短句
   const RATE_PRAISES = [
-    '说得对！这条说到点子上了。',
-    '完全正确，就是这样。',
-    '准。我也是这么理解的。',
-    '对，没毛病，继续。',
-    '这条挺准，我同意。',
-    '讲到点子上了，赞一个。',
-    '嗯，这条说得很到位。',
-    '这条很妙，正是关键。',
+    "Nailed it. Right on the money.",
+    "Spot on, exactly that.",
+    "Yep — that's how I read it too.",
+    "Good call, keep going.",
+    "Solid — I'm with you.",
+    "Hit the nail on the head, nice.",
+    "That's it, well put.",
+    "Sharp — that's the crux.",
   ]
   const RATE_CRITIQUES = [
-    '这条不对，完全错了，纠正一下：',
-    '错了，事实不是这样：',
-    '不，这里说偏了，应该是：',
-    '这条判断有问题，需要修正：',
-    '完全错，下面是我的看法：',
-    '这条偏离了，重新理解一下：',
-    '不对，这里得改改：',
-    '这一段有误，正确理解是：',
+    "Not quite — totally off. Here's the fix:",
+    "Wrong, that's not what's happening:",
+    "Nope, that's missing the mark — should be:",
+    "This call's off, needs a fix:",
+    "Way off. Here's how I see it:",
+    "Off track — let's rethink:",
+    "Not right, has to change:",
+    "This part's wrong, the real read is:",
   ]
-  // 双钩 pass 后自动发到群里的正面回应（最后那个 ✓ 的人发，触发 AI 自然继续话题）
-  // 风格：江湖/茶馆/老炮儿气，短句、抽象、不直白说对
+  // After two ✓✓ pass — auto-post into group chat. NYC-flavored short phrases,
+  // casual / coffee-shop tone, abstract not "correct".
   const PASS_PRAISES = [
-    '✓✓ 没错了，下一段',
-    '✓✓ go 不 go，下一题',
-    '✓✓ 这味儿正',
-    '✓✓ 嗯…有点意思',
-    '✓✓ 这一口记下了',
-    '✓✓ 有回甘',
-    '✓✓ 火候到了，下一锅',
-    '✓✓ 嚼一嚼，往下',
-    '✓✓ 这一笔，妙',
-    '✓✓ 嗯——继续',
-    '✓✓ 接着往下抖',
-    '✓✓ 听明白了，继续讲',
-    '✓✓ 抓住了，下一段',
-    '✓✓ 顺着这条线，再讲',
-    '✓✓ 这话有嚼头',
-    '✓✓ 翻篇，下一段',
-    '✓✓ 这一段稳，往下',
-    '✓✓ 心领了，继续',
-    '✓✓ 收着，再来',
-    '✓✓ 这点子妙',
+    '✓✓ Got it, next one',
+    '✓✓ Yeah, run it',
+    '✓✓ That hits',
+    '✓✓ Hmm, kinda dope',
+    '✓✓ Tucking that one away',
+    '✓✓ Got some flavor',
+    '✓✓ Pot is hot, next round',
+    '✓✓ Chew on it, moving on',
+    '✓✓ Nice touch',
+    '✓✓ Aight, keep it rolling',
+    '✓✓ Keep dropping em',
+    '✓✓ Tracking, keep going',
+    '✓✓ Locked, next',
+    '✓✓ Same thread, more please',
+    '✓✓ This one got teeth',
+    '✓✓ Page turned, next',
+    '✓✓ Steady, moving on',
+    '✓✓ Heard it, going',
+    '✓✓ Stashed it, again',
+    '✓✓ Slick take',
   ]
   function pickPhrase(arr) { return arr[Math.floor(Math.random() * arr.length)] }
 
@@ -3905,7 +3905,7 @@
     const cur = ratings[myUid] || ''
     const next = (cur === val) ? '' : val   // 再点取消
     const { data, error } = await sb.rpc('rate_message', { p_msg_id: msgId, p_val: next })
-    if (error) { showToast('评价失败：' + error.message); return }
+    if (error) { showToast('Rating failed: ' + error.message); return }
     applyRatingsToMsg(msgId, data || {})
     refreshQuizState()
     // 我刚把 up 数从 <2 推到 >=2 → 摘要 copy 私聊 + main 频道随机发一句正面回应让 AI 自然推进
@@ -4008,12 +4008,12 @@
 
   // ── @ 提及功能 ──
   function getMentionCandidates() {
-    const aiName = currentRoom?.ai_name || 'AI 助手'
+    const aiName = currentRoom?.ai_name || 'AI assistant'
     const list = [{ name: aiName, kind: 'ai', initial: 'AI' }]
     Object.entries(profilesByUid).forEach(([uid, name]) => {
       if (uid === currentUser?.id || !name) return
       const isExp = uid === currentRoom?.expert_id
-      list.push({ name, kind: isExp ? 'expert' : 'user', initial: isExp ? 'OG' : '白' })
+      list.push({ name, kind: isExp ? 'expert' : 'user', initial: isExp ? 'OG' : 'S' })
     })
     return list
   }
@@ -4093,14 +4093,14 @@
         .select('content,attachments,user_id,role')
         .eq('id', msgId)
         .maybeSingle()
-      if (e1 || !src) { showToast('找不到原消息'); return }
+      if (e1 || !src) { showToast('Original message not found'); return }
       let senderName
-      if (src.role === 'ai') senderName = currentRoom?.ai_name || 'AI 助手'
-      else if (src.user_id === currentUser?.id) senderName = currentDisplayName || '我'
-      else senderName = profilesByUid[src.user_id] || (src.role === 'expert' ? 'OG' : '小白')
+      if (src.role === 'ai') senderName = currentRoom?.ai_name || 'AI assistant'
+      else if (src.user_id === currentUser?.id) senderName = currentDisplayName || 'Me'
+      else senderName = profilesByUid[src.user_id] || (src.role === 'expert' ? 'OG' : 'Student')
       const myRole = isExpert(currentRoom) ? 'expert' : 'user'
       const full = (src.content || '').trim()
-      const newContent = `↪ 同步自 ${senderName}：${full || '[附件]'}`
+      const newContent = `↪ Synced from ${senderName}: ${full || '[attachment]'}`
       const { error: e2 } = await sb.from('messages').insert({
         room_id: currentRoom.id,
         user_id: currentUser.id,
@@ -4111,10 +4111,10 @@
       })
       if (e2) {
         console.error('[sync to private]', e2)
-        showToast('同步失败：' + (e2.message || e2.code))
+        showToast('Sync failed: ' + (e2.message || e2.code))
         return
       }
-      showToast('已同步到私聊')
+      showToast('Synced to private chat')
     } finally {
       if (btn) btn.disabled = false
     }
@@ -4174,7 +4174,7 @@
 
     // 等所有附件上传完
     if (pendingAttachments.some(a => a.uploading)) {
-      showToast('附件还在上传中，请稍候')
+      showToast('Attachments still uploading, please wait')
       return
     }
 
@@ -4218,7 +4218,7 @@
 
     if (error) {
       console.error('insert message failed:', error)
-      showToast('发送失败：' + (error.message || error.details || JSON.stringify(error)).slice(0, 100))
+      showToast('Send failed: ' + (error.message || error.details || JSON.stringify(error)).slice(0, 100))
       sendBtn.disabled = false
       return
     }
@@ -4231,7 +4231,7 @@
 
     // OG私聊纠正：toast 提示已发到私聊，避免在 main 找不到困惑
     if (isExpertQuoteCorrection && targetChannel !== currentChannel) {
-      showToast('已发到「OG↔小白」私聊纠正')
+      showToast('Sent to OG↔student private correction')
     }
 
     appendMessage(msgData)
@@ -4254,8 +4254,8 @@
     el.className = 'status-item ' + (online ? 'online' : 'offline')
     const canRestart = currentRoomRole === 'expert'
     el.title = canRestart
-      ? (online ? 'AI 已连接 · 点击请求重启' : 'AI 未连接 · 点击请求重启')
-      : (online ? 'AI 已连接' : 'AI 未连接 · 仅OG可重启')
+      ? (online ? 'AI online · click to restart' : 'AI offline · click to restart')
+      : (online ? 'AI online' : 'AI offline · only OG can restart')
     el.style.cursor = canRestart ? 'pointer' : 'default'
   }
 
@@ -4286,35 +4286,41 @@
 
   // 点击图标 → 请求 bridge 重启（落入 bridge_state.restart_requested_at，bridge 下一轮自我退出，launchd 拉起）
   async function requestBridgeRestart() {
-    if (currentRoomRole !== 'expert') { showToast('只有OG能重启 AI'); return }
-    const ok = confirm('AI 桥接重启一次？（适用于 AI 不响应）')
+    if (currentRoomRole !== 'expert') { showToast('Only OG can restart AI'); return }
+    const ok = confirm("Restart the AI bridge? (Use this when AI isn't responding)")
     if (!ok) return
     const { error } = await sb.rpc('request_bridge_restart')
-    if (error) { showToast('请求失败：' + (error.message || error.code)); return }
-    showToast('已请求重启，5~10 秒后生效')
+    if (error) { showToast('Request failed: ' + (error.message || error.code)); return }
+    showToast('Restart requested — takes effect in 5-10s')
     // 立刻刷一下状态（lasts_seen 还没更新，会显示离线，等 bridge 拉起再变绿）
     refreshBridgeStatus()
   }
 
   // Claude Code 风 typing 词池(中文,3-5 字,~100 个)。口语老师场景:评测 / 讲解 / 训练 / 归纳 / 接地气混搭。
+  // NYC-flavored present-participle verbs (5-10 chars). 100 items for an American
+  // English teacher vibe — gritty, direct, casual.
   const TYPING_VERBS = [
-    // 评测听辨(25)
-    '听辨中', '测听力', '辨发音', '测词汇', '量水平', '听节奏', '辨连读', '判口音', '排错音', '校元音',
-    '校辅音', '听重音', '查弱读', '测语流', '判语速', '辨吞音', '听爆破', '听同化', '量流利度', '测准确度',
-    '看停顿', '抓气口', '校升降调', '辨方言', '校口型',
-    // 教学讲解(25)
-    '讲单词', '讲句型', '解语法', '编例句', '改作业', '挑词头', '指语义', '辨语境', '讲搭配', '列同近义',
-    '讲反义', '排陷阱', '讲文化', '点习语', '解隐喻', '比中英', '讲构词', '讲词根', '讲词缀', '抽真题',
-    '推教材', '排课表', '配练习', '编对话', '编情景',
-    // 训练操练(25)
-    '排训练', '设难度', '配进度', '催复习', '催背单词', '督练习', '催造句', '催听写', '催跟读', '催复述',
-    '督角色扮演', '催自由说', '催记笔记', '督朗读', '促模仿', '促复述', '促开口', '组队练', '配对练', '小组练',
-    '抓重点', '抓难点', '抓易错', '催 review', '催 quiz',
-    // 进度归纳(15)
-    '查进度', '量掌握', '看曲线', '盯薄弱', '记词本', '编笔记', '整知识点', '归错题', '汇本周', '比上周',
-    '排重练', '提阶段', '画进度', '同步学情', '更新进度条',
-    // 接地气搞笑(10)
-    '催开口', '哄一哄', '夸一夸', '鼓一鼓', '逗一逗', '听咬字', '听口音', '听磕巴', '听口吃', '听结巴',
+    // Listening / assessment (25)
+    'listening', 'clocking', 'tuning', 'catching', 'spotting', 'sussing', 'probing', 'gauging',
+    'weighing', 'timing', 'tracking', 'tracing', 'mapping', 'peeking', 'checking', 'testing',
+    'quizzing', 'scoring', 'grading', 'tallying', 'ranking', 'judging', 'flagging', 'snapping',
+    'sampling',
+    // Teaching / explaining (25)
+    'teaching', 'breaking', 'unpacking', 'parsing', 'framing', 'drafting', 'sketching', 'building',
+    'wiring', 'etching', 'spelling', 'drawing', 'showing', 'linking', 'bridging', 'citing',
+    'quoting', 'flexing', 'naming', 'tagging', 'labeling', 'sorting', 'filing', 'listing',
+    'logging',
+    // Drilling / training (25)
+    'drilling', 'rolling', 'spinning', 'pacing', 'nudging', 'coaxing', 'pushing', 'pulling',
+    'tossing', 'fielding', 'lobbing', 'pitching', 'swinging', 'shadowing', 'mirroring', 'echoing',
+    'looping', 'tweaking', 'polishing', 'buffing', 'trimming', 'tightening', 'shaping', 'forging',
+    'hammering',
+    // Progress / tracking (15)
+    'noting', 'charting', 'graphing', 'updating', 'syncing', 'plotting', 'archiving', 'saving',
+    'stashing', 'stacking', 'wrapping', 'capping', 'summing', 'boiling', 'condensing',
+    // NYC slang / street vibe (10)
+    'hustling', 'vibing', 'riffing', 'noodling', 'wrangling', 'schlepping', 'winging', 'bouncing',
+    'cracking', 'nailing',
   ]
   let _typingVerbTimer = null
   let _typingElapsedTimer = null
@@ -4392,7 +4398,7 @@
     if (!name) { document.getElementById('newRoomName').focus(); return }
 
     const btn = document.getElementById('createRoomBtn')
-    btn.disabled = true; btn.textContent = '创建中...'
+    btn.disabled = true; btn.textContent = 'Creating…'
 
     const { data: room, error } = await sb.from('rooms').insert({
       name,
@@ -4402,16 +4408,16 @@
       status: 'active'
     }).select().single()
 
-    btn.disabled = false; btn.textContent = '创建'
+    btn.disabled = false; btn.textContent = 'Create'
 
-    if (error) { showToast('创建失败：' + error.message); return }
+    if (error) { showToast('Create failed: ' + error.message); return }
 
     document.getElementById('newRoomModal').classList.remove('show')
     document.getElementById('newRoomName').value = ''
 
     renderRoomItem(room)
     openRoom(room)
-    showToast('Chat 创建成功')
+    showToast('Chat created')
   }
 
   async function handleLogout() {
@@ -4496,7 +4502,7 @@
         stub.uploading = false
     } catch (err) {
       console.error('upload failed:', err)
-      showToast(`上传失败：${file.name} - ${err.message || err}`)
+      showToast(`Upload failed: ${file.name} - ${err.message || err}`)
       pendingAttachments = pendingAttachments.filter(a => a !== stub)
     }
     renderAttachPreview()
@@ -4580,9 +4586,9 @@
     recognition.onerror = (e) => {
       console.error('voice error:', e)
       stopVoice()
-      if (e.error === 'not-allowed') showToast('麦克风权限被拒，请到 chrome://settings 允许 chat2go.xyz 使用麦克风')
+      if (e.error === 'not-allowed') showToast('Mic permission denied — go to chrome://settings to allow speak2go.ai')
       else if (e.error === 'no-speech') {} // 无语音不报错
-      else showToast('语音识别错误：' + e.error)
+      else showToast('Voice recognition error: ' + e.error)
     }
 
     recognition.onend = () => {
@@ -4602,7 +4608,7 @@
   function startVoice() {
     const r = getRecognition()
     if (!r) {
-      showToast('当前浏览器不支持语音识别（建议 Chrome / Edge / Safari）')
+      showToast("Your browser doesn't support voice recognition (try Chrome / Edge / Safari)")
       return
     }
     voiceTextBefore = document.getElementById('msgInput').value
@@ -4610,7 +4616,7 @@
     isRecording = true
     document.getElementById('voiceBtn').classList.add('recording')
     try { r.start() } catch(e) { console.warn(e) }
-    showToast('开始说话…')
+    showToast('Listening…')
   }
 
   function stopVoice() {
@@ -4637,7 +4643,7 @@
       await navigator.clipboard.writeText(text)
       btn.classList.add('copied')
       btn.innerHTML = '<i class="ti ti-check"></i>'
-      showToast('已复制')
+      showToast('Copied')
       setTimeout(() => {
         btn.classList.remove('copied')
         btn.innerHTML = '<i class="ti ti-copy"></i>'
@@ -4649,8 +4655,8 @@
       ta.style.position = 'fixed'; ta.style.opacity = '0'
       document.body.appendChild(ta)
       ta.select()
-      try { document.execCommand('copy'); showToast('已复制') }
-      catch { showToast('复制失败') }
+      try { document.execCommand('copy'); showToast('Copied') }
+      catch { showToast('Copy failed') }
       ta.remove()
     }
   }
@@ -4680,7 +4686,7 @@
   init()
 </script>
 <div class="img-lightbox" id="imgLightbox" onclick="closeImageLightbox(event)">
-  <button class="img-lightbox-close" onclick="closeImageLightbox()" title="关闭 (Esc)">×</button>
+  <button class="img-lightbox-close" onclick="closeImageLightbox()" title="Close (Esc)">×</button>
   <img alt="">
 </div>
 
@@ -4769,7 +4775,7 @@ window.Classroom = (function() {
         if (msg.type === 'hello_ack') { wsReady = true; resolve(ws) }
         else handleWsMessage(msg)
       }
-      ws.onclose = () => { wsReady = false; setStatus('转写离线（sidecar 未启动？）', 'offline') }
+      ws.onclose = () => { wsReady = false; setStatus('Transcript offline (sidecar not running?)', 'offline') }
       ws.onerror = (e) => { console.warn('[ws] error', e); reject(e) }
       setTimeout(() => { if (!wsReady) reject(new Error('ws hello timeout')) }, 6000)
     })
@@ -4780,17 +4786,17 @@ window.Classroom = (function() {
       startCapture()
     } else if (msg.type === 'segment_ack') {
       setStatus(`转写中 (${msg.latency_ms}ms)`, null)
-      setTimeout(() => setStatus('听课中…', null), 1500)
+      setTimeout(() => setStatus('Listening to class…', null), 1500)
     } else if (msg.type === 'error') {
       console.error('[asr error]', msg)
-      showToast('转写错误:' + (msg.message || ''))
+      showToast('Transcription error: ' + (msg.message || ''))
     }
   }
 
   // ─── 实录:Silero VAD + WS push ─────────────────────────────────────────────
   async function startCapture() {
-    setBar(true); setBtnActive(true); setStatus('VAD 启动中…', null); startTimer()
-    if (!window.vad) { showToast('VAD 库未加载，刷新页面重试'); return }
+    setBar(true); setBtnActive(true); setStatus('VAD starting…', null); startTimer()
+    if (!window.vad) { showToast('VAD library not loaded — refresh and retry'); return }
     try {
       vadInstance = await window.vad.MicVAD.new({
         onSpeechStart: () => {},
@@ -4801,10 +4807,10 @@ window.Classroom = (function() {
         minSpeechFrames: 8,
       })
       vadInstance.start()
-      setStatus('听课中…', null)
+      setStatus('Listening to class…', null)
     } catch (e) {
       console.error('[vad] failed', e)
-      showToast('VAD 启动失败:' + e.message)
+      showToast('VAD startup failed: ' + e.message)
     }
   }
   function sendSegment(audio) {
@@ -4823,26 +4829,26 @@ window.Classroom = (function() {
       await sb.from('messages').insert({
         room_id: lesson.room_id, user_id: currentUser.id,
         role: 'expert', type: 'text',
-        content: '📍 此节完结',
+        content: '📍 End of unit',
         source: 'system', message_type: 'knowledge_unit_end',
         lesson_session_id: lesson.id,
       })
-      showToast('已标记知识点结束，助教 tips 生成中…')
-    } catch (e) { showToast('标记失败:' + (e.message || e)) }
+      showToast('Unit marked done — AI tips generating…')
+    } catch (e) { showToast('Mark failed: ' + (e.message || e)) }
   }
 
   async function endLesson() {
     if (!lesson) return
-    if (!confirm('结束课堂？本节会生成课后作业 + 下节课规划。')) return
+    if (!confirm('End class? Will generate homework + plan for next class.')) return
     try {
       await sb.from('messages').insert({
         room_id: lesson.room_id, user_id: currentUser.id,
         role: 'expert', type: 'text',
-        content: '🔔 课程结束',
+        content: '🔔 Class ended',
         source: 'system', message_type: 'lesson_ended',
         lesson_session_id: lesson.id,
       })
-      showToast('课程结束，作业 + 下节课规划生成中…')
+      showToast('Class ended — homework + next-class plan generating…')
     } catch (e) { console.error('[endLesson]', e) }
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'lesson_end', lesson_session_id: lesson.id }))
@@ -4862,9 +4868,9 @@ window.Classroom = (function() {
 
   async function toggle() {
     if (lesson) { endLesson(); return }
-    if (!currentRoom || !currentUser) { showToast('请先选择房间'); return }
-    if (currentRoom.expert_id !== currentUser.id) { showToast('只有老师可以开始课堂'); return }
-    if (!currentRoom.focal_user_id) { showToast('1v1 课需要小白先加入再开课'); return }
+    if (!currentRoom || !currentUser) { showToast('Pick a room first'); return }
+    if (currentRoom.expert_id !== currentUser.id) { showToast('Only the teacher can start a class'); return }
+    if (!currentRoom.focal_user_id) { showToast('1v1 class needs a student to join first'); return }
 
     let row
     try {
@@ -4877,17 +4883,17 @@ window.Classroom = (function() {
       if (error) throw error
       row = data
     } catch (e) {
-      showToast('创建课堂失败:' + (e.message || e))
+      showToast('Failed to create class: ' + (e.message || e))
       return
     }
     lesson = { id: row.id, room_id: row.room_id, expert_id: row.expert_id, focal_user_id: row.focal_user_id }
     setBar(true)
-    setStatus('连接本机 sidecar…', null)
+    setStatus('Connecting to local sidecar…', null)
 
     try { await wsConnect() }
     catch (e) {
-      setStatus('转写离线（sidecar 未启动？）', 'offline')
-      showToast('连接本机转写服务失败,请确认 asr_server 已启动\n命令:python ~/.hermes-speak2go/asr_server.py')
+      setStatus('Transcript offline (sidecar not running?)', 'offline')
+      showToast('Failed to connect local ASR service — make sure asr_server is running\nCmd: python ~/.hermes/asr_server.py')
       return
     }
     ws.send(JSON.stringify({
