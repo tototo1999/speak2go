@@ -2035,6 +2035,7 @@
   let currentRoom = null
   let currentRoomRole = null  // 'expert' | 'focal' | 'audience' | 'none'，每次 openRoom 刷新
   let realtimeChannel = null
+  let todoTemplateChannel = null  // 订阅 expert_todo_templates UPDATE，AI 写 todo 后自动重渲 sidebar（不需 F5）
   let pendingAttachments = []  // 待发送的附件 [{name, url, size, mime_type, storage_path}]
   let currentDisplayName = '' // 自己的 display_name，用于消息头展示
   const profilesByUid = {}    // 房间内成员 display_name 缓存 {user_id: name}
@@ -3074,6 +3075,28 @@
     hideTodoPopup()
 
     renderTodos(currentTemplate ? currentTemplate.payload : DEFAULT_TODO_PAYLOAD)
+
+    // AI 写 todo (chat2go.py 调 ai_replace_room_todo RPC 直接改表) 绕过 messages 流，
+    // 单独订阅 expert_todo_templates UPDATE 触发 sidebar 重渲
+    if (todoTemplateChannel) { sb.removeChannel(todoTemplateChannel); todoTemplateChannel = null }
+    if (currentTemplate?.id) {
+      todoTemplateChannel = sb
+        .channel(`tpl-${currentTemplate.id}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'expert_todo_templates',
+          filter: `id=eq.${currentTemplate.id}`,
+        }, payload => {
+          const row = payload.new
+          if (!row) return
+          currentTemplate.payload = row.payload || []
+          currentTemplate.name = row.name || currentTemplate.name
+          document.getElementById('todoHeadName').textContent = currentTemplate.name || 'Todo'
+          renderTodos(currentTemplate.payload)
+        })
+        .subscribe()
+    }
   }
 
   // 老师点 mic 按钮 → 写一条 message_type='extract_todos' 给 Hermes 路由 → 后端拉最近
