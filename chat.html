@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +10,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23DC2626'/%3E%3Ctext x='32' y='44' font-family='Helvetica,Arial,sans-serif' font-size='30' font-weight='800' text-anchor='middle' fill='%23fff'%3EGO%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
   <script src="/vendor/supabase.js"
           onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'"></script>
@@ -50,9 +50,9 @@
     html { background: #DDDCD6; }
     html, body { height: 100vh; overflow: hidden; }
 
-    /* body 本身就是 800px 居中容器，跟 index.html 完全一致 */
+    /* body itself is the 800px centered container — matches index.html exactly */
     body {
-      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      font-family: 'Inter', -apple-system, sans-serif;
       color: var(--text);
       background: var(--bg);
       -webkit-font-smoothing: antialiased;
@@ -64,7 +64,7 @@
       border-right: 0.5px solid var(--border);
     }
 
-    /* 不再单独刷 #fff，统一用 var(--bg) #FAFAF8，跟 landing 的 main 底色一致 */
+    /* No more separate #fff — use var(--bg) #FAFAF8 to match landing main background */
 
     /* ── NAV ── */
     nav {
@@ -78,7 +78,7 @@
     }
     .nav-left { display: flex; align-items: center; gap: 10px; }
     .logo {
-      font-family: 'Noto Serif SC', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 22px;
       font-weight: 600;
       color: var(--text);
@@ -108,7 +108,7 @@
       transition: all .15s;
     }
     .btn-logout:hover { background: var(--bg2); color: var(--text); }
-    /* nav 右上角图标按钮：仅图标，无文字 */
+    /* Top-right nav icon buttons: icon only, no text */
     .icon-btn {
       width: 32px;
       height: 32px;
@@ -132,7 +132,7 @@
       flex: 1;
       display: flex;
       overflow: hidden;
-      min-height: 0;   /* 关键：让 .messages 能滚动而不撑高 body */
+      min-height: 0;   /* Key: lets .messages scroll without expanding body */
     }
 
     /* ── SIDEBAR ── */
@@ -167,12 +167,12 @@
     }
     .invite-btn:hover { background: var(--teal-50); color: var(--teal-600); transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,.1); }
     .invite-btn svg { width: 13px; height: 13px; }
-    /* sidebar 顶部：当前聊天室标题（极简版，无新建按钮） */
+    /* Sidebar top: current chat title (minimal version, no New button) */
     .sidebar-room-title {
       width: 100%;
       padding: 10px 14px;
       font-size: 14px;
-      font-family: 'Noto Serif SC', serif;
+      font-family: 'Playfair Display', serif;
       font-weight: 600;
       letter-spacing: -0.2px;
       background: var(--teal);
@@ -191,7 +191,7 @@
       white-space: nowrap;
     }
 
-    /* Todo list section（在 + Chat 下方） */
+    /* Todo list section (below + Chat) */
     .todo-section {
       padding: 6px;
       border-bottom: 0.5px solid var(--border);
@@ -212,7 +212,7 @@
       background: var(--teal-50);
       border: 0.5px solid var(--teal-100);
       border-radius: var(--radius);
-      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      font-family: 'Inter', -apple-system, sans-serif;
       font-size: 13px;
       font-weight: 300;
       color: var(--text);
@@ -246,7 +246,7 @@
     .todo-head-btn.visible { display: inline-flex; }
     .todo-head-btn:hover { background: var(--teal-100); color: var(--teal-600); }
     .todo-popup {
-      /* fixed 定位避免被 .sidebar overflow:hidden 截断；位置由 JS 跟随 caret 按钮 */
+      /* Fixed positioning avoids being clipped by .sidebar overflow:hidden; position follows caret button via JS */
       position: fixed;
       background: #fff;
       border: 0.5px solid var(--border);
@@ -294,7 +294,7 @@
     }
     .todo-popup-item:hover .todo-popup-del { opacity: 1; }
     .todo-popup-del:hover { background: #fee; color: #c00; }
-    /* 编辑态：可改名 + 行尾 ✕ + + 新建 */
+    /* Editing mode: rename + end-of-line ✕ + + new */
     .todo-section.editing .todo-pill,
     .todo-section.editing .todo-sub { cursor: default; }
     .todo-section.editing .todo-text[contenteditable="true"],
@@ -376,8 +376,8 @@
     }
     .todo-pill .todo-toggle:hover { background: var(--teal-50); color: var(--teal-600); }
     .todo-group.expanded .todo-pill .todo-toggle { transform: rotate(45deg); color: var(--teal-600); }
-    /* 大题锁状态:gi>0 的组渲染 .todo-lock-state(两个 SVG,CSS 切换);
-       锁态用红色挂锁醒目提示,解锁后切到绿色开锁图标 */
+    /* Group lock state: groups with gi>0 render .todo-lock-state (two SVGs, CSS toggles);
+       Locked shows a red padlock for clarity, unlocked switches to a green open lock */
     .todo-lock-state {
       display: inline-flex;
       width: 16px; height: 16px;
@@ -392,7 +392,7 @@
     .todo-group.locked .todo-pill { cursor: not-allowed; opacity: 0.6; }
     .todo-group.locked .todo-pill:hover { background: var(--bg); }
     .todo-group.locked .todo-children { display: none !important; }
-    /* 子目录 */
+    /* Children */
     .todo-children {
       display: none;
       padding: 4px 0 2px 32px;
@@ -414,7 +414,7 @@
       transition: background .15s, color .15s;
     }
     .todo-sub:hover { background: var(--teal-50); }
-    /* 当前正在做的题：橙黄底闪烁 */
+    /* Current quiz item: amber pulse */
     .todo-sub.current {
       background: #FEF3C7;
       border-color: #F59E0B;
@@ -482,8 +482,8 @@
       text-overflow: ellipsis;
     }
     .room-item.active .room-name { color: var(--teal-800); }
-    /* 置顶:房间内任一 AI 消息处于单钩待二钩状态(一方 ✓ 等另一方确认) */
-    /* 中性灰底 + 小面积警示橙,适配任何主题色(绿/蓝/紫) */
+    /* Pinned: any AI message in single-check pending state (one side ✓, waiting for the other) */
+    /* Neutral gray background + small accent of warning orange — works with any theme color (green/blue/purple) */
     .room-item.pinned {
       background: rgba(0, 0, 0, .04);
       border-left: 2px solid rgba(217, 119, 6, .55);
@@ -493,7 +493,7 @@
       font-size: 11px;
       opacity: .9;
     }
-    /* OG hover 删除按钮 */
+    /* Coach hover delete button */
     .room-del {
       flex-shrink: 0;
       width: 22px;
@@ -533,14 +533,14 @@
       justify-content: center;
     }
     .room-edit:hover { background: var(--teal-50); color: var(--teal-600); }
-    /* OG 待审 follow 已挪到 role-badge 弹层（见 .role-popup） */
-    /* 小白：没有房间时显示「选OG follow」面板 */
+    /* Pending follow review has moved to the role-badge popover (see .role-popup) */
+    /* Learner: when no rooms exist, show the "Pick a Coach to follow" panel */
     .follow-experts {
       padding: 1.5rem 1.25rem;
       text-align: center;
     }
     .follow-experts-title {
-      font-family: 'Noto Serif SC', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 17px;
       color: var(--text);
       margin-bottom: 6px;
@@ -557,7 +557,7 @@
       background: #fff;
     }
     .expert-row-name { flex: 1; text-align: left; font-size: 13px; color: var(--text); }
-    /* follow 胶囊：左 ♥ 右数字，统一与落地页（GO 同款勃艮第红） */
+    /* Follow pill: ♥ on left, count on right — matches landing (GO burgundy red) */
     .follow-pill {
       display: inline-flex;
       align-items: stretch;
@@ -630,7 +630,7 @@
     .welcome h3 { font-size: 16px; font-weight: 500; color: var(--text2); margin-bottom: 8px; }
     .welcome p { font-size: 13px; line-height: 1.7; max-width: 300px; }
 
-    /* chat-head：两行紧凑布局 */
+    /* chat-head: two-row compact layout */
     .chat-head {
       padding: 8px 1rem;
       min-height: 64px;
@@ -648,7 +648,7 @@
       justify-content: space-between;
       gap: 8px;
     }
-    /* Channel 切换 tab：白底胶囊 + 图标 + 阴影（参考 Gemini 风格） */
+    /* Channel switch tab: white pill + icon + shadow (Gemini-style) */
     .presence-row {
       display: flex;
       align-items: center;
@@ -681,7 +681,7 @@
     .presence-tab.main         { --tab-c: var(--teal); }
     .presence-tab.peer-expert  { --tab-c: #7C3AED; }
     .presence-tab.peer-user    { --tab-c: #EA580C; }
-    /* 单聊胶囊默认就带一点 tint，更突出 */
+    /* DM pill has a slight tint by default for emphasis */
     .presence-tab.peer-expert,
     .presence-tab.peer-user {
       background: color-mix(in srgb, var(--tab-c) 7%, #fff);
@@ -699,7 +699,7 @@
       min-width: 12px; text-align: center;
       font-variant-numeric: tabular-nums;
     }
-    /* 群成员列表弹层（点群胶囊出现） */
+    /* Group member list popover (appears when group pill is clicked) */
     .member-list-popover {
       position: absolute;
       top: 30px; left: 0;
@@ -735,7 +735,7 @@
     .member-list-popover .ml-av.ai        { background: var(--teal-50);   color: var(--teal-600); }
     .member-list-popover .ml-name { flex: 1; color: var(--text); }
     .member-list-popover .ml-role { font-size: 11px; color: var(--text3); }
-    /* 未读数徽章：>0 显示，=0 隐藏；位置在 icon 右侧（gap 控制间距） */
+    /* Unread badge: shown if >0, hidden if 0; positioned right of icon (gap controls spacing) */
     .presence-tab .unread {
       min-width: 14px;
       height: 14px;
@@ -751,7 +751,7 @@
       box-sizing: border-box;
     }
     .presence-tab .unread.has { display: inline-flex; }
-    /* metrics + status, 统一小字灰色 */
+    /* metrics + status: small gray text */
     .chat-metrics {
       display: flex;
       align-items: center;
@@ -763,16 +763,16 @@
     .chat-metrics .sep { color: var(--border2); }
     .chat-metrics .warn   { color: #92400e; font-weight: 500; }   /* 60-85% */
     .chat-metrics .danger { color: #991b1b; font-weight: 600; }   /* >85% */
-    /* token 用量进度环（Claude 客户端风格，圆环填充表示 used/total） */
+    /* Token usage progress ring (Claude client style: ring fill shows used/total) */
     .tokens-ring {
-      color: #10b981;     /* emerald-500，比品牌 teal 更亮更鲜明 */
+      color: #10b981;     /* emerald-500 — brighter than brand teal */
       flex-shrink: 0;
-      margin-right: -2px; /* 跟数字稍微贴近，gap:8px 的视觉补偿 */
+      margin-right: -2px; /* slight nudge toward the number to compensate for gap:8px */
     }
     .tokens-ring circle { transition: stroke-dashoffset .35s ease, stroke .15s; }
     .chat-metrics.warn   .tokens-ring { color: #f59e0b; }   /* amber-500 */
     .chat-metrics.danger .tokens-ring { color: #ef4444; }   /* red-500 */
-    /* iPhone 风 context 电池图标 */
+    /* iPhone-style context battery icon */
     .ctx-pct {
       display: inline-flex;
       align-items: center;
@@ -809,10 +809,10 @@
       border-radius: 1px;
       transition: width .25s ease;
     }
-    /* 模型名嵌在 AI status pill 里，加点 weight 突出 */
+    /* Model name embedded in AI status pill — slightly heavier weight to stand out */
     #bridgeStatus #chatRoomModel { font-weight: 500; color: var(--text2); }
     #bridgeStatus.online #chatRoomModel { color: var(--teal-600); }
-    /* brain 运行时徽章：深酒红胶囊，温润不刺眼 */
+    /* Brain runtime badge: deep wine pill — soft, not loud */
     .brain-badge {
       font-size: 10px;
       font-weight: 700;
@@ -830,7 +830,7 @@
       gap: 8px;
       font-size: 11px;
       color: var(--text3);
-      margin-right: 14px;  /* 整组左移，让右边大致与下方消息气泡右边对齐 */
+      margin-right: 14px;  /* nudge group left so right edge aligns with message bubbles below */
     }
     .status-item { display: flex; align-items: center; gap: 5px; }
     .status-item .dot {
@@ -841,7 +841,7 @@
     }
     .status-item.online .dot { background: var(--teal); animation: pulse 2s ease-in-out infinite; }
     .status-item.offline .dot { background: #DC2626; }
-    /* signal 图标:online 显示满格绿,offline 显示红 ✕ */
+    /* Signal icon: full green when online, red ✕ when offline */
     .status-item.online  svg { color: var(--teal); }
     .status-item .signal-offline { display: none; }
     .status-item.offline .signal-online  { display: none; }
@@ -865,7 +865,7 @@
       50% { opacity: 0.4; }
     }
 
-    /* ── 飞书风消息布局：左头像 + 右侧 名字+时间+气泡 ── */
+    /* ── Lark-style message layout: avatar on left + name+time+bubble on right ── */
     .messages {
       flex: 1;
       overflow-y: auto;
@@ -896,7 +896,7 @@
       margin-top: 2px;
     }
     .msg-av.user     { background: var(--bg2);       color: var(--text2); }
-    .msg-av.audience { background: #FFEDD5;          color: #C2410C; }   /* 路人：暖橙 */
+    .msg-av.audience { background: #FFEDD5;          color: #C2410C; }   /* Guest: warm orange */
     .msg-av.expert   { background: var(--purple-50); color: var(--purple-600); }
     .msg-av.ai       { background: var(--teal-50);   color: var(--teal-800); }
 
@@ -930,7 +930,7 @@
     .msg-role-badge.ai     { background: var(--teal-50); color: var(--teal-600); }
     .msg-ts { font-size: 11px; color: var(--text3); }
 
-    /* hover 出现的操作按钮 */
+    /* Action buttons revealed on hover */
     .msg-actions {
       display: flex;
       gap: 4px;
@@ -954,7 +954,7 @@
     .msg-action-btn:hover { background: var(--bg2); color: var(--text); }
     .msg-action-btn.copied { color: var(--teal); }
     .msg-action-btn.translate-btn.loading { color: var(--teal); animation: voicePulse 1s ease-in-out infinite; }
-    /* 翻译结果灰字接原文下方 */
+    /* Translation result: gray text below the original */
     .msg-translation {
       margin-top: 4px;
       padding: 4px 10px;
@@ -969,7 +969,7 @@
     .msg-translation:hover { background: var(--bg2); }
     .msg-translation.loading::before { content: '⟳ '; }
 
-    /* AI 消息底部 ✓ / ✗ 评价按钮 */
+    /* AI message footer ✓ / ✗ rating buttons */
     .msg-rate-bar {
       display: flex;
       gap: 8px;
@@ -1006,7 +1006,7 @@
       letter-spacing: 0.4px;
       animation: ratePop .3s ease;
     }
-    /* 单钩状态：浅底深字，仅一个 ✓ */
+    /* Single-check state: light background, dark text, only one ✓ */
     .rate-badge.half {
       background: var(--teal-50);
       color: var(--teal-600);
@@ -1028,7 +1028,7 @@
     .msg-rate-btn.quote:hover { background: var(--teal-50); color: var(--teal-600); border-color: var(--teal-100); }
     .msg-rate-btn.sync:hover  { background: #EDE9FE;          color: #7C3AED;            border-color: #DDD6FE; }
 
-    /* 微信风引用卡片：消息气泡下方一个紧凑灰条 */
+    /* WeChat-style quote card: compact gray bar below the message bubble */
     .msg-quote-card {
       margin-top: 4px;
       padding: 7px 10px;
@@ -1065,19 +1065,19 @@
       align-self: flex-start;
       border-left: 3px solid transparent;
     }
-    /* 三色区分，方便扫读 */
+    /* Three-color split for quick scanning */
     .msg-bubble.user   { background: #FFF8E7;       border-left-color: #E5B85A; color: var(--text); }
     .msg-bubble.expert { background: var(--purple-50); border-left-color: var(--purple); color: var(--text); }
     .msg-bubble.ai     { background: var(--teal-50);   border-left-color: var(--teal);   color: var(--text); }
 
 
-    /* 跳到 AI 消息时的闪烁高亮(用 box-shadow,跨任何主题背景都可见) */
+    /* Flash highlight when scrolling to an AI message (box-shadow stays visible on any theme background) */
     .flash-highlight { animation: pin-flash 1.4s ease-out; }
     @keyframes pin-flash {
       0%   { box-shadow: 0 0 0 3px rgba(217, 119, 6, .55), 0 0 16px rgba(217, 119, 6, .25); }
       100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
     }
-    /* 单钩待二钩:current 题目胶囊的 checkbox 框显示半勾,表示已有 1 方确认 */
+    /* Single-check pending: current quiz pill's checkbox shows a half-check (one side confirmed) */
     .todo-sub.half-checked .check { position: relative; }
     .todo-sub.half-checked .check::after {
       content: "✓";
@@ -1114,7 +1114,7 @@
       align-items: center;
       gap: 8px;
       font-size: 14px;
-      /* 等宽字体打头,中文 fallback 到苹方/雅黑,避免 Monaco 拼凑出来的丑中文 */
+      /* Monospace primary; falls back to system UI for non-Latin characters */
       font-family: 'SF Mono', Menlo, Monaco, 'PingFang SC', 'Microsoft YaHei', system-ui, monospace;
       color: var(--text3);
       white-space: nowrap;
@@ -1122,7 +1122,7 @@
     }
     .typing-indicator.show { display: flex; }
     .typing-indicator > * { flex-shrink: 0; }
-    /* typing 头部：空心红色描边小圈，跟品牌色一致 */
+    /* Typing leader: hollow red outline circle matching brand color */
     .typing-star {
       display: inline-block;
       width: 12px;
@@ -1140,8 +1140,8 @@
     }
     .typing-name { color: var(--text); font-weight: 500; font-size: 12px; }
     .typing-sep, .typing-elapsed { color: var(--text3); }
-    .typing-elapsed { font-size: 11px; }   /* 数字段缩小 1/5(14px → 11.2px) */
-    /* 雷达 ping 效果：中心一个点 → 扩散为大圆 → 淡出 → 又一个点 */
+    .typing-elapsed { font-size: 11px; }   /* digits shrink ~20% (14px → 11.2px) */
+    /* Radar ping effect: dot → expanding circle → fade → next dot */
     @keyframes typing-pulse {
       0%   { transform: scale(0.2); opacity: 1; }
       80%  { transform: scale(1.2); opacity: 0; }
@@ -1176,7 +1176,7 @@
     }
     .input-box:focus { border-color: var(--teal); background: #fff; }
     .input-box::placeholder { color: var(--text3); }
-    /* GO 圆形红底按钮 */
+    /* GO round red button */
     .send-btn {
       width: 30px;
       height: 30px;
@@ -1206,8 +1206,8 @@
       color: var(--text3);
     }
 
-    /* ── 附件 ── */
-    /* 用户身份徽章：白(小白) / 咖(OG)，teal 圆底白字，点击进入资料设置 */
+    /* ── Attachments ── */
+    /* User role badge: S (Learner) / OG (Coach) — teal circle white text, click opens settings */
     .role-badge-wrap { position: relative; flex-shrink: 0; }
     .role-badge {
       width: 30px;
@@ -1228,7 +1228,7 @@
     }
     .role-badge:hover { background: var(--teal-600); }
     .role-badge:active { transform: scale(0.94); }
-    /* 待审 follow 数字气泡：右上角红圆 */
+    /* Pending follow count bubble: red circle at top-right */
     .role-badge-count {
       position: absolute;
       top: -2px;
@@ -1249,7 +1249,7 @@
       pointer-events: none;
     }
     .role-badge-count.has { display: inline-flex; }
-    /* 待审 follow 弹层：从 role-badge 上方弹出 */
+    /* Pending follow popover: pops up above the role-badge */
     .role-popup {
       position: absolute;
       bottom: calc(100% + 8px);
@@ -1317,7 +1317,7 @@
       50%      { box-shadow: 0 0 0 6px rgba(155, 28, 28, 0); }
     }
 
-    /* ── speak2go 课堂录音 ── */
+    /* ── speak2go classroom recording ── */
     .classroom-btn {
       width: 27px; height: 30px; flex-shrink: 0;
       background: transparent;
@@ -1372,7 +1372,7 @@
     }
     .asr-badge.unknown { background: rgba(156, 163, 175, 0.15); color: #6b7280; }
 
-    /* voice-reg-modal CSS 已删除(2026-05-21):三角色架构纠偏 */
+    /* voice-reg-modal CSS removed (2026-05-21): three-role architecture cleanup */
 
     .attach-preview {
       display: flex;
@@ -1382,7 +1382,7 @@
     }
     .attach-preview:empty { display: none; }
 
-    /* 微信风「回复 X」小条：挂在输入框上方，发送时静默附 quote 到消息末尾 */
+    /* WeChat-style "reply to X" bar: sits above the input; quote is silently appended on send */
     .quote-preview {
       display: flex;
       align-items: center;
@@ -1447,7 +1447,7 @@
     .attach-chip.uploading { opacity: 0.6; }
     .attach-chip.uploading .name::after { content: ' (uploading…)'; color: var(--text3); font-size: 10px; }
 
-    /* 已发送消息里的附件卡片 */
+    /* Attachment card in sent messages */
     .msg-attachments { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
     .msg-attachment {
       display: inline-flex;
@@ -1466,7 +1466,7 @@
     .msg-attachment i { font-size: 16px; color: var(--teal); flex-shrink: 0; }
     .msg-attachment .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    /* 消息内图片直接显示（不走 chip） */
+    /* Inline images show directly (no chip wrapper) */
     .msg-image {
       display: block;
       max-width: 320px;
@@ -1478,7 +1478,7 @@
     }
     .msg-image:hover { border-color: var(--teal-100); }
 
-    /* @ 提及候选弹层 */
+    /* @ mention candidate popover */
     .mention-popover {
       position: absolute;
       bottom: calc(100% + 6px);
@@ -1513,14 +1513,14 @@
     .mention-popover .mav.ai     { background: var(--teal); }
     .mention-popover .mav.expert { background: var(--purple); }
     .mention-popover .mav.user   { background: #E5B85A; }
-    /* 消息里渲染出来的 @mention：纯文字色，无底色 / 无阴影 */
+    /* @mention rendered in messages: pure text color, no background, no shadow */
     .mention {
       color: var(--teal-600);
       font-weight: 500;
       text-shadow: none;
     }
 
-    /* 图片 lightbox */
+    /* Image lightbox */
     .img-lightbox {
       position: fixed; inset: 0;
       background: rgba(0, 0, 0, 0.86);
@@ -1575,7 +1575,7 @@
       overflow-y: auto;
     }
     .modal h3 {
-      font-family: 'Noto Serif SC', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 18px;
       font-weight: 600;
       margin-bottom: 1.5rem;
@@ -1625,7 +1625,7 @@
     .btn-create:hover { background: var(--teal-600); }
     .btn-create:disabled { background: var(--gray-100); color: var(--gray-400); cursor: not-allowed; }
 
-    /* ── MARKDOWN 渲染 ── */
+    /* ── MARKDOWN rendering ── */
     .msg-bubble.markdown {
       padding: 0;
       background: transparent;
@@ -1644,7 +1644,7 @@
     .md-body > *:first-child { margin-top: 0 !important; }
     .md-body > *:last-child  { margin-bottom: 0 !important; }
     .md-body h1, .md-body h2, .md-body h3, .md-body h4 {
-      font-family: 'Noto Serif SC', serif;
+      font-family: 'Playfair Display', serif;
       font-weight: 600;
       margin: 0.5rem 0 0.15rem;
       line-height: 1.3;
@@ -1656,7 +1656,7 @@
     .md-body p  { margin: 0.2rem 0; }
     .md-body ul, .md-body ol { padding-left: 1.2rem; margin: 0.2rem 0; }
     .md-body li { margin: 0; }
-    /* 关键：marked 把松散列表的每项包成 <p>，干掉它的边距 */
+    /* Key: marked wraps loose list items in <p>; kill their margin */
     .md-body li > p { margin: 0; }
     .md-body li + li { margin-top: 1px; }
     .md-body strong { font-weight: 600; }
@@ -1690,7 +1690,7 @@
       font-size: 12px;
     }
     .md-body hr { border: none; border-top: 0.5px solid var(--teal-100); margin: 0.5rem 0; }
-    /* 连续空行折叠 */
+    /* Collapse consecutive blank lines */
     .md-body br + br { display: none; }
 
     .pdf-bar {
@@ -1766,24 +1766,24 @@
   </div>
 </nav>
 
-<!-- Settings Modal（仅OG可见，含 Agent Keys 管理）-->
+<!-- Settings Modal (Coach only — includes Agent Keys management) -->
 <div class="modal-overlay" id="settingsModal" onclick="closeSettings(event)">
   <div class="modal" style="max-width:640px;" onclick="event.stopPropagation()">
     <h3 id="settingsTitle">Settings</h3>
 
-    <!-- 管理员入口（仅白名单邮箱可见）—— 置顶，避免拉到底 -->
+    <!-- Admin entry (visible only to whitelisted emails) — pinned to top so it's not scrolled past -->
     <div id="adminSection" style="display:none;margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:0.5px solid var(--border);">
       <h4 style="margin:0 0 .5rem;font-size:14px;font-weight:600;">Admin</h4>
       <p style="margin:0 0 .8rem;font-size:13px;color:var(--text2);">
-        访问站点后台：用户/房间/Bridge 状态、计费汇总。
+        Site admin: users, rooms, Bridge status, billing summary.
       </p>
       <a href="https://chat2go.cn/admin.html" target="_blank"
          style="display:inline-flex;align-items:center;gap:6px;padding:.5rem 1rem;background:#1a1a18;color:#fff;border-radius:6px;text-decoration:none;font-size:13px;font-weight:500;">
-        进入 Admin 后台 →
+        Open Admin →
       </a>
     </div>
 
-    <!-- 个人资料 -->
+    <!-- Profile -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
       <h4 style="margin:0;font-size:14px;font-weight:600;">Profile</h4>
       <button class="btn-cancel" onclick="saveProfile()" style="flex:0 0 auto;padding:.45rem 1rem;font-size:13px;">Save</button>
@@ -1794,18 +1794,18 @@
       <label style="font-size:12px;color:var(--text2);margin-top:.3rem;">Email</label>
       <input type="text" id="profileEmail" disabled style="padding:.5rem;font-size:13px;background:var(--bg);color:var(--text3);">
 
-      <!-- 当前房间标题 inline；仅OG在自己房间内时显示 -->
+      <!-- Current room title inline; shown only when Coach is in their own room -->
       <div id="roomTitleSection" style="display:none;flex-direction:column;gap:.3rem;margin-top:.3rem;">
         <label style="font-size:12px;color:var(--text2);">Room title (max 13 chars, blank falls back to display name)</label>
         <input type="text" id="roomSidebarTitle" maxlength="13" placeholder="Blank falls back to display name" style="padding:.5rem;font-size:13px;">
       </div>
     </div>
 
-    <!-- Agent Keys（仅OG可见） -->
+    <!-- Agent Keys (Coach only) -->
     <div id="agentKeysSection" style="display:none;">
       <h4 style="margin:0 0 .5rem;font-size:14px;font-weight:600;">Agent connect keys</h4>
       <p style="margin:0 0 1rem;font-size:13px;color:var(--text2);">
-        把本地 chat2go-agent 接入这个账号。每把密钥独立可撤销，建议每台机器一把。
+        Connect a local chat2go-agent to this account. Each key is independently revocable — we recommend one per machine.
       </p>
 
       <div id="agentKeysList" style="font-size:13px;">Loading…</div>
@@ -1820,10 +1820,10 @@
         <pre id="newKeyValue" style="margin:.5rem 0;padding:.5rem;background:#fff;border-radius:4px;overflow-x:auto;font-size:11px;font-family:'SF Mono',Monaco,monospace;"></pre>
         <button onclick="copyNewKey()" style="padding:.4rem .8rem;cursor:pointer;font-size:12px;">Copy key</button>
         <p style="margin:.5rem 0 0;font-size:12px;color:var(--text2);line-height:1.7;">
-          安装步骤:<br>
+          Setup steps:<br>
           ① <code style="background:#fff;padding:.1rem .3rem;border-radius:3px;">pip install -e ~/chat2go-agent</code><br>
           ② <code style="background:#fff;padding:.1rem .3rem;border-radius:3px;">chat2go-agent connect &lt;paste your key&gt;</code><br>
-          ③ 启动 bridge（launchd / start.sh）
+          ③ Start the bridge (launchd / start.sh)
         </p>
       </div>
     </div>
@@ -1863,7 +1863,7 @@
       <div class="todo-body" id="todoBody"></div>
       <div class="todo-add-group" onclick="addTodoGroup()">+ New group</div>
     </div>
-    <!-- 极简版：sidebar 不再渲染聊天室列表，房间在右侧主区自动打开 -->
+    <!-- Minimal version: sidebar no longer renders chat list; rooms auto-open in the main panel -->
     <div class="rooms-list" id="roomsList" style="display:none;"></div>
   </aside>
 
@@ -1872,7 +1872,7 @@
 
     <div id="activeChat" style="display:none; flex-direction:column; flex:1; overflow:hidden; min-height:0;">
       <div class="chat-head">
-        <!-- 在线头像 -->
+        <!-- Online avatars -->
         <div class="presence-row" style="position:relative;">
           <div id="presenceRow" style="display:flex;align-items:center;gap:6px;"></div>
           <div id="memberListPopover" class="member-list-popover"></div>
@@ -1932,9 +1932,9 @@
       </div>
 
       <div class="input-area">
-        <!-- 待上传的附件预览 -->
+        <!-- Pending attachment previews -->
         <div class="attach-preview" id="attachPreview"></div>
-        <!-- 待发送引用预览（微信样式：发送时静默附在消息末尾） -->
+        <!-- Pending quote preview (WeChat style: silently appended on send) -->
         <div class="quote-preview" id="quotePreview" style="display:none;">
           <i class="ti ti-corner-up-left"></i>
           <span class="qp-sender" id="qpSender"></span>
@@ -1943,7 +1943,7 @@
         </div>
 
         <div class="input-wrap" style="position:relative;">
-          <!-- @ 提及候选弹层（输入 @ 时显示） -->
+          <!-- @ mention candidate popover (shown while typing @) -->
           <div class="mention-popover" id="mentionPopover"></div>
           <div class="role-badge-wrap">
             <div class="role-badge" id="roleBadge" title="Your role" onclick="onRoleBadgeClick()">—</div>
@@ -1981,7 +1981,7 @@
             GO
           </button>
         </div>
-        <!-- 课堂录音状态条（开课后显示） -->
+        <!-- Classroom recording status bar (shown once class starts) -->
         <div class="classroom-bar" id="classroomBar">
           <span class="cb-dot" id="cbDot"></span>
           <span class="cb-status" id="cbStatus">Connecting…</span>
@@ -2021,12 +2021,12 @@
   </div>
 </div>
 
-<!-- Invite landing：?invite=<token> 触发，匿名进场填昵称 -->
+<!-- Invite landing: ?invite=<token> triggers anonymous entry with a nickname prompt -->
 <div class="modal-overlay" id="inviteModal" style="z-index:2000;">
   <div class="modal" style="max-width:380px;" onclick="event.stopPropagation()">
     <h3 style="margin:0 0 1rem;">Welcome to the chat room</h3>
     <p style="margin:0 0 1rem;font-size:13px;color:var(--text2);line-height:1.6;">
-      给自己起个昵称，进入OG的房间。
+      Pick a display name to join the Coach's room.
     </p>
     <input type="text" id="inviteNickname" placeholder="Display name (e.g. Sarah)" maxlength="20"
            onkeydown="if(event.key==='Enter'){event.preventDefault();submitInvite()}"
@@ -2048,19 +2048,19 @@
 
   let currentUser = null
   let currentRoom = null
-  let currentRoomRole = null  // 'expert' | 'focal' | 'audience' | 'none'，每次 openRoom 刷新
+  let currentRoomRole = null  // 'expert' | 'focal' | 'audience' | 'none' — refreshed on each openRoom
   let realtimeChannel = null
-  let todoTemplateChannel = null  // 订阅 expert_todo_templates UPDATE，AI 写 todo 后自动重渲 sidebar（不需 F5）
-  let pendingAttachments = []  // 待发送的附件 [{name, url, size, mime_type, storage_path}]
-  let currentDisplayName = '' // 自己的 display_name，用于消息头展示
-  const profilesByUid = {}    // 房间内成员 display_name 缓存 {user_id: name}
-  let currentChannel = 'main'  // 当前消息频道: 'main' | 'expert_user'
-  let unreadCounts = { main: 0, expert_user: 0 }  // 每个 channel 的未读计数（本会话）
+  let todoTemplateChannel = null  // Subscribes to expert_todo_templates UPDATE; auto re-renders sidebar after AI writes todos (no F5)
+  let pendingAttachments = []  // Pending attachments to send [{name, url, size, mime_type, storage_path}]
+  let currentDisplayName = '' // Your own display_name, used in message headers
+  const profilesByUid = {}    // display_name cache for room members {user_id: name}
+  let currentChannel = 'main'  // Current message channel: 'main' | 'expert_user'
+  let unreadCounts = { main: 0, expert_user: 0 }  // Unread counts per channel (this session)
 
   async function init() {
     const inviteToken = new URLSearchParams(location.search).get('invite')
     const { data: { session } } = await sb.auth.getSession()
-    // 无 session 且带 invite token → 匿名进场流程；否则按老逻辑去登录
+    // No session + invite token → anonymous entry flow; otherwise normal login
     if (!session) {
       if (inviteToken) {
         showInviteModal(inviteToken)
@@ -2068,20 +2068,20 @@
       }
       window.location.href = '/login.html'; return
     }
-    // 已登录 + URL 带 invite token：邀请进入 = 加入新房的主动动作，
-    // 不论是否已有 display_name 都弹昵称 modal 让确认（input 预填现有名，可改可直进）
-    // 注意OG自己点自己的邀请链接也会被弹，少见但无害（点取消会跳 login.html，刷新走老逻辑）
+    // Logged in + URL has invite token: invite entry = explicit join-new-room action,
+    // so prompt the nickname modal regardless of existing display_name (input pre-fills current name, editable or pass-through)
+    // Note: Coach clicking their own invite link also triggers this — rare but harmless (Cancel goes to login.html, refresh follows old logic)
     if (inviteToken) {
       try {
         const { data: profile } = await sb.from('profiles')
           .select('role,display_name').eq('user_id', session.user.id).maybeSingle()
         const dn = (profile?.display_name || '').trim()
-        // OG账号点邀请链接：不弹昵称 modal，避免误改OG display_name 污染数据
-        // （比如OG在浏览器复制了自己房间的邀请链接给小白测试，结果自己先点了）
+        // Coach clicking an invite link: don't show nickname modal, avoid overwriting Coach display_name
+        // (e.g. Coach copies their own invite link in the browser for a Learner to test but clicks it themselves first)
         if (profile?.role === 'expert') {
           const { roomId } = await tryJoinByInviteToken(inviteToken)
           if (roomId) history.replaceState({}, '', `/chat.html?room=${roomId}`)
-          // 继续走老登录逻辑（不 return），让 init 后续渲染设置 currentUser/currentRole 等
+          // Continue with normal login (don't return) so init sets currentUser/currentRole etc.
         } else {
           showInviteModal(inviteToken, 'existing', dn)
           return
@@ -2094,12 +2094,12 @@
     }
     currentUser = session.user
 
-    // bridge 心跳轮询：每 6 秒拉一次 last_seen 状态
+    // Bridge heartbeat polling: refreshes last_seen every 6s
     startBridgeHeartbeatPolling()
 
     const email = currentUser.email
 
-    // 检查角色：OG才显示设置按钮
+    // Check role: only Coach sees settings button
     try {
       const { data: profile } = await sb
         .from('profiles')
@@ -2108,21 +2108,21 @@
         .maybeSingle()
       currentRole = profile?.role || 'user'
       currentDisplayName = profile?.display_name || ''
-      // 输入区身份徽章: OG → 咖, 小白 → 白
+      // Input area role badge: Coach → OG, Learner → Me
       const badge = document.getElementById('roleBadge')
       if (badge) {
         badge.textContent = currentRole === 'expert' ? 'OG' : 'Me'
         badge.title = currentRole === 'expert' ? 'OG · click to view pending follows' : 'Student · click to edit profile'
       }
-      // OG 或 admin 都看得到设置入口
+      // Both Coach and admin see the settings entry
       if (currentRole === 'expert' || ADMIN_EMAILS.includes(currentUser?.email)) {
         document.getElementById('settingsBtn').style.display = ''
       }
     } catch (e) { console.warn('[role] failed:', e) }
 
-    // 单例房模型:不再按角色 ensure 新房,所有人共享同一个房(已由 trigger 自动加成员)
+    // Singleton room model: no more per-role ensure-new-room; everyone shares one room (trigger auto-adds members)
 
-    // 一次性清理：自己名下叫 "Todo list" 的房（早期测试残留）
+    // One-time cleanup: rooms named "Todo list" owned by self (leftover test data)
     try {
       await sb.from('rooms').delete()
         .eq('expert_id', currentUser.id)
@@ -2131,10 +2131,10 @@
 
     await loadRooms()
 
-    // 小白：订阅 room_members 变动（用于其它入口加入的房间也能同步）
+    // Learner: subscribe to room_members changes (so rooms joined via other entry points sync too)
     if (currentRole !== 'expert') subscribeMyMemberships()
 
-    // 仅 ?room=<id>：直接尝试打开（要求是成员，否则 RLS 静默拒绝）
+    // Just ?room=<id>: try opening directly (must be a member, otherwise RLS silently rejects)
     const params = new URLSearchParams(window.location.search)
     const roomParam = params.get('room')
     if (roomParam) {
@@ -2144,7 +2144,7 @@
 
   let currentRole = 'user'  // 'user' | 'expert'
 
-  // (invite-token 流程已废弃，统一用 follow/approve 模型)
+  // (invite-token flow deprecated — unified to follow/approve model)
 
   async function openRoomById(roomId) {
     try {
@@ -2154,12 +2154,12 @@
         console.warn('[openRoomById] not found:', roomId, error)
         return
       }
-      // OG只能打开自己的房；外来 ?room= 链接忽略
+      // Coach can only open their own rooms; external ?room= links ignored
       if (currentRole === 'expert' && room.expert_id !== currentUser?.id) {
         console.warn('[openRoomById] expert blocked from foreign room:', roomId)
         return
       }
-      // 小白通过链接来的房间：如果还不在列表里，临时塞进列表
+      // Learner arriving via link: if room isn't in the list yet, insert it temporarily
       const list = document.getElementById('roomsList')
       if (!list.querySelector(`[data-id="${room.id}"]`)) {
         renderRoomItem(room)
@@ -2170,15 +2170,15 @@
     }
   }
 
-  // ── Settings 模态框（OG独享）──
+  // ── Settings modal (Coach only) ──
   async function openSettings() {
     document.getElementById('settingsModal').classList.add('show')
-    // 标题随角色变化
+    // Title varies by role
     document.getElementById('settingsTitle').textContent =
-      currentRole === 'expert' ? 'OG settings' : 'Student settings'
-    // 邮箱（只读）
+      currentRole === 'expert' ? 'Coach settings' : 'Learner settings'
+    // Email (read-only)
     document.getElementById('profileEmail').value = currentUser?.email || ''
-    // 拉当前 display_name（并同步到全局 currentDisplayName，修复 init 时 fetch 失败的情况）
+    // Load current display_name (and sync to global currentDisplayName, in case init fetch failed)
     try {
       const { data } = await sb.from('profiles')
         .select('display_name')
@@ -2193,18 +2193,18 @@
         })
       }
     } catch (e) { console.warn('[profile load]', e) }
-    // Agent Keys 仅OG
+    // Agent Keys: Coach only
     document.getElementById('agentKeysSection').style.display =
       currentRole === 'expert' ? '' : 'none'
     if (currentRole === 'expert') loadAgentKeys()
-    // 当前房间标题：仅当处在自己作为OG的房间内时显示
+    // Room title: only shown when in a room you own as Coach
     const showRoomTitle = !!currentRoom && isExpert(currentRoom)
     const roomTitleSection = document.getElementById('roomTitleSection')
     if (roomTitleSection) roomTitleSection.style.display = showRoomTitle ? 'flex' : 'none'
     if (showRoomTitle) {
       document.getElementById('roomSidebarTitle').value = (currentRoom.sidebar_title || '').slice(0, 13)
     }
-    // 管理员入口仅 admin 白名单可见
+    // Admin entry visible only to admin whitelist
     document.getElementById('adminSection').style.display =
       ADMIN_EMAILS.includes(currentUser?.email) ? '' : 'none'
   }
@@ -2221,14 +2221,14 @@
     const name = room?.querySelector('.room-name')?.textContent || 'this chat'
     if (!confirm(`Delete "${name}"?\nAll messages and billing records go with it. Cannot be undone.`)) return
     try {
-      // .select() 让 PostgREST 返回被删的行，能区分「RLS 拦截」vs「真的删了」
+      // .select() makes PostgREST return the deleted rows — lets us distinguish "RLS blocked" vs "actually deleted"
       const { data, error } = await sb.from('rooms').delete().eq('id', roomId).select()
       if (error) throw error
       if (!data || data.length === 0) {
         showToast('Delete failed: no permission (RLS) or room is gone')
         return
       }
-      // 如果删的是当前打开的房间，清掉聊天面板
+      // If we just deleted the currently open room, clear the chat panel
       if (currentRoom?.id === roomId) {
         currentRoom = null
         document.getElementById('activeChat').style.display = 'none'
@@ -2255,7 +2255,7 @@
       if (error) throw error
       currentRoom.ai_name = newName || null
       const displayName = newName || 'AI assistant'
-      // 当前已渲染的 AI sender 全部刷新
+      // Refresh all currently rendered AI senders
       document.querySelectorAll('.msg-sender.ai').forEach(el => {
         el.textContent = displayName
       })
@@ -2275,18 +2275,18 @@
         .eq('user_id', currentUser.id)
       if (error) throw error
       currentDisplayName = name
-      // 把当前已渲染的自己消息的 sender 名同步刷新
+      // Refresh sender name on all currently rendered own messages
       document.querySelectorAll('.msg-sender[data-own="1"]').forEach(el => {
         el.textContent = name
       })
-      // 同时保存当前房间标题（如果可见）
+      // Also save the current room title (if visible)
       const roomSection = document.getElementById('roomTitleSection')
       if (roomSection && roomSection.style.display !== 'none' && currentRoom && isExpert(currentRoom)) {
         await saveRoomSidebarTitle(name)
       } else {
         showToast('Profile saved')
       }
-      // 保存成功后自动关 modal（极简；想取消改动可点 modal 外部）
+      // Auto-close modal after save (minimal — click outside the modal to cancel changes)
       document.getElementById('settingsModal').classList.remove('show')
     } catch (e) {
       console.warn('[profile save]', e)
@@ -2335,7 +2335,7 @@
       const display = document.getElementById('newKeyDisplay')
       display.style.display = ''
       document.getElementById('newKeyValue').textContent = row.token
-      window._lastKey = row.token  // 给 copy 用
+      window._lastKey = row.token  // for copy
       nameInput.value = ''
       await loadAgentKeys()
     } catch (e) {
@@ -2371,17 +2371,17 @@
     return Math.floor(diff/86400) + ' days ago'
   }
 
-  // tradego 子目录:行业锁口语训练,product='tradego' 跟主站 rooms 隔离
+  // tradego subdirectory: industry-locked speaking practice; product='tradego' is isolated from main site rooms
   const DEMO_INDUSTRY = 'English speaking'
   const DEMO_PRODUCT = 'speak2go'
-  // 单例房模型:全站只一个房,所有账号登录都进它
+  // Singleton room model: one room for the whole site, every account joins it on login
   const SPEAK2GO_SINGLETON_ROOM_ID = '5b622bc4-88b4-47c1-9aa6-643c4b1e0f96'
 
-  // admin 邮箱白名单（与 admin.html / is_admin() RPC 保持一致）
+  // Admin email whitelist (must match admin.html / is_admin() RPC)
   const ADMIN_EMAILS = ['lirui88888862@gmail.com']
 
-  // 找出"置顶"房间:房间内任一 AI 消息处于单钩等二钩状态(1 个 up + 0 个 down)。
-  // 任一方打 ✗(down) → 那条 msg 不再 pending → 整房 unpin;双钩(2 up)同样 unpin。
+  // Find "pinned" rooms: any AI message in single-check-pending state (1 up + 0 down).
+  // Either side marking ✗ (down) → that msg no longer pending → whole room unpinned; double-check (2 up) also unpins.
   async function findPinnedRooms(rooms) {
     if (!rooms.length) return new Set()
     const roomIds = rooms.map(r => r.id)
@@ -2408,7 +2408,7 @@
     const list = document.getElementById('roomsList')
     list.innerHTML = ''
 
-    // 单例房模型:直接拿固定的那个房,不再按角色分支
+    // Singleton room model: grab the fixed room directly; no more per-role branching
     const { data: room, error } = await sb
       .from('rooms').select('*')
       .eq('id', SPEAK2GO_SINGLETON_ROOM_ID)
@@ -2421,12 +2421,12 @@
     renderRoomItem(room, false)
     if (!currentRoom) {
       await openRoom(room)
-      // 显式触发学士帽按钮的可见性判断 (单例房模型下不依赖 window.openRoom wrapper)
+      // Explicitly re-check classroom button visibility (singleton room model doesn't rely on window.openRoom wrapper)
       try { window.Classroom?.refreshButton?.() } catch (e) { console.warn('[refreshButton]', e) }
     }
   }
 
-  // ── OG：首次登录自动建一个房（每个OG固定 1 个）──
+  // ── Coach: auto-create one room on first login (each Coach gets exactly 1) ──
   async function ensureExpertRoom() {
     const { data: existing, error } = await sb
       .from('rooms').select('id').eq('expert_id', currentUser.id).eq('product', DEMO_PRODUCT).limit(1)
@@ -2443,12 +2443,12 @@
     if (insErr) console.warn('[ensureExpertRoom] insert failed:', insErr)
   }
 
-  // role-badge 点击：直接开 settings（待审 follow 流程已废弃）
+  // role-badge click: open settings directly (pending-follow flow deprecated)
   function onRoleBadgeClick() {
     openSettings()
   }
 
-  // ── 小白：订阅自己的 room_members 变动（兜底同步其它入口加入的房间）──
+  // ── Learner: subscribe to own room_members changes (fallback sync for rooms joined via other paths) ──
   let myMembershipChannel = null
   function subscribeMyMemberships() {
     if (myMembershipChannel) sb.removeChannel(myMembershipChannel)
@@ -2463,7 +2463,7 @@
       .subscribe()
   }
 
-  // ── 小白：没有房 → 列出可 follow 的OG ──
+  // ── Learner: no room yet → list followable Coaches ──
   async function renderFollowExpertsPanel() {
     const list = document.getElementById('roomsList')
     const [expertsResp, requestsResp] = await Promise.all([
@@ -2506,7 +2506,7 @@
         <div class="follow-experts-sub">Pick an OG to start chatting</div>
         ${rows}
       </div>`
-    // 异步填充每个OG的 follower 数
+    // Async-fill each Coach's follower count
     experts.forEach(async e => {
       const { data } = await sb.rpc('get_expert_follower_count', { p_expert_id: e.user_id })
       const el = list.querySelector(`.follow-pill[data-expert="${e.user_id}"] .pf-count`)
@@ -2536,9 +2536,9 @@
     document.getElementById('followersListModal').classList.remove('show')
   }
 
-  // ── Invite landing：匿名进场填昵称 → 进群 ──
+  // ── Invite landing: anonymous entry → nickname → join room ──
   let _pendingInviteToken = null
-  let _inviteMode = 'anon'  // 'anon' (无 session 走 signInAnonymously) | 'existing' (已登录走 update display_name)
+  let _inviteMode = 'anon'  // 'anon' (no session — signInAnonymously) | 'existing' (already logged in — just update display_name)
   function showInviteModal(token, mode = 'anon', prefilledName = '') {
     _pendingInviteToken = token
     _inviteMode = mode
@@ -2548,7 +2548,7 @@
     modal.classList.add('show')
     setTimeout(() => {
       input?.focus()
-      input?.select()  // 选中预填文本，方便直接覆盖
+      input?.select()  // Select pre-filled text so user can overwrite easily
     }, 50)
   }
   function dismissInvite() {
@@ -2566,7 +2566,7 @@
     submitBtn.disabled = true
     submitBtn.textContent = 'Entering…'
     try {
-      // 'anon' 模式：先匿名登录；'existing' 模式：已登录用户只补 display_name
+      // 'anon' mode: sign in anonymously first; 'existing' mode: logged-in user just sets display_name
       if (_inviteMode === 'anon') {
         const { error: signErr } = await sb.auth.signInAnonymously({
           options: { data: { display_name: nickname } }
@@ -2578,11 +2578,11 @@
           return
         }
       }
-      // 写 profiles.display_name
+      // Write profiles.display_name
       const { data: { user } } = await sb.auth.getUser()
       if (user) {
         if (_inviteMode === 'anon') {
-          // 新匿名用户：profile 行可能 trigger 还没建好（race），upsert + role='user' 兜底
+          // New anonymous user: profile row may not exist yet (trigger race) — upsert + role='user' fallback
           const { error: pErr } = await sb.from('profiles')
             .upsert({ user_id: user.id, role: 'user', display_name: nickname }, { onConflict: 'user_id' })
           if (pErr) {
@@ -2591,7 +2591,7 @@
             return
           }
         } else {
-          // existing：profile 必有行，只 update display_name 不动 role（避免覆盖OG角色）
+          // existing: profile row must exist; only update display_name, don't touch role (avoid overwriting Coach role)
           const { error: pErr } = await sb.from('profiles')
             .update({ display_name: nickname })
             .eq('user_id', user.id)
@@ -2602,12 +2602,12 @@
           }
         }
       }
-      // 进房:优先 try 新 multi-token,失败 fallback 旧的
+      // Join room: try new multi-token first, fall back to old on failure
       const { roomId, error: joinErr } = await tryJoinByInviteToken(_pendingInviteToken)
       if (joinErr || !roomId) {
         const msg = joinErr?.message || ''
         if (msg.includes('already consumed') || msg.includes('invite_used') || msg.includes('focal already locked')) {
-          err.textContent = "This invite link's already been used — ask the OG for a new one (each copy makes a new link)"
+          err.textContent = "This invite link's already been used — ask the Coach for a new one (each copy makes a new link)"
         } else if (msg.includes('invalid') || msg.includes('not room owner')) {
           err.textContent = 'Invite link invalid or expired'
         } else {
@@ -2616,7 +2616,7 @@
         err.style.display = 'block'
         return
       }
-      // 关 modal，刷新页面跳到房（避免重写 init 流程）
+      // Close modal, reload page to enter the room (avoid rewriting init flow)
       location.href = `/chat.html?room=${roomId}`
     } catch (e) {
       err.textContent = 'Error: ' + (e.message || e)
@@ -2632,7 +2632,7 @@
     const { data: room, error: e1 } = await sb
       .from('rooms').select('id').eq('expert_id', expertId).eq('product', DEMO_PRODUCT).limit(1).maybeSingle()
     if (e1 || !room) {
-      showToast("Can't find OG's chat")
+      showToast("Can't find Coach's chat")
       btnEl.disabled = false
       return
     }
@@ -2644,13 +2644,13 @@
       btnEl.disabled = false
       return
     }
-    showToast("Joined OG's chat")
+    showToast("Joined Coach's chat")
     await loadRooms()
     await openRoomById(room.id)
   }
 
   function renderRoomItem(room, isPinned = false) {
-    // OG只看自己 owned 的房：拒绝渲染外来房（兜底 openRoomById 等旁路）
+    // Coach only sees rooms they own: refuse rendering foreign rooms (fallback for openRoomById side paths)
     if (currentRole === 'expert' && room.expert_id !== currentUser?.id) return
     const list = document.getElementById('roomsList')
     const empty = list.querySelector('.rooms-empty')
@@ -2697,9 +2697,9 @@
   }
 
   async function saveRoomSidebarTitle(fallbackName) {
-    if (!currentRoom || !isExpert(currentRoom)) { showToast("Only this room's OG can change this"); return }
+    if (!currentRoom || !isExpert(currentRoom)) { showToast("Only this room's Coach can change this"); return }
     const inputEl = document.getElementById('roomSidebarTitle')
-    const newTitle = (inputEl?.value || '').trim().slice(0, 13)  // 兜底再截 13 字，防绕过 maxlength
+    const newTitle = (inputEl?.value || '').trim().slice(0, 13)  // Extra trim to 13 chars in case maxlength is bypassed
     const { error } = await sb.from('rooms')
       .update({ sidebar_title: newTitle || null })
       .eq('id', currentRoom.id)
@@ -2716,10 +2716,10 @@
     currentRoom = room
     currentChannel = 'main'
     unreadCounts = { main: 0, expert_user: 0 }
-    // 切房间清掉 profile name 缓存（让 display_name 改名后下次进房能拿到最新值）
+    // Switching rooms clears the profile name cache (so renames show up next time)
     Object.keys(profilesByUid).forEach(k => delete profilesByUid[k])
 
-    // 查询本房角色：'expert' | 'focal' | 'audience' | 'none'
+    // Get my role in this room: 'expert' | 'focal' | 'audience' | 'none'
     try {
       const { data: roleData } = await sb.rpc('get_my_room_role', { p_room_id: room.id })
       currentRoomRole = roleData || 'audience'
@@ -2732,8 +2732,8 @@
       el.classList.toggle('active', el.dataset.id === room.id)
     })
 
-    // sidebar 顶部房间标题：rooms.sidebar_title 优先，否则 fallback 到 expert.display_name
-    // 编辑入口在「设置 → 当前房间标题」（仅OG在房间内可见）
+    // Sidebar room title: rooms.sidebar_title preferred, falls back to expert.display_name
+    // Edit entry is in "Settings → Room title" (visible only to Coach inside their own room)
     const titleTextEl = document.getElementById('sidebarRoomTitleText')
     if (titleTextEl) {
       let title = (room.sidebar_title || '').trim()
@@ -2753,40 +2753,40 @@
     const ac = document.getElementById('activeChat')
     ac.style.display = 'flex'
 
-    // OG / 小白 显示邀请按钮；路人隐藏
+    // Coach / Learner see invite button; guests hide it
     const inviteBtn = document.getElementById('inviteBtn')
     if (inviteBtn) {
       inviteBtn.style.display = (currentRoomRole === 'expert' || currentRoomRole === 'focal') ? '' : 'none'
       inviteBtn.title = currentRoomRole === 'expert' ? 'Copy invite link (for student)' : 'Copy invite link (for guest)'
     }
-    // 重置按钮仅OG看到
+    // Reset button only visible to Coach
     const resetBtn = document.getElementById('resetRoomBtn')
     if (resetBtn) resetBtn.style.display = currentRoomRole === 'expert' ? '' : 'none'
-    // 输入栏身份徽章按房内角色(expert/focal/audience)显示，跟消息头像保持一致
+    // Input-bar role badge shows current room role (expert/focal/audience), matching message avatars
     const badge = document.getElementById('roleBadge')
     if (badge) {
       const map = { expert: 'OG', focal: 'S', audience: 'G' }
       badge.textContent = map[currentRoomRole] || 'S'
       const titleMap = {
-        expert: 'OG · click to edit profile',
-        focal:  'Student · click to edit profile',
+        expert: 'Coach · click to edit profile',
+        focal:  'Learner · click to edit profile',
         audience: 'Guest · click to edit profile',
       }
       badge.title = titleMap[currentRoomRole] || 'Click to edit profile'
     }
 
-    await refreshRoomMembers()  // 拉群人数 + 成员列表（同时补 profilesByUid 让 @ 列表完整）
-    renderPresence()  // 先把 tab 行画出来（不依赖 realtime presence）
-    await loadActiveTodoTemplate(room)  // sidebar todo 渲染要在 refreshQuizState 之前
+    await refreshRoomMembers()  // Load room members + fill profilesByUid so @ list is complete
+    renderPresence()  // Render the tab row first (doesn't depend on realtime presence)
+    await loadActiveTodoTemplate(room)  // Sidebar todo must render before refreshQuizState
     await loadMessages(room.id)
     await loadRoomCost(room.id)
     subscribeRoom(room.id)
-    startMessagePolling()    // ★ 双保险:Realtime 漏 push 时由轮询兜底拉新消息
+    startMessagePolling()    // ★ Double-safety: polling backfills if Realtime misses a push
     document.getElementById('msgInput').focus()
   }
 
-  // 前端 messages 轮询兜底(每 10s):Realtime WebSocket 偶发漏 INSERT 时,
-  // 拉本房最近 20 条消息跟 DOM 比对,缺的补 appendMessage,缺的非当前 channel 累计未读
+  // Frontend message polling fallback (every 10s): when Realtime WebSocket occasionally drops INSERTs,
+  // pull the last 20 messages from this room, diff against DOM, appendMessage for any missing — non-current channel ones go to unread count
   let _msgPollTimer = null
   async function pollMessagesBackfill() {
     if (!currentRoom || !currentUser) return
@@ -2834,7 +2834,7 @@
     if (_msgPollTimer) { clearInterval(_msgPollTimer); _msgPollTimer = null }
   }
 
-  // 点击 todo 题目胶囊 → 跳到对应 AI 消息 + flash 高亮
+  // Click a todo pill → jump to the matching AI message + flash highlight
   function scrollToAiMessage(msgId) {
     if (!msgId) return
     const el = document.querySelector(`.msg-group[data-msg-id="${msgId}"]`)
@@ -2846,7 +2846,7 @@
 
   async function resetRoom() {
     if (!currentRoom) return
-    if (currentRoomRole !== 'expert') { showToast('Only OG can reset the room'); return }
+    if (currentRoomRole !== 'expert') { showToast('Only Coach can reset the room'); return }
     const ok = confirm('Reset this room?\n\n• Kick all members\n• Wipe all messages\n• Regenerate invite links (old ones invalidate)\n\nCannot be undone.')
     if (!ok) return
     const { error } = await sb.rpc('reset_room', { p_room_id: currentRoom.id })
@@ -2855,7 +2855,7 @@
     setTimeout(() => location.reload(), 800)
   }
 
-  // 优先 try 新 multi-token(room_invites);失败 fallback 旧的(rooms.invite_token / audience_invite_token)
+  // Try new multi-token (room_invites) first; fall back to old (rooms.invite_token / audience_invite_token)
   async function tryJoinByInviteToken(token) {
     const r1 = await sb.rpc('consume_invite_token', { p_token: token })
     if (!r1.error && r1.data) return { roomId: r1.data, error: null }
@@ -2875,8 +2875,8 @@
         return
       }
       token = newToken
-      tag = 'Student invite link'
-      hint = 'One student per link — click again to invite more'
+      tag = 'Learner invite link'
+      hint = 'One learner per link — click again to invite more'
     } else {
       token = currentRoom.audience_invite_token
       if (!token) { showToast('No invite token for this room'); return }
@@ -2910,7 +2910,7 @@
     if (!currentRoom || ch === currentChannel) return
     currentChannel = ch
     unreadCounts[ch] = 0
-    // 切换 channel 一并清掉残留的 typing 指示
+    // Switching channels also clears any leftover typing indicator
     clearTimeout(typingTimer)
     hideTyping()
     renderPresence()
@@ -2927,13 +2927,13 @@
     el.classList.toggle('has', n > 0)
   }
 
-  // 房间 token 预算（不再是物理 context window，而是产品维度的"一房一桌"用量上限）
+  // Room token budget (not the physical context window — product-level "one room, one tab" usage cap)
   const ROOM_TOKEN_BUDGET = 10_000_000  // 10M tokens per room
 
-  // ── 做题模式 ──
-  // 题序由 active todo 方案的 items.flat() 顺序决定（data-quiz-idx 在 renderTodos 里自动派生）。
-  // 某条 AI 消息的 messages.ratings 里 'up' >= 2 → pass 一题，指针前进。
-  // sidebar 子项 [0..passed-1] 标 done；第 passed 项 highlight 为「当前题」。
+  // ── Quiz mode ──
+  // Question order is items.flat() of the active todo template (data-quiz-idx auto-derived in renderTodos).
+  // An AI message with messages.ratings showing 'up' >= 2 → that question passes, pointer advances.
+  // Sidebar items [0..passed-1] marked done; item at index `passed` highlighted as "current question".
   const DEFAULT_TODO_PAYLOAD = [
     { label: 'Level Check', items: [{ label: 'Listening baseline' }, { label: 'Speaking baseline' }, { label: 'Vocab size check' }] },
     { label: 'Learning Goals', items: [{ label: 'Short-term (1-2 wks)' }, { label: 'Long-term (3-6 mos)' }, { label: 'Areas of interest' }] },
@@ -2946,15 +2946,15 @@
     { label: 'Stage Quiz', items: [{ label: 'Speaking mini-test' }, { label: 'Listening test' }, { label: 'Vocab test' }] },
     { label: 'Next Stage', items: [{ label: 'Review last stage' }, { label: 'Set next direction' }, { label: 'Showcase wins' }] },
   ]
-  let currentTemplate = null  // {id, name, payload} —— 当前房间挂的方案（小白也持有副本，仅OG可改）
+  let currentTemplate = null  // {id, name, payload} — plan attached to the current room (Learner also holds a copy; only Coach can edit)
   let todoPopupOpen = false
-  let _todoPopupTemplates = []  // showTodoPopup 缓存的方案列表，供 deleteTemplate 查名字用
+  let _todoPopupTemplates = []  // Template list cached by showTodoPopup so deleteTemplate can look up names
 
   function renderTodos(payload) {
     const body = document.getElementById('todoBody')
     if (!body) return
-    // 重渲染保留每组展开状态（addTodoSub 等编辑操作会触发 rerender，
-    // 否则用户在非首组加子项时该组会被默认折叠逻辑收起）
+    // Re-render preserves each group's expanded state (addTodoSub etc. trigger rerender —
+    // otherwise adding a sub-item to a non-first group would collapse it via the default-fold logic)
     const prevExpanded = new Set()
     body.querySelectorAll('.todo-group.expanded').forEach(g => prevExpanded.add(g.dataset.group))
     body.innerHTML = ''
@@ -2963,8 +2963,8 @@
     ;(payload || []).forEach((group, gi) => {
       const groupEl = document.createElement('div')
       groupEl.className = 'todo-group'
-      // 首次渲染默认锁住 gi>0 的组,避免 refreshQuizState 跑完前的解锁闪烁;
-      // 编辑态不锁;refreshQuizState 之后会按真实 passed 重算
+      // First render: lock groups with gi>0 by default to avoid an unlock flash before refreshQuizState runs;
+      // Editing mode doesn't lock; refreshQuizState recomputes locks based on real `passed` afterwards
       if (!sectionEditing && gi > 0) groupEl.classList.add('locked')
       groupEl.dataset.group = `g${gi}`
       groupEl.dataset.groupStart = String(idx)
@@ -2978,7 +2978,7 @@
             <button type="button" class="todo-row-del" title="Delete" onclick="event.stopPropagation();deleteTodoItem(${gi},${ii})">×</button>
           </div>`
       }).join('')
-      // gi=0 永远不锁,不渲染锁图标;gi>0 渲染左侧 lock-state(红挂锁/绿开锁,CSS 按 .locked 切换)
+      // gi=0 is never locked, no lock icon; gi>0 renders left lock-state (red padlock / green open lock; CSS toggles via .locked)
       const lockHtml = gi > 0 ? `
           <span class="todo-lock-state" aria-hidden="true">
             <svg class="lk-closed" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
@@ -3011,19 +3011,19 @@
     const sec = document.getElementById('todoSection')
     if (!sec) return
     const editing = sec.classList.contains('editing')
-    // 编辑态:OG要能改任何大题,先把所有 .locked 清掉(退出编辑时 saveCurrentTemplate → refreshQuizState 会重算)
+    // Editing mode: Coach should be able to edit any group, so clear all .locked first (refreshQuizState recomputes on exit via saveCurrentTemplate)
     if (editing) sec.querySelectorAll('.todo-group.locked').forEach(g => g.classList.remove('locked'))
     sec.querySelectorAll('.todo-text[data-text]').forEach(el => {
       if (editing) el.setAttribute('contenteditable', 'true')
       else el.removeAttribute('contenteditable')
     })
-    // 方案名（todoHeadName）也可改
+    // Plan name (todoHeadName) is also editable
     const nameEl = document.getElementById('todoHeadName')
     if (nameEl) {
       if (editing) nameEl.setAttribute('contenteditable', 'true')
       else nameEl.removeAttribute('contenteditable')
     }
-    // 编辑按钮在编辑态变成对勾「确认/保存」
+    // The edit button becomes a check mark "confirm/save" in editing mode
     const btn = document.getElementById('todoEditBtn')
     if (btn) {
       btn.title = editing ? 'Done editing (save)' : 'Edit plan'
@@ -3056,7 +3056,7 @@
   async function loadActiveTodoTemplate(room) {
     let templateId = room.active_todo_template_id
 
-    // OG在自己房：没 active 就 seed 个人首个方案并设为 active
+    // Coach in own room: if no active, seed first personal plan and set as active
     if (!templateId && isExpert(room)) {
       templateId = await ensureExpertHasDefaultTemplate(room.expert_id)
       if (templateId) {
@@ -3091,8 +3091,8 @@
 
     renderTodos(currentTemplate ? currentTemplate.payload : DEFAULT_TODO_PAYLOAD)
 
-    // AI 写 todo (chat2go.py 调 ai_replace_room_todo RPC 直接改表) 绕过 messages 流，
-    // 单独订阅 expert_todo_templates UPDATE 触发 sidebar 重渲
+    // AI writes todos (chat2go.py calls ai_replace_room_todo RPC directly), bypassing the messages stream,
+    // so we subscribe separately to expert_todo_templates UPDATE to re-render the sidebar
     if (todoTemplateChannel) { sb.removeChannel(todoTemplateChannel); todoTemplateChannel = null }
     if (currentTemplate?.id) {
       todoTemplateChannel = sb
@@ -3114,9 +3114,9 @@
     }
   }
 
-  // 老师点 mic 按钮 → 写一条 message_type='extract_todos' 给 Hermes 路由 → 后端拉最近
-  // source='asr' 的转写 → Haiku 抽 todo items → append 到当前模板 → 写 AI 回复(带
-  // attachments _event 标记)→ 前端 Realtime INSERT 检测到该标记 → reload 模板
+  // Coach taps mic button → writes a message_type='extract_todos' to route to Hermes → backend pulls latest
+  // source='asr' transcripts → Haiku extracts todo items → append to current template → writes AI reply (with
+  // attachments _event marker) → frontend Realtime INSERT detects marker → reloads template
   async function extractTodosFromLatestRecording() {
     if (!currentRoom || !currentUser) { showToast('Pick a room first'); return }
     try {
@@ -3166,7 +3166,7 @@
       const it = currentTemplate.payload[gi]?.items?.[ii]
       if (it) it.label = el.textContent.trim()
     })
-    // 同步方案名（清空则回退到原名，避免存空字符串）
+    // Sync plan name (empty falls back to original to avoid saving an empty string)
     const nameEl = document.getElementById('todoHeadName')
     const newName = (nameEl?.textContent || '').trim() || currentTemplate.name || 'Todo'
     currentTemplate.name = newName
@@ -3240,7 +3240,7 @@
       <div class="todo-popup-item todo-popup-add" onclick="createNewTemplate()">
         <span class="dot"></span><span>+ New plan</span>
       </div>`
-    // 跟随 caret 按钮定位（fixed → 视口坐标），右对齐 caret 右沿
+    // Follow the caret button's position (fixed → viewport coords), right-align with caret's right edge
     const r = caret.getBoundingClientRect()
     popup.style.top = (r.bottom + 4) + 'px'
     popup.style.left = Math.max(8, r.right - 220) + 'px'
@@ -3278,7 +3278,7 @@
     if (error) { showToast('Delete failed: ' + (error.message || error.code)); return }
     showToast('Deleted')
     if (wasActive) {
-      // rooms.active_todo_template_id 已被 fk on delete set null
+      // rooms.active_todo_template_id was set null by FK on delete
       currentRoom.active_todo_template_id = null
       await loadActiveTodoTemplate(currentRoom)
       await refreshQuizState()
@@ -3353,7 +3353,7 @@
       if (isCurrent && currentAiMsgId) sub.dataset.aiMsgId = currentAiMsgId
       else delete sub.dataset.aiMsgId
     })
-    // 大题解锁：当前组的「起始题号」<= passed 才解锁，编辑态强制全解锁
+    // Group unlock: a group's "start index" must be <= passed to unlock; editing mode forces full unlock
     const editing = document.getElementById('todoSection')?.classList.contains('editing')
     document.querySelectorAll('.todo-group').forEach(g => {
       const start = Number(g.dataset.groupStart || 0)
@@ -3361,16 +3361,16 @@
       g.classList.toggle('locked', locked)
       if (locked) g.classList.remove('expanded')
     })
-    // 自动展开包含 current 的 group + 自动折叠已完成的 group
+    // Auto-expand the group containing `current` + auto-collapse completed groups
     const currentSub = document.querySelector('.todo-sub.current')
     const currentGroup = currentSub?.closest('.todo-group') || null
     document.querySelectorAll('.todo-group').forEach(g => {
-      if (g.classList.contains('locked')) return  // 锁定的上面已折叠,不动
+      if (g.classList.contains('locked')) return  // Locked ones are already collapsed above — skip
       if (g === currentGroup) {
         g.classList.add('expanded')
         return
       }
-      // 整组都 done → 折叠;有空组(没 sub)不动
+      // All subs done → collapse; empty groups (no subs) untouched
       const subs = g.querySelectorAll('.todo-sub[data-quiz-idx]')
       if (subs.length > 0 && Array.from(subs).every(s => s.classList.contains('done'))) {
         g.classList.remove('expanded')
@@ -3391,7 +3391,7 @@
   }
   function shortModelName(model) {
     if (!model) return '—'
-    // openrouter 只是聚合层，不是真正的 LLM 提供方，去掉前缀只保留底层 provider/model
+    // openrouter is an aggregator, not an actual LLM provider — strip prefix, keep underlying provider/model
     model = model.replace(/^openrouter\//, '')
     const parts = model.split('/')
     const tail = parts[parts.length - 1]
@@ -3406,13 +3406,13 @@
       const provider = PROVIDER_LABELS[p] || (p.charAt(0).toUpperCase() + p.slice(1))
       return `${provider} · ${tailNice}`
     }
-    // 只有 provider 没有具体 model（如 'google'），保留 provider 名
+    // Provider only, no specific model (e.g. 'google') — keep the provider name
     const lone = (model || '').toLowerCase()
     return PROVIDER_LABELS[lone] || tailNice
   }
 
   async function loadRoomCost(roomId) {
-    // 并行拉 room_costs（汇总）+ 最近一条 model_usage（context 占用）
+    // Fetch room_costs (totals) + latest model_usage (context usage) in parallel
     const [rc, lu] = await Promise.all([
       sb.from('room_costs')
         .select('total_charge_cny,total_input_tokens,total_output_tokens')
@@ -3426,53 +3426,53 @@
         .maybeSingle(),
     ])
 
-    // 单次计算 context 占用（三档之和），同时驱动模型名 / 已用-上限 / 百分比
+    // Single pass: compute context usage (sum of three tiers); drives model name / used-vs-cap / percent
     try {
-      // 顶部进度环 = 本房间累计 token (跟 typing 气泡的 ↑↓ 累计估算语义对齐)
-      // 不再用 model_usage 最近一条 (那只是单次 input 占用),用 room_costs 视图累计
+      // Top progress ring = cumulative tokens this room (aligns with the typing bubble's ↑↓ cumulative estimate)
+      // No longer using the latest model_usage row (that's only one input pass); use room_costs view cumulative
       const used = Number(rc.data?.total_input_tokens ?? 0)
                  + Number(rc.data?.total_output_tokens ?? 0)
       const model = lu.data?.model ?? ''
       const window = ROOM_TOKEN_BUDGET
       const pct = window > 0 ? (used / window) * 100 : 0
 
-      // 累计 token（input+output）作为悬停详情
+      // Cumulative token (input+output) for hover detail
       const inTok = Number(rc.data?.total_input_tokens ?? 0)
       const outTok = Number(rc.data?.total_output_tokens ?? 0)
       const totalIO = inTok + outTok
       const cny = Number(rc.data?.total_charge_cny ?? 0)
 
-      // 模型名
+      // Model name
       const modelEl = document.getElementById('chatRoomModel')
       modelEl.textContent = shortModelName(model)
       modelEl.title = model || 'No conversation yet'
 
-      // 已用 / 上限
+      // Used / cap
       const tokensEl = document.getElementById('chatRoomTokens')
       tokensEl.textContent = `${formatTokens(used)} / ${formatTokens(window)} Token`
-      tokensEl.title = `本轮 context: ${used.toLocaleString()} / ${window.toLocaleString()} tokens`
-        + `\n累计 I/O: ${formatTokens(totalIO)} (${inTok.toLocaleString()} in + ${outTok.toLocaleString()} out)`
-        + `\n累计消费: ¥${cny.toFixed(2)}`
+      tokensEl.title = `This turn context: ${used.toLocaleString()} / ${window.toLocaleString()} tokens`
+        + `\nCumulative I/O: ${formatTokens(totalIO)} (${inTok.toLocaleString()} in + ${outTok.toLocaleString()} out)`
+        + `\nCumulative spend: ¥${cny.toFixed(2)}`
 
-      // 进度环填充（dashoffset = C × (1 - pct/100)，pct 已是百分数）
+      // Progress ring fill (dashoffset = C × (1 - pct/100), pct is already a percentage)
       const ring = document.getElementById('chatTokensRingFill')
       if (ring) {
         const C = 2 * Math.PI * 14
         ring.style.strokeDasharray = String(C)
         ring.style.strokeDashoffset = String(C * (1 - Math.min(pct, 100) / 100))
       }
-      // chat-metrics 容器跟随 warn/danger 着色（让环跟随）
+      // chat-metrics container picks up warn/danger color (ring follows)
       const metricsEl = document.querySelector('.chat-metrics')
       if (metricsEl) {
         metricsEl.classList.toggle('warn',   pct >= 60 && pct < 85)
         metricsEl.classList.toggle('danger', pct >= 85)
       }
 
-      // 剩余百分比 + 电池图标（语义对齐：显示「还剩多少」）
+      // Remaining percent + battery icon (semantic: show "how much is left")
       const remPct = Math.min(Math.max(100 - pct, 0), 100)
       const pctEl = document.getElementById('chatRoomCtx')
       pctEl.textContent = `${remPct.toFixed(0)}%`
-      pctEl.title = `context 剩余 ${remPct.toFixed(1)}% · 已用 ${pct.toFixed(1)}%`
+      pctEl.title = `Context remaining ${remPct.toFixed(1)}% · used ${pct.toFixed(1)}%`
       const wrap = document.getElementById('chatCtxWrap')
       wrap.classList.toggle('warn',   pct >= 60 && pct < 85)
       wrap.classList.toggle('danger', pct >= 85)
@@ -3496,13 +3496,13 @@
     refreshQuizState()
     scrollToBottom()
 
-    // 用心跳真实反映 bridge 状态（不再靠「最近 10 分钟有 AI 消息」猜）
+    // Use heartbeat for real bridge status (no more guessing from "AI message in last 10 minutes")
     refreshBridgeStatus()
   }
 
   async function maybeRefreshRoomFocal(payloadNew) {
-    // user role 消息到达时，若前端 currentRoom.focal_user_id 跟实际不一致(trigger 已在
-    // DB 端锁了 focal 但前端 snapshot stale)，refetch + 重画已渲染 user 头像
+    // When a user-role message arrives, if frontend currentRoom.focal_user_id is out of sync (trigger
+    // locked focal on the DB side but frontend snapshot is stale), refetch + redraw rendered user avatars
     if (!currentRoom || !payloadNew || payloadNew.role !== 'user') return
     const oldFocal = currentRoom.focal_user_id
     try {
@@ -3539,7 +3539,7 @@
         table: 'messages',
         filter: `room_id=eq.${roomId}`
       }, payload => {
-        // 评价 ratings 更新（双方共识用），同步 UI + 刷做题进度
+        // Rating updates (for two-side consensus): sync UI + refresh quiz progress
         if (payload.new?.role === 'ai') {
           applyRatingsToMsg(payload.new.id, payload.new.ratings || {})
           refreshQuizState()
@@ -3552,11 +3552,11 @@
         table: 'messages',
         filter: `room_id=eq.${roomId}`
       }, payload => {
-        // 系统 marker 消息：不渲染、不计未读（trigger 自动写的双钩 pass 推进信号）
+        // System marker message: don't render, don't count unread (trigger-written double-check-pass signal)
         if (payload.new?.content === '__SYS_ADVANCE_QUIZ__') return
-        // 翻译触发消息(隐藏)
+        // Translation trigger message (hidden)
         if (payload.new?.content === '__SYS_TRANSLATE__') return
-        // 翻译结果 AI 消息(不作为独立 bubble 渲染,只把灰字填进源消息下方)
+        // Translation result AI message (not rendered as its own bubble — fills gray text under the source message)
         try {
           const _atts = payload.new?.attachments || []
           if (payload.new?.role === 'ai' && Array.isArray(_atts)) {
@@ -3568,29 +3568,29 @@
                 slot.textContent = _tr.translation || '(empty)'
                 slot.style.display = 'block'
               }
-              // 同时清掉对应消息按钮的 loading 态
+              // Also clear loading state on the corresponding message button
               const srcMsgEl = document.querySelector(`[data-msg-id="${_tr.source_message_id}"]`)
               srcMsgEl?.querySelector('.translate-btn')?.classList.remove('loading')
-              return  // 不走下面 append 流程
+              return  // Skip the append flow below
             }
           }
         } catch (_) {}
-        // 只渲染当前 channel 的消息；其它 channel 累计未读计数
+        // Only render messages in the current channel; other channels accumulate unread counts
         const msgChannel = payload.new.channel || 'main'
         const inCurChannel = msgChannel === currentChannel
         const isSelf = payload.new.user_id === currentUser?.id && payload.new.role !== 'ai'
         const exists = document.querySelector(`[data-msg-id="${payload.new.id}"]`)
         if (!exists) {
           if (payload.new.role === 'ai') {
-            // typing 是全局 UI，任何 AI 消息到达都清掉（避免切 channel 残留）
+            // Typing is global UI — any incoming AI message clears it (avoids stale state when switching channels)
             clearTimeout(typingTimer)
             hideTyping()
             setBridgeStatus(true)
             lastAiMessageAt = Date.now()
-            // AI 回复完成 → bridge 刚写完 model_usage 行 → 刷新成本徽章
-            // 延迟 500ms 等 model_usage insert 落地
+            // AI reply complete → bridge just wrote model_usage row → refresh cost badge
+            // 500ms delay so the model_usage insert lands first
             setTimeout(() => loadRoomCost(roomId), 500)
-            // 后端抽完 todo 会带 attachments[*]._event='todos_updated' 标记 → reload 模板
+            // Backend's todo extraction marks attachments[*]._event='todos_updated' → reload template
             try {
               const atts = payload.new.attachments || []
               if (Array.isArray(atts) && atts.some(a => a && a._event === 'todos_updated')) {
@@ -3601,17 +3601,17 @@
           if (inCurChannel) {
             appendMessage(payload.new)
             scrollToBottom()
-            // user role 消息可能触发了 focal 锁定，refetch 同步 + 重画
+            // A user-role message may have triggered focal lock — refetch sync + redraw
             if (payload.new.role === 'user') maybeRefreshRoomFocal(payload.new)
-            // 非 AI 消息进入 main 频道 → AI 会响应，所有观众都显示 typing
+            // Non-AI message enters main channel → AI will respond, all viewers show typing
             if (payload.new.role !== 'ai' && (payload.new.channel || 'main') === 'main') {
               showTyping()
               clearTimeout(typingTimer)
-              // typing 兜底 timeout 拉到 10 分钟（qwen 慢响应 + 命理深推可能 3-5 分钟）
+              // Typing fallback timeout extended to 10 minutes (slow model responses can take 3-5 min)
               typingTimer = setTimeout(() => { hideTyping(); setBridgeStatus(false) }, 600000)
             }
           } else if (!isSelf) {
-            // 不在当前 channel + 不是自己发的 → 累计未读
+            // Not in current channel + not sent by self → accumulate unread
             unreadCounts[msgChannel] = (unreadCounts[msgChannel] || 0) + 1
             updateUnreadBadge(msgChannel)
           }
@@ -3632,32 +3632,32 @@
   }
 
   function renderPresence(_state) {
-    // 白底胶囊 channel tab：图标 only + 未读徽章位
+    // White-pill channel tabs: icon only + unread badge slot
     const row = document.getElementById('presenceRow')
     if (!row) return
     const isExp = isExpert(currentRoom)
     const aiName = currentRoom?.ai_name || 'AI'
-    // 群聊：原 ti-users 风格 + 第三个人头 → 手写 SVG 3 头
+    // Group chat: ti-users style + a third head → hand-drawn SVG with 3 heads
     const groupIconSvg = `<svg class="tab-icon" width="20" height="16" viewBox="0 0 26 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="5" r="2.4"/><circle cx="13" cy="4" r="2.8"/><circle cx="21" cy="5" r="2.4"/><path d="M1 15v-1.2a2.6 2.6 0 0 1 2.6-2.6h2.8A2.6 2.6 0 0 1 9 13.8V15"/><path d="M8.4 15v-1.4A3 3 0 0 1 11.4 10.6h3.2a3 3 0 0 1 3 3V15"/><path d="M17 15v-1.2a2.6 2.6 0 0 1 2.6-2.6h2.8A2.6 2.6 0 0 1 25 13.8V15"/></svg>`
     const groupCountHtml = `<span class="group-count" id="groupMemberCount">${roomMemberCount ?? ''}</span>`
-    // 私聊永远是OG + 小白 = 焦点锁了就 2，否则只有OG = 1
+    // DM is always Coach + Learner = 2 if focal is locked, otherwise just Coach = 1
     const peerCount = currentRoom?.focal_user_id ? 2 : 1
     const peerCountHtml = `<span class="group-count">${peerCount}</span>`
     const tabs = [
       { cls: 'main', ch: 'main', title: `Main (group chat with ${aiName})`, iconHtml: groupCountHtml + groupIconSvg },
     ]
-    // 私聊 tab 只对OG和八字主（focal）开放；路人看不到
+    // DM tab is only visible to Coach and the focal Learner; guests don't see it
     if (currentRoomRole === 'expert' || currentRoomRole === 'focal') {
-      // 私聊：图标在左，数字在右
+      // DM: icon on the left, count on the right
       const peerInner = `<i class="ti ti-user"></i>` + peerCountHtml
       tabs.push(isExp
-        ? { cls: 'peer-user',   ch: 'expert_user', title: 'Private with student (AI not involved)', iconHtml: peerInner }
-        : { cls: 'peer-expert', ch: 'expert_user', title: 'Private with OG (AI not involved)', iconHtml: peerInner })
+        ? { cls: 'peer-user',   ch: 'expert_user', title: 'Private with learner (AI not involved)', iconHtml: peerInner }
+        : { cls: 'peer-expert', ch: 'expert_user', title: 'Private with Coach (AI not involved)', iconHtml: peerInner })
     }
     row.innerHTML = tabs.map(t => {
       const cls = `presence-tab ${t.cls}` + (t.ch === currentChannel ? ' active' : '')
       const iconHtml = t.iconHtml || `<i class="ti ${t.icon}"></i>`
-      // 群胶囊：点了切到 main + 弹成员列表；其它胶囊只切频道
+      // Group pill: clicking switches to main + opens member list; other pills only switch channel
       const clickHandler = t.ch === 'main'
         ? "switchChannel('main');openMemberListPopover();event.stopPropagation();"
         : `switchChannel('${t.ch}')`
@@ -3666,42 +3666,42 @@
         + `<span class="unread" data-ch="${t.ch}">0</span>`
         + `</div>`
     }).join('')
-    // 重渲染后把现有未读计数同步到 DOM
+    // After re-render, sync existing unread counts to the DOM
     Object.keys(unreadCounts).forEach(updateUnreadBadge)
   }
 
   let roomMemberCount = null
   let _roomMembersCache = []
   async function refreshRoomMembers() {
-    // 拉本房成员（用 SECURITY DEFINER RPC 绕开 room_members RLS），顺带塞 profilesByUid 让 @ 列表完整
+    // Load room members (using SECURITY DEFINER RPC to bypass room_members RLS); also populate profilesByUid so the @ list is complete
     if (!currentRoom) return
     const { data, error } = await sb.rpc('get_room_members', { p_room_id: currentRoom.id })
     if (error) { console.warn('[room members]', error); return }
     _roomMembersCache = data || []
-    roomMemberCount = _roomMembersCache.length + 1  // +1: AI 也算一个成员
+    roomMemberCount = _roomMembersCache.length + 1  // +1: AI counts as a member
     const el = document.getElementById('groupMemberCount')
     if (el) el.textContent = roomMemberCount
     _roomMembersCache.forEach(m => {
       if (m.display_name && !profilesByUid[m.user_id]) profilesByUid[m.user_id] = m.display_name
     })
   }
-  // 兼容旧调用入口
+  // Back-compat for old call sites
   async function refreshRoomMemberCount() { return refreshRoomMembers() }
 
-  // 点群胶囊：除了切换频道，还弹出成员清单
+  // Click group pill: switch channel + show member list
   function openMemberListPopover() {
     const pop = document.getElementById('memberListPopover')
     if (!pop) return
     const aiName = currentRoom?.ai_name || 'AI assistant'
-    // AI 永远在场，单独加一行；点行 = @ 这个名字进输入框
+    // AI is always present, add its own row; clicking a row = @ that name into the input
     const rows = []
     rows.push(`<div class="ml-row" data-mention="${escHtml(aiName)}"><span class="ml-av ai">AI</span><span class="ml-name">${escHtml(aiName)}</span><span class="ml-role">AI assistant</span></div>`)
     _roomMembersCache.forEach(m => {
-      // 自己不出现在 @ 列表里（避免 @ 自己）
+      // Don't show self in the @ list (avoid @-ing yourself)
       if (m.user_id === currentUser?.id) return
       const roleCls = m.role
       const initial = m.role === 'expert' ? 'OG' : (m.role === 'audience' ? 'G' : 'S')
-      const roleLabel = m.role === 'expert' ? 'OG' : (m.role === 'focal' ? 'Student' : 'Guest')
+      const roleLabel = m.role === 'expert' ? 'Coach' : (m.role === 'focal' ? 'Learner' : 'Guest')
       rows.push(`<div class="ml-row" data-mention="${escHtml(m.display_name)}"><span class="ml-av ${roleCls}">${initial}</span><span class="ml-name">${escHtml(m.display_name)}</span><span class="ml-role">${roleLabel}</span></div>`)
     })
     pop.innerHTML = rows.join('')
@@ -3718,14 +3718,14 @@
       })
     })
     pop.classList.add('open')
-    // 点外部关闭
+    // Click outside to close
     setTimeout(() => document.addEventListener('click', _onDocClickCloseMemberList, { once: true }), 0)
   }
   function _onDocClickCloseMemberList(e) {
     const pop = document.getElementById('memberListPopover')
     if (!pop) return
     if (pop.contains(e.target)) {
-      // 在弹层内点击就保持打开，再挂一次 once 监听
+      // Click inside popover: keep open, re-attach the once listener
       setTimeout(() => document.addEventListener('click', _onDocClickCloseMemberList, { once: true }), 0)
       return
     }
@@ -3733,11 +3733,11 @@
   }
 
   function appendMessage(msg) {
-    // 系统 marker 消息：双钩 pass 触发 bridge 让 AI 进入下一题，前端不渲染
+    // System marker message: double-check pass tells bridge to advance to next question; not rendered on frontend
     if (msg.content === '__SYS_ADVANCE_QUIZ__') return
-    if (msg.content === '__SYS_TRANSLATE__') return  // 翻译触发消息
-    // 翻译结果消息(AI + attachments._event=translation_result):loadMessages 历史回放时
-    // 把灰字回填到源消息下方,不作为独立 bubble
+    if (msg.content === '__SYS_TRANSLATE__') return  // Translation trigger message
+    // Translation result message (AI + attachments._event=translation_result): during loadMessages history replay,
+    // fill the gray text under the source message — not rendered as its own bubble
     try {
       const _atts = msg.attachments || []
       if (msg.role === 'ai' && Array.isArray(_atts)) {
@@ -3758,16 +3758,16 @@
     const isOwn = msg.user_id === currentUser?.id
     const isMarkdown = msg.type === 'markdown' || (role === 'ai' && looksLikeMarkdown(msg.content))
 
-    // 三角色：role='user' 且 user_id 非 focal_user_id → 路人；其余按 role
-    // 兜底：focal_user_id 未锁定(null)时所有 user 默认显示「小白」而不是「路人」，
-    // 防止前端 currentRoom 数据 stale(trigger 在 DB 端锁了 focal 但前端没刷)误标头像
+    // Three roles: role='user' with user_id != focal_user_id → guest; otherwise follow role
+    // Fallback: when focal_user_id is null (not locked yet), default user role to "Learner" rather than "Guest",
+    // to prevent stale frontend currentRoom data (trigger locked focal on DB but frontend didn't refresh) from mislabeling avatars
     const isFocal = msg.user_id && currentRoom?.focal_user_id && msg.user_id === currentRoom.focal_user_id
     const displayRole = (role === 'user' && currentRoom?.focal_user_id && !isFocal) ? 'audience' : role
     const aiName = currentRoom?.ai_name || 'AI assistant'
-    const roleLabels = { user: 'Student', audience: 'Guest', expert: 'OG', ai: aiName }
+    const roleLabels = { user: 'Learner', audience: 'Guest', expert: 'Coach', ai: aiName }
     const roleLabel = roleLabels[displayRole] || displayRole
     const avText = displayRole === 'ai' ? 'AI' : displayRole === 'expert' ? 'OG' : displayRole === 'audience' ? 'G' : 'S'
-    // 头像点击：AI 头像(仅OG)→编辑 AI 名；自己头像(非 AI)→进设置；其它头像不可点
+    // Avatar click: AI avatar (Coach only) → edit AI name; own avatar (non-AI) → open settings; others not clickable
     let avClick = ''
     if (role === 'ai' && isExpert(currentRoom)) {
       avClick = ' onclick="editAIName()" title="Click to edit AI name" style="cursor:pointer;"'
@@ -3775,7 +3775,7 @@
       avClick = ' onclick="openSettings()" title="Click to open settings" style="cursor:pointer;"'
     }
     const aiAvClick = avClick
-    // 显示名优先级：自己 → currentDisplayName；他人 → profilesByUid 缓存 → roleLabel
+    // Display name precedence: self → currentDisplayName; others → profilesByUid cache → roleLabel
     let senderName
     if (role === 'ai') {
       senderName = roleLabel
@@ -3783,10 +3783,10 @@
       senderName = currentDisplayName || roleLabel
     } else {
       senderName = profilesByUid[msg.user_id] || roleLabel
-      // 没缓存就异步拉一下，回来再更新 DOM
+      // No cache — fetch async and update DOM when it returns
       if (!profilesByUid[msg.user_id]) ensureProfileName(msg.user_id)
     }
-    // ASR 实时转写来源加小标
+    // Add small badge for ASR live transcription source
     let asrBadge = ''
     if (msg.source === 'asr') asrBadge = '<span class="asr-badge" title="Live transcript">🎙</span>'
     else if (msg.source === 'asr-unknown') asrBadge = '<span class="asr-badge unknown" title="Unknown speaker">🎙?</span>'
@@ -3816,13 +3816,13 @@
         }).join('')}
       </div>` : ''
 
-    const isPlaceholderMsg = attachments.length > 0 && /^\[发送了 \d+ 个文件\]$/.test(msg.content)
+    const isPlaceholderMsg = attachments.length > 0 && /^\[Sent \d+ files?\]$/.test(msg.content)
 
-    // 微信风：抽出尾部 markdown 引用块，渲染成气泡下的灰色卡片（只对非 markdown 消息做）
+    // WeChat style: extract trailing markdown quote block and render as a gray card below the bubble (only for non-markdown messages)
     let displayContent = msg.content || ''
     let quoteCardHtml = ''
     if (!isMarkdown) {
-      const QUOTE_TRAILER_RE = /\n\n> \*\*(.+?)\*\*：\n((?:>.*(?:\n|$))+)\s*$/
+      const QUOTE_TRAILER_RE = /\n\n> \*\*(.+?)\*\*[:：]\n((?:>.*(?:\n|$))+)\s*$/
       const m = displayContent.match(QUOTE_TRAILER_RE)
       if (m) {
         displayContent = displayContent.slice(0, m.index).trimEnd()
@@ -3830,7 +3830,7 @@
         const lines = m[2].split('\n').map(l => l.replace(/^>\s?/, '')).filter(s => s !== '')
         let preview = lines.join(' ').replace(/\s+/g, ' ').trim()
         if (preview.length > 120) preview = preview.slice(0, 120) + '…'
-        quoteCardHtml = `<div class="msg-quote-card"><span class="qsender">${escHtml(qSender)}：</span><span class="qbody">${escHtml(preview)}</span></div>`
+        quoteCardHtml = `<div class="msg-quote-card"><span class="qsender">${escHtml(qSender)}:</span><span class="qbody">${escHtml(preview)}</span></div>`
       }
     }
 
@@ -3839,21 +3839,21 @@
            <div class="md-body" id="md-${msg.id}">${marked.parse(msg.content)}</div>
          </div>`
       : (isPlaceholderMsg
-          ? ''  // 纯文件消息不显示气泡，只显示附件卡片
+          ? ''  // Pure file message: no bubble, just attachment card
           : (displayContent
               ? `<div class="msg-bubble ${role}">${highlightMentions(escHtml(displayContent))}</div>`
               : ''))
 
-    // 把原始文本存起来供复制（HTML 转义后再 unescape 不可靠，直接 base64 编码绕过）
+    // Store raw text for copy (HTML-escape+unescape isn't reliable, use base64 to bypass)
     const rawB64 = btoa(unescape(encodeURIComponent(msg.content || '')))
 
     const quoteSender = escHtml(senderName).replace(/'/g, "&#39;")
     const quoteBtnHtml = `<button class="msg-rate-btn quote" title="Quote in input" onclick="quoteMessage('${rawB64}', '${quoteSender}')"><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="2" cy="5" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="8" cy="5" r="1"/></svg></button>`
-    // 同步到私聊按钮：只在主窗渲染时出现
+    // Sync-to-DM button: only appears in the main channel
     const syncBtnHtml = currentChannel === 'main'
       ? `<button class="msg-rate-btn sync" title="Sync to private chat" onclick="syncToPrivate('${msg.id}', this)"><svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v2.5A1.5 1.5 0 0 0 4.5 13h5A1.5 1.5 0 0 0 11 11.5V9"/><path d="M7 9V2"/><path d="M4 5l3-3 3 3"/></svg></button>`
       : ''
-    const translateBtnHtml = `<button class="msg-rate-btn translate-btn" title="Translate (EN ↔ 中)" onclick="translateMessage('${msg.id}', this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>`
+    const translateBtnHtml = `<button class="msg-rate-btn translate-btn" title="Translate (EN ↔ ZH)" onclick="translateMessage('${msg.id}', this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>`
     const rateBarHtml = role === 'ai' ? `
       <div class="msg-rate-bar" data-rate-msg-id="${msg.id}">
         <button class="msg-rate-btn up" title="Correct — one-tap praise + quote" onclick="rateMessage(this, '${msg.id}', 'up', '${rawB64}', '${quoteSender}')">&#10003;</button>
@@ -3891,7 +3891,7 @@
     if (role === 'ai') applyRatingsToMsg(msg.id, msg.ratings || {})
   }
 
-  // 评 ✓ / ✗ 时自动 prepend 的赞美 / 纠错短句
+  // Auto-prepended praise / critique phrases when rating ✓ / ✗
   const RATE_PRAISES = [
     "Nailed it. Right on the money.",
     "Spot on, exactly that.",
@@ -3938,10 +3938,10 @@
   ]
   function pickPhrase(arr) { return arr[Math.floor(Math.random() * arr.length)] }
 
-  // 记录上次 rate 自动 prepend 的字符串，便于下次 rate（切换 ✓/✗ 或取消）时先剥掉
+  // Remember the last auto-prepended string so the next rate (✓/✗ switch or cancel) can strip it first
   let lastRatePrepend = ''
 
-  // 待发送引用（微信样式：输入框里看不到，发送时静默附在消息末尾）
+  // Pending quote (WeChat style: invisible in the input box; silently appended on send)
   // { b64, sender, preview } | null
   let pendingQuote = null
 
@@ -3953,7 +3953,7 @@
     pendingQuote = { b64, sender, preview }
     const wrap = document.getElementById('quotePreview')
     if (!wrap) return
-    document.getElementById('qpSender').textContent = sender + '：'
+    document.getElementById('qpSender').textContent = sender + ':'
     document.getElementById('qpBody').textContent = preview
     wrap.style.display = ''
   }
@@ -3970,10 +3970,10 @@
     const lines = text.split('\n').slice(0, 4)
     let preview = lines.map(l => '> ' + l).join('\n')
     if (text.split('\n').length > 4 || text.length > 200) preview += '\n> …'
-    return `> **${sender}**：\n${preview}`
+    return `> **${sender}**:\n${preview}`
   }
 
-  // 评价 AI 消息：调 rate_message RPC，状态走 messages.ratings（双方共识，Realtime 同步）
+  // Rate an AI message: calls rate_message RPC; state goes through messages.ratings (two-side consensus, Realtime sync)
   async function rateMessage(btn, msgId, val, b64, sender) {
     const bar = btn.closest('.msg-rate-bar')
     if (!bar) return
@@ -3984,12 +3984,12 @@
     try { ratings = JSON.parse(group?.dataset.ratings || '{}') } catch (e) {}
     const oldUp = Object.values(ratings).filter(v => v === 'up').length
     const cur = ratings[myUid] || ''
-    const next = (cur === val) ? '' : val   // 再点取消
+    const next = (cur === val) ? '' : val   // Tap again to cancel
     const { data, error } = await sb.rpc('rate_message', { p_msg_id: msgId, p_val: next })
     if (error) { showToast('Rating failed: ' + error.message); return }
     applyRatingsToMsg(msgId, data || {})
     refreshQuizState()
-    // 我刚把 up 数从 <2 推到 >=2 → 摘要 copy 私聊 + main 频道随机发一句正面回应让 AI 自然推进
+    // Just pushed up-count from <2 to >=2 → summary copy to DM + main channel posts a random positive reply so AI advances naturally
     const newUp = Object.values(data || {}).filter(v => v === 'up').length
     if (newUp >= 2 && oldUp < 2) {
       relayPassToPrivate(msgId).catch(e => console.warn('[relay pass]', e))
@@ -4003,13 +4003,13 @@
         type: 'text',
       }).then(({ error: e }) => { if (e) console.warn('[pass praise insert]', e) })
     }
-    // 处理输入框：先把上次自动 prepend 的内容剥掉，再按需 prepend 新的
+    // Handle input: strip last auto-prepended content, then prepend new content if needed
     const input = document.getElementById('msgInput')
     if (input) {
       if (lastRatePrepend && input.value.startsWith(lastRatePrepend)) {
         input.value = input.value.slice(lastRatePrepend.length)
       }
-      // 仅 ✗ 时挂引用 + 评论；✓ 不打扰输入框
+      // Only on ✗: attach quote + comment; ✓ leaves the input alone
       if (next === 'down' && b64 && sender) {
         const phrase = pickPhrase(RATE_CRITIQUES)
         const block = `❌ ${phrase}\n\n`
@@ -4028,7 +4028,7 @@
       }
     }
   }
-  // 把 messages.ratings 应用到 AI 消息 UI（DOM 状态 + 按钮 active + 双钩 badge）
+  // Apply messages.ratings to AI message UI (DOM state + button active + double-check badge)
   function applyRatingsToMsg(msgId, ratings) {
     const group = document.querySelector(`.msg-group[data-msg-id="${msgId}"]`)
     if (!group) return
@@ -4060,11 +4060,11 @@
       }
     }
   }
-  // 旧 applyRateState 兼容：appendMessage 渲染完调，把 ratings 从消息对象写回
+  // Back-compat for old applyRateState: called after appendMessage renders, writes ratings back from the message object
   function applyRateState(msgId, container) {
-    // 真正的状态来源是消息数据，appendMessage 时通过 applyRatingsToMsg 写回
+    // Real source of state is message data; appendMessage writes it back via applyRatingsToMsg
   }
-  // 拉某用户的 display_name 并回写所有已渲染的他/她的消息头
+  // Fetch a user's display_name and write back to all of their rendered message headers
   const _pendingNameFetches = new Set()
   async function ensureProfileName(uid) {
     if (!uid || profilesByUid[uid] || _pendingNameFetches.has(uid)) return
@@ -4075,7 +4075,7 @@
       const name = (data?.display_name || '').trim()
       if (name) {
         profilesByUid[uid] = name
-        // 回写所有该用户的已渲染消息 sender 文字
+        // Write back sender text on all rendered messages for this user
         document.querySelectorAll('.msg-group').forEach(g => {
           const senderEl = g.querySelector('.msg-sender')
           if (senderEl && g.dataset.userId === uid && !senderEl.dataset.own) {
@@ -4087,7 +4087,7 @@
     finally { _pendingNameFetches.delete(uid) }
   }
 
-  // ── @ 提及功能 ──
+  // ── @ Mention feature ──
   function getMentionCandidates() {
     const aiName = currentRoom?.ai_name || 'AI assistant'
     const list = [{ name: aiName, kind: 'ai', initial: 'AI' }]
@@ -4126,7 +4126,7 @@
     const before = val.slice(0, pos)
     const after = val.slice(pos)
     const lastAt = before.lastIndexOf('@')
-    // 只有 @ 到光标之间无空格才算「正在打的 @ token」，替换它；否则在光标位置插入新 @
+    // Only if there's no space between @ and the cursor is it considered "the @ token being typed" — replace it; otherwise insert a new @ at the cursor
     const activeAt = lastAt >= 0 && !/\s/.test(before.slice(lastAt + 1))
     let newPos
     if (activeAt) {
@@ -4142,7 +4142,7 @@
     input.focus()
   }
   function onMentionInput(e) {
-    // 在 oninput 时也检测一次（粘贴 / 输入法都走这里）
+    // Also detect on oninput (paste / IME both go through here)
     onMentionKeyup(e)
   }
   function onMentionKeyup(e) {
@@ -4151,20 +4151,20 @@
     const before = input.value.slice(0, pos)
     const lastAt = before.lastIndexOf('@')
     if (lastAt < 0) return hideMentionPopover()
-    // @ 前面：行头 / 空格 / 中文 / 标点 都行；只在前面是 ASCII 字母数字时拦截（避邮箱 user@host 误触）
+    // Before @: line start / space / any non-Latin char / punctuation all OK; only block if preceded by ASCII alphanumerics (avoid email user@host false-trigger)
     const charBefore = lastAt > 0 ? before[lastAt - 1] : ''
     if (charBefore && /[A-Za-z0-9._-]/.test(charBefore)) return hideMentionPopover()
-    // @ 到光标之间不能有空格
+    // No spaces allowed between @ and the cursor
     if (/\s/.test(before.slice(lastAt + 1))) return hideMentionPopover()
     showMentionPopover()
   }
-  // 把消息文本里的 @xxx 高亮
+  // Highlight @xxx in message text
   function highlightMentions(html) {
-    // 匹配 @ + 后面 1-30 非空白/标点字符
-    return html.replace(/@([^\s@<>,，。?？!！]{1,30})/g, '<span class="mention">@$1</span>')
+    // Match @ + 1-30 non-whitespace/punctuation chars after
+    return html.replace(/@([^\s@<>,.?!]{1,30})/g, '<span class="mention">@$1</span>')
   }
 
-  // 手动同步一条主窗消息到私聊（每条消息底部的「→私聊」按钮）
+  // Manually sync a main-channel message into DM (the "→ DM" button at the bottom of each message)
   async function syncToPrivate(msgId, btn) {
     if (!currentRoom) return
     if (btn) btn.disabled = true
@@ -4178,7 +4178,7 @@
       let senderName
       if (src.role === 'ai') senderName = currentRoom?.ai_name || 'AI assistant'
       else if (src.user_id === currentUser?.id) senderName = currentDisplayName || 'Me'
-      else senderName = profilesByUid[src.user_id] || (src.role === 'expert' ? 'OG' : 'Student')
+      else senderName = profilesByUid[src.user_id] || (src.role === 'expert' ? 'Coach' : 'Learner')
       const myRole = isExpert(currentRoom) ? 'expert' : 'user'
       const full = (src.content || '').trim()
       const newContent = `↪ Synced from ${senderName}: ${full || '[attachment]'}`
@@ -4201,7 +4201,7 @@
     }
   }
 
-  // 把刚 pass 的 AI 消息摘要 copy 到 expert_user 私聊频道
+  // Copy a summary of the just-passed AI message into the expert_user DM channel
   async function relayPassToPrivate(msgId) {
     if (!currentRoom) return
     const group = document.querySelector(`.msg-group[data-msg-id="${msgId}"]`)
@@ -4250,10 +4250,10 @@
     if (!currentRoom) return
     const input = document.getElementById('msgInput')
     const content = input.value.trim()
-    // 必须有内容或附件之一
+    // Must have content or attachments
     if (!content && pendingAttachments.length === 0) return
 
-    // 等所有附件上传完
+    // Wait for all attachments to finish uploading
     if (pendingAttachments.some(a => a.uploading)) {
       showToast('Attachments still uploading, please wait')
       return
@@ -4262,27 +4262,27 @@
     input.value = ''
     autoResize(input)
     lastRatePrepend = ''
-    // 清空语音识别的累积缓存，防止录音中发送后旧文本被 onresult 写回
+    // Clear voice-recognition accumulator so old text isn't written back by onresult after a mid-recording send
     voiceTextBefore = ''
-    // 把当前为止的所有 result 都标记为「已发」，后续 onresult 跳过它们（防 interim→final 延迟写回）
+    // Mark all results so far as "sent" so later onresult callbacks skip them (avoid interim→final late-write-back)
     voiceSkipBeforeIdx = voiceLastResultsLen
 
     const sendBtn = document.getElementById('sendBtn')
     sendBtn.disabled = true
 
     const role = isExpert(currentRoom) ? 'expert' : 'user'
-    // 微信样式引用：如果有 pendingQuote，把 trailer 静默附在消息末尾，
-    // 渲染时会被 appendMessage 抽出渲染为气泡下方灰卡片
+    // WeChat-style quote: if pendingQuote exists, silently append trailer to the message,
+    // appendMessage will extract it on render and show as a gray card below the bubble
     let bodyContent = content
     if (pendingQuote && bodyContent) {
       bodyContent = bodyContent + '\n\n' + buildQuoteBlock(pendingQuote.b64, pendingQuote.sender)
     }
-    // OG带引用 = 私下纠正语义，强制发到 expert_user 频道，AI 不公开回复
-    // （main 频道里 AI 错了不当众纠正，避免小白看到错误公开化）
+    // Coach + quote = private correction; force-send to expert_user channel, AI won't reply publicly
+    // (don't correct AI mistakes publicly in the main channel — avoid exposing the error to the Learner)
     const hadQuote = !!pendingQuote
     const isExpertQuoteCorrection = hadQuote && role === 'expert'
     const targetChannel = isExpertQuoteCorrection ? 'expert_user' : currentChannel
-    const finalContent = bodyContent || `[发送了 ${pendingAttachments.length} 个文件]`
+    const finalContent = bodyContent || `[Sent ${pendingAttachments.length} file${pendingAttachments.length === 1 ? '' : 's'}]`
     clearPendingQuote()
     const attachments = pendingAttachments.map(a => ({
       name: a.name, url: a.url, size: a.size, mime_type: a.mime_type, storage_path: a.storage_path
@@ -4310,19 +4310,19 @@
     sendBtn.disabled = false
     input.focus()
 
-    // OG私聊纠正：toast 提示已发到私聊，避免在 main 找不到困惑
+    // Coach private correction: toast says it went to DM, so user isn't confused by not seeing it in main
     if (isExpertQuoteCorrection && targetChannel !== currentChannel) {
-      showToast('Sent to OG↔student private correction')
+      showToast('Sent to Coach↔Learner private correction')
     }
 
     appendMessage(msgData)
     scrollToBottom()
 
-    // AI 在 main / expert_ai 频道响应；expert_user 频道（OG ↔ 小白）AI 不参与
+    // AI responds on main / expert_ai channels; expert_user channel (Coach ↔ Learner) is AI-free
     if (currentChannel !== 'expert_user') {
       showTyping()
       clearTimeout(typingTimer)
-      // typing 兜底 timeout 拉到 10 分钟（qwen 慢响应 + 命理深推可能 3-5 分钟）
+      // Typing fallback timeout extended to 10 minutes (slow model responses can take 3-5 min)
       typingTimer = setTimeout(() => {
         hideTyping()
         setBridgeStatus(false)
@@ -4340,9 +4340,9 @@
     el.style.cursor = canRestart ? 'pointer' : 'default'
   }
 
-  // ── bridge 心跳轮询 ──（每 6 秒拉 bridge_state.last_seen，> 30 秒未更新当离线）
+  // ── Bridge heartbeat polling ── (every 6s pulls bridge_state.last_seen; > 30s no update counts as offline)
   let _bridgeHeartbeatTimer = null
-  let _bridgeStatusFailCount = 0  // 连续异常计数；> 3 强制 offline，避免无限保留旧绿状态
+  let _bridgeStatusFailCount = 0  // Consecutive failure count; > 3 forces offline so old green state isn't kept forever
   async function refreshBridgeStatus() {
     try {
       const { data, error } = await sb
@@ -4355,7 +4355,7 @@
     } catch (e) {
       _bridgeStatusFailCount++
       console.warn('[bridge status]', e)
-      // 连续 3 次失败（约 18 秒）后转 offline，防止 bridge 中风但 UI 永远满格
+      // After 3 consecutive failures (~18s), switch to offline so a stalled bridge doesn't keep UI green
       if (_bridgeStatusFailCount >= 3) setBridgeStatus(false)
     }
   }
@@ -4365,19 +4365,19 @@
     _bridgeHeartbeatTimer = setInterval(refreshBridgeStatus, 6000)
   }
 
-  // 点击图标 → 请求 bridge 重启（落入 bridge_state.restart_requested_at，bridge 下一轮自我退出，launchd 拉起）
+  // Click icon → request bridge restart (writes bridge_state.restart_requested_at; bridge self-exits on next loop, launchd brings it back)
   async function requestBridgeRestart() {
-    if (currentRoomRole !== 'expert') { showToast('Only OG can restart AI'); return }
+    if (currentRoomRole !== 'expert') { showToast('Only Coach can restart AI'); return }
     const ok = confirm("Restart the AI bridge? (Use this when AI isn't responding)")
     if (!ok) return
     const { error } = await sb.rpc('request_bridge_restart')
     if (error) { showToast('Request failed: ' + (error.message || error.code)); return }
     showToast('Restart requested — takes effect in 5-10s')
-    // 立刻刷一下状态（lasts_seen 还没更新，会显示离线，等 bridge 拉起再变绿）
+    // Refresh status immediately (last_seen hasn't updated yet, so it'll show offline until bridge comes back)
     refreshBridgeStatus()
   }
 
-  // Claude Code 风 typing 词池(中文,3-5 字,~100 个)。口语老师场景:评测 / 讲解 / 训练 / 归纳 / 接地气混搭。
+  // Claude Code-style typing verbs (~100 items). English-teacher vibe: evaluate / explain / drill / summarize / casual mix.
   // NYC-flavored short phrases (2-4 words) for an American English teacher vibe.
   // 100 items, 5 groups: Listening / Teaching / Drilling / Tracking / Street slang.
   const TYPING_VERBS = [
@@ -4410,18 +4410,18 @@
   let _typingVerbTimer = null
   let _typingElapsedTimer = null
   let _typingStartAt = 0
-  // 估算 token:中文约 1.5 char/token,英文约 4 char/token(粗略,真值得等 Hermes brain 回传)
+  // Token estimation: ~1.5 chars/token for CJK, ~4 chars/token for Latin (rough; real value comes back from Hermes brain)
   function estimateTokens(text) {
     if (!text) return 0
     let zh = 0, other = 0
     for (const ch of text) {
-      if (/[一-鿿]/.test(ch)) zh++; else other++
+      if (/[\u4e00-\u9fff]/.test(ch)) zh++; else other++
     }
     return Math.round(zh / 1.5 + other / 4)
   }
-  // 估算本房间当前送给 LLM 的 input context tokens
+  // Estimate the input context tokens currently sent to the LLM for this room
   function estimateContextTokens() {
-    let total = 200  // system prompt 粗估
+    let total = 200  // rough estimate for system prompt
     document.querySelectorAll('#messagesList .msg-bubble').forEach(el => {
       total += estimateTokens(el.textContent || '')
     })
@@ -4430,7 +4430,7 @@
   function showTyping() {
     const el = document.getElementById('typingIndicator')
     if (!el) return
-    // 已在显示就只重置计时器，不重置 startAt（保留累计秒数）
+    // Already showing: only reset the verb timer, not startAt (preserve elapsed seconds)
     const alreadyOn = el.classList.contains('show')
     if (!alreadyOn) {
       _typingStartAt = Date.now()
@@ -4449,7 +4449,7 @@
     const baseInput = estimateContextTokens()
     const tick = () => {
       const s = Math.floor((Date.now() - _typingStartAt) / 1000)
-      // 伪流式 output:Claude API 大致 60 tokens/s,加 ±15 抖动让数字真"动"
+      // Fake streaming output: Claude API ~60 tokens/s, add ±15 jitter so the number actually moves
       const out = Math.max(0, Math.floor(s * 60 + (Math.random() * 30 - 15)))
       if (elapsedEl) {
         elapsedEl.textContent = baseInput > 0
@@ -4511,7 +4511,7 @@
   }
 
   function handleKey(e) {
-    // 中文输入法组词时按回车是"确认候选词"，不应触发发送
+    // IME composition: Enter confirms candidate; don't trigger send
     if (e.isComposing || e.keyCode === 229) return
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -4524,7 +4524,7 @@
     el.style.height = Math.min(el.scrollHeight, 140) + 'px'
   }
 
-  // ── 附件上传 ──
+  // ── Attachment upload ──
   async function onPasteImage(e) {
     const items = (e.clipboardData || window.clipboardData)?.items
     if (!items) return
@@ -4535,18 +4535,18 @@
         if (file) images.push(file)
       }
     }
-    if (images.length === 0) return  // 普通文字粘贴，让默认行为发生
+    if (images.length === 0) return  // Plain text paste — let default behavior happen
     e.preventDefault()
     for (const blob of images) {
       const ext = (blob.type.split('/')[1] || 'png').replace('+xml', '')
-      const named = new File([blob], `截图_${Date.now()}.${ext}`, { type: blob.type })
+      const named = new File([blob], `screenshot_${Date.now()}.${ext}`, { type: blob.type })
       await uploadOneFile(named)
     }
   }
 
   async function onFilePick(e) {
     const files = Array.from(e.target.files || [])
-    e.target.value = ''  // 允许重复选同一个文件
+    e.target.value = ''  // Allow re-selecting the same file
     for (const file of files) {
       await uploadOneFile(file)
     }
@@ -4556,21 +4556,21 @@
     const stub = {
       name: file.name, size: file.size, mime_type: file.type || 'application/octet-stream',
       url: '', storage_path: '', uploading: true,
-      // 本地预览（图片用 dataURL，纯前端，不依赖网络）
+      // Local preview (use dataURL for images — pure frontend, no network)
       preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : ''
     }
     pendingAttachments.push(stub)
     renderAttachPreview()
     try {
-        // 清洗文件名：保留扩展名，非 ASCII / 特殊字符替换为下划线
-        // （Supabase Storage 对路径里的非 ASCII 字符不友好，会 400）
+        // Sanitize filename: keep extension, replace non-ASCII / special chars with underscore
+        // (Supabase Storage chokes on non-ASCII chars in paths — returns 400)
         const ext = (file.name.match(/\.[^.]+$/) || [''])[0].toLowerCase()
         const safeBase = file.name
-          .replace(/\.[^.]+$/, '')               // 去扩展名
-          .replace(/[^\w\-]+/g, '_')              // 非字母数字下划线连字符 → _
-          .replace(/_+/g, '_')                    // 连续 _ 合并
-          .replace(/^_+|_+$/g, '')                // 首尾 _ 去掉
-          .slice(0, 40) || 'file'                 // 限长
+          .replace(/\.[^.]+$/, '')               // strip extension
+          .replace(/[^\w\-]+/g, '_')              // non-word/dash → _
+          .replace(/_+/g, '_')                    // collapse consecutive _
+          .replace(/^_+|_+$/g, '')                // trim leading/trailing _
+          .slice(0, 40) || 'file'                 // length cap
         const safeName = `${safeBase}${ext}`
         const path = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`
 
@@ -4578,7 +4578,7 @@
           cacheControl: '3600', upsert: false, contentType: file.type || 'application/octet-stream'
         })
         if (error) throw error
-        // 私有 bucket：用 1 年过期的 signed URL 写进消息（防止公开 URL 泄露）
+        // Private bucket: write a 1-year signed URL into the message (avoid leaking public URLs)
         const { data: signed, error: signErr } = await sb.storage
           .from('chat-uploads').createSignedUrl(path, 365 * 24 * 3600)
         if (signErr) throw signErr
@@ -4635,21 +4635,21 @@
     return `${h}:${m}`
   }
 
-  // ── 语音输入 ──
+  // ── Voice input ──
   let recognition = null
   let isRecording = false
-  let voiceTextBefore = ''       // 开始录音前输入框已有的内容
-  let voiceLastResultsLen = 0    // 上次 onresult 看到的 results.length（发送时用作分水岭）
-  let voiceSkipBeforeIdx = 0     // 任何 < 这个 idx 的 result 都视为「已发过」，跳过
+  let voiceTextBefore = ''       // Input content before recording started
+  let voiceLastResultsLen = 0    // results.length from last onresult (watermark for send)
+  let voiceSkipBeforeIdx = 0     // Any result with idx < this is considered already-sent — skip it
 
   function getRecognition() {
     if (recognition) return recognition
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SR) return null
     recognition = new SR()
-    recognition.lang = 'zh-CN'
+    recognition.lang = 'en-US'
     recognition.continuous = true
-    recognition.interimResults = true   // 边说边出文字
+    recognition.interimResults = true   // Stream interim text while speaking
 
     recognition.onresult = (event) => {
       voiceLastResultsLen = event.results.length
@@ -4664,7 +4664,7 @@
       const input = document.getElementById('msgInput')
       input.value = (voiceTextBefore + finalText + interimText).trim()
       autoResize(input)
-      // 累积已确认的部分
+      // Accumulate confirmed segments
       if (finalText) voiceTextBefore = (voiceTextBefore + finalText).trim() + ' '
     }
 
@@ -4672,12 +4672,12 @@
       console.error('voice error:', e)
       stopVoice()
       if (e.error === 'not-allowed') showToast('Mic permission denied — go to chrome://settings to allow speak2go.ai')
-      else if (e.error === 'no-speech') {} // 无语音不报错
+      else if (e.error === 'no-speech') {} // No speech is not an error
       else showToast('Voice recognition error: ' + e.error)
     }
 
     recognition.onend = () => {
-      // 用户停止说话后浏览器会自动 onend，再次 start 才能继续
+      // Browser auto-fires onend when user stops speaking — must start() again to continue
       if (isRecording) {
         try { recognition.start() } catch(e) {}
       }
@@ -4713,26 +4713,26 @@
   }
 
   function quoteMessage(b64, sender) {
-    // 微信样式：不再往 input.value 里塞，挂到上方小条，发送时静默附 trailer
+    // WeChat style: don't stuff input.value — show in the bar above, silently append trailer on send
     setPendingQuote(b64, sender)
     const input = document.getElementById('msgInput')
     if (input) input.focus()
   }
 
-  // 老师/学生点消息下方 🌐 按钮 → 写隐藏 message_type='translate' → Hermes 路由到
-  // libs/speak2go.handle_translate_message → Haiku 双向中英翻译 → 写 AI 消息携带
-  // attachments._event='translation_result' + source_message_id + translation。
-  // 前端 Realtime onInsert 捕获后填到对应 .msg-translation 容器(灰字接原文下方)。
+  // Coach/Learner taps 🌐 button under message → writes hidden message_type='translate' → Hermes routes to
+  // libs/speak2go.handle_translate_message → Haiku does EN↔ZH translation → writes an AI message with
+  // attachments._event='translation_result' + source_message_id + translation.
+  // Frontend Realtime onInsert catches it and fills the .msg-translation container (gray text under original).
   async function translateMessage(msgId, btn) {
     if (!currentRoom || !currentUser) { showToast('Pick a room first'); return }
     const slot = document.querySelector(`.msg-translation[data-translation-for="${msgId}"]`)
     if (!slot) return
-    // toggle: 已展示 → 折叠/展开
+    // toggle: already shown → collapse/expand
     if (slot.textContent && !slot.classList.contains('loading')) {
       slot.style.display = slot.style.display === 'none' ? 'block' : 'none'
       return
     }
-    // 首次点击 → loading 占位 + 写隐藏触发消息
+    // First click → loading placeholder + write hidden trigger message
     slot.classList.add('loading')
     slot.textContent = 'translating…'
     slot.style.display = 'block'
@@ -4772,7 +4772,7 @@
         btn.innerHTML = '<i class="ti ti-copy"></i>'
       }, 1500)
     } catch (e) {
-      // 降级方案：fallback to textarea
+      // Fallback to textarea
       const ta = document.createElement('textarea')
       ta.value = text
       ta.style.position = 'fixed'; ta.style.opacity = '0'
@@ -4791,7 +4791,7 @@
     setTimeout(() => el.classList.remove('show'), 2500)
   }
 
-  // 图片 lightbox：点对话框里的图 → 内嵌大图查看
+    // Image lightbox: click an image in the chat → open inline large view
   function openImageLightbox(url) {
     const box = document.getElementById('imgLightbox')
     if (!box) return
@@ -4799,7 +4799,7 @@
     box.classList.add('open')
   }
   function closeImageLightbox(ev) {
-    if (ev && ev.target.tagName === 'IMG') return  // 点图片本身不关
+    if (ev && ev.target.tagName === 'IMG') return  // Clicking the image itself doesn't close
     document.getElementById('imgLightbox')?.classList.remove('open')
   }
   document.addEventListener('keydown', e => {
@@ -4813,17 +4813,17 @@
   <img alt="">
 </div>
 
-<!-- speak2go 声纹注册 modal 已删除(2026-05-21):三角色架构纠偏,系统内只有老师+AI,不分说话人 -->
+<!-- speak2go voiceprint registration modal removed (2026-05-21): three-role architecture cleanup — system only has Coach + AI, no per-speaker split -->
 
-<!-- @ricky0123/vad-web 加载 Silero VAD（CDN） -->
+<!-- Load @ricky0123/vad-web Silero VAD (CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/ort.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.24/dist/bundle.min.js"></script>
 
 <script>
 // ────────────────────────────────────────────────────────────────────────────
-// speak2go 1v1 课堂实时录音 + AI 助教模块
-// 依赖外部全局:sb (Supabase client)、currentRoom、currentUser、appendMessage、showToast
-// 后端:本机 sidecar ws://127.0.0.1:8765 + Supabase 表 lesson_sessions / messages
+// speak2go 1-on-1 classroom live recording + AI Assistant module
+// Depends on external globals: sb (Supabase client), currentRoom, currentUser, appendMessage, showToast
+// Backend: local sidecar ws://127.0.0.1:8765 + Supabase tables lesson_sessions / messages
 // ────────────────────────────────────────────────────────────────────────────
 window.Classroom = (function() {
   const WS_URL = 'ws://127.0.0.1:8765'
@@ -4876,7 +4876,7 @@ window.Classroom = (function() {
     if (active) b.classList.add('active'); else b.classList.remove('active')
   }
 
-  // 仅 1v1 + 老师视角时显示按钮
+  // Show button only in 1-on-1 + from the Coach's view
   function refreshButton() {
     if (!currentRoom || !currentUser) { showBtn(false); return }
     const isExpertRole = currentRoom.expert_id === currentUser.id
@@ -4905,10 +4905,10 @@ window.Classroom = (function() {
   }
   function handleWsMessage(msg) {
     if (msg.type === 'lesson_ack') {
-      // 三角色纠偏:无声纹注册,直接开录
+      // Three-role cleanup: no voiceprint registration, start recording directly
       startCapture()
     } else if (msg.type === 'segment_ack') {
-      setStatus(`转写中 (${msg.latency_ms}ms)`, null)
+      setStatus(`Transcribing (${msg.latency_ms}ms)`, null)
       setTimeout(() => setStatus('Listening to class…', null), 1500)
     } else if (msg.type === 'error') {
       console.error('[asr error]', msg)
@@ -4916,7 +4916,7 @@ window.Classroom = (function() {
     }
   }
 
-  // ─── 实录:Silero VAD + WS push ─────────────────────────────────────────────
+  // ─── Live capture: Silero VAD + WS push ─────────────────────────────────────
   async function startCapture() {
     setBar(true); setBtnActive(true); setStatus('VAD starting…', null); startTimer()
     if (!window.vad) { showToast('VAD library not loaded — refresh and retry'); return }
@@ -5031,7 +5031,7 @@ window.Classroom = (function() {
   return { toggle, refreshButton, markKnowledgeEnd, endLesson }
 })()
 
-// 房间切换时刷新按钮可见性
+// Refresh button visibility when switching rooms
 if (typeof window !== 'undefined') {
   const origOpenRoom = window.openRoom
   if (typeof origOpenRoom === 'function') {

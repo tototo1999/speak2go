@@ -1,13 +1,12 @@
 <!DOCTYPE html>
-<!-- saved from url=(0043)file:///Users/dami2026/Downloads/login.html -->
-<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login · Speak2GO.ai</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23DC2626'/%3E%3Ctext x='32' y='44' font-family='Helvetica,Arial,sans-serif' font-size='30' font-weight='800' text-anchor='middle' fill='%23fff'%3EGO%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -18,15 +17,15 @@
       --text: #1a1a18; --text2: #5f5e5a; --text3: #888780;
       --radius: 8px; --radius-lg: 12px;
     }
-    body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
     nav { display: flex; align-items: center; justify-content: space-between; padding: 0 2.5rem; height: 60px; background: #fff; border-bottom: 0.5px solid var(--border); }
-    .logo { font-family: 'Noto Serif SC', serif; font-size: 24px; font-weight: 600; text-decoration: none; color: var(--text); }
+    .logo { font-family: 'Playfair Display', Georgia, serif; font-size: 24px; font-weight: 600; text-decoration: none; color: var(--text); }
     .logo span { color: var(--teal); }
     .nav-link { font-size: 13px; color: var(--text2); text-decoration: none; }
     .main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
     .card { background: #fff; border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem; width: 100%; max-width: 400px; }
     .card-header { text-align: center; margin-bottom: 2rem; }
-    .card-logo { font-family: 'Noto Serif SC', serif; font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+    .card-logo { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 600; margin-bottom: 8px; }
     .card-logo span { color: var(--teal); }
     .logo .logo-tld, .card-logo .logo-tld { font-size: 0.65em; font-weight: 500; letter-spacing: 0; }
     .card-sub { font-size: 14px; color: var(--text2); }
@@ -56,7 +55,7 @@
 <body>
   <nav>
     <a href="/" class="logo">Speak2<span>GO</span><span class="logo-tld">.ai</span></a>
-    <a href="/" class="nav-link">← 返回首页</a>
+    <a href="/" class="nav-link">← Back to home</a>
   </nav>
 
   <main class="main">
@@ -65,7 +64,7 @@
         <div class="card-logo">Speak2<span>GO</span><span class="logo-tld">.ai</span></div>
       </div>
 
-      <!-- tradego 子站:Register tab 默认开启,允许新建口语OG独立账号 -->
+      <!-- Register tab is enabled by default so new coaches can create their own accounts -->
       <div class="tabs">
         <button class="tab active" onclick="switchTab(&#39;login&#39;)">Login</button>
         <button class="tab" onclick="switchTab(&#39;register&#39;)">Register</button>
@@ -73,7 +72,7 @@
 
       <div id="msg" class="msg"></div>
 
-      <!-- Login表单 -->
+      <!-- Login form -->
       <div id="form-login" class="form">
         <div class="field">
           <label>Email</label>
@@ -81,12 +80,12 @@
         </div>
         <div class="field">
           <label>Password</label>
-          <input type="password" id="login-password" placeholder="输入Password" autocomplete="current-password">
+          <input type="password" id="login-password" placeholder="Enter your password" autocomplete="current-password">
         </div>
         <button class="submit-btn" onclick="handleLogin()">Login</button>
       </div>
 
-      <!-- Register表单 -->
+      <!-- Register form -->
       <div id="form-register" class="form" style="display:none;">
         <div class="field">
           <label>Email</label>
@@ -94,30 +93,30 @@
         </div>
         <div class="field">
           <label>Password</label>
-          <input type="password" id="reg-password" placeholder="至少8位" autocomplete="new-password">
+          <input type="password" id="reg-password" placeholder="At least 8 characters" autocomplete="new-password">
         </div>
         <div class="field">
-          <label>昵称</label>
-          <input type="text" id="reg-nickname" placeholder="随便起一个" autocomplete="nickname">
+          <label>Display name</label>
+          <input type="text" id="reg-nickname" placeholder="Pick any name" autocomplete="nickname">
         </div>
         <div class="field">
-          <label>你的角色</label>
+          <label>Your role</label>
           <select id="reg-role" style="padding:10px 12px;font-size:14px;font-family:inherit;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;">
-            <option value="user">小白</option>
-            <option value="expert">OG</option>
+            <option value="user">Learner</option>
+            <option value="expert">Coach</option>
           </select>
         </div>
-        <button class="submit-btn" onclick="handleRegister()">Register账号</button>
+        <button class="submit-btn" onclick="handleRegister()">Create account</button>
       </div>
 
       <div class="footer-note">
-        Login即代表同意 <a href="/terms">服务条款</a> 和 <a href="/privacy">隐私政策</a>
+        By signing in you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>
       </div>
     </div>
   </main>
 
   <footer>
-    <a href="/" class="back-link">← Speak2GO.ai 首页</a>
+    <a href="/" class="back-link">← Speak2GO.ai home</a>
     <p>© 2026 Speak2GO.ai</p>
   </footer>
 
@@ -126,7 +125,7 @@
   <script>
     const SUPABASE_URL = 'https://qjnagbzqhoansixqharb.supabase.co'
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqbmFnYnpxaG9hbnNpeHFoYXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDIxODIsImV4cCI6MjA5MzkxODE4Mn0.GpMUVTk6JvqeciXagXQiJunc8TLFMHg3_b9reIjJ2Y8'
-    // 避免与 UMD 注入的全局 supabase 冲突，本地 client 用 sb 命名
+    // Use `sb` locally to avoid clashing with the global `supabase` UMD injects
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
     function showMsg(text, type) {
@@ -153,28 +152,28 @@
       clearMsg()
       const email = document.getElementById('login-email').value.trim()
       const password = document.getElementById('login-password').value
-      if (!email || !password) { showMsg('请填写Email和Password', 'error'); return }
+      if (!email || !password) { showMsg('Please enter your email and password', 'error'); return }
       const btn = document.querySelector('#form-login .submit-btn')
       btn.disabled = true; btn.textContent = 'Logging in...'
       const { data, error } = await sb.auth.signInWithPassword({ email, password })
       btn.disabled = false; btn.textContent = 'Login'
-      if (error) { showMsg('Login失败：' + (error.message === 'Invalid login credentials' ? 'Email或Password错误' : error.message), 'error'); return }
-      showMsg('Login成功！正在跳转...', 'success')
+      if (error) { showMsg('Login failed: ' + (error.message === 'Invalid login credentials' ? 'Incorrect email or password' : error.message), 'error'); return }
+      showMsg('Logged in! Redirecting…', 'success')
       setTimeout(() => { window.location.href = '/chat.html' }, 1000)
     }
 
     async function handleRegister() {
       clearMsg()
-      if (!window.supabase) { showMsg('Supabase SDK 未加载，请刷新页面或检查网络', 'error'); return }
+      if (!window.supabase) { showMsg('Supabase SDK failed to load — please refresh the page or check your network.', 'error'); return }
       const email = document.getElementById('reg-email').value.trim()
       const password = document.getElementById('reg-password').value
       const nickname = document.getElementById('reg-nickname').value.trim()
       const role = document.getElementById('reg-role').value
-      if (!email || !password) { showMsg('请填写Email和Password', 'error'); return }
-      if (password.length < 6) { showMsg('Password至少6位', 'error'); return }
-      if (!nickname) { showMsg('请填写昵称', 'error'); return }
+      if (!email || !password) { showMsg('Please enter your email and password', 'error'); return }
+      if (password.length < 6) { showMsg('Password must be at least 6 characters', 'error'); return }
+      if (!nickname) { showMsg('Please pick a display name', 'error'); return }
       const btn = document.querySelector('#form-register .submit-btn')
-      btn.disabled = true; btn.textContent = 'Register中...'
+      btn.disabled = true; btn.textContent = 'Creating account…'
       try {
         const target = role === 'expert' ? '/chat.html' : '/chat.html'
         const { data, error } = await sb.auth.signUp({
@@ -184,23 +183,23 @@
             emailRedirectTo: `${window.location.origin}${target}`,
           },
         })
-        btn.disabled = false; btn.textContent = 'Register账号'
-        if (error) { showMsg('Register失败：' + error.message, 'error'); return }
-        // 不走Email验证：Register成功后直接Login跳转
+        btn.disabled = false; btn.textContent = 'Create account'
+        if (error) { showMsg('Sign-up failed: ' + error.message, 'error'); return }
+        // Skip email verification — sign in directly after sign-up
         if (!data.session) {
           const r = await sb.auth.signInWithPassword({ email, password })
-          if (r.error) { showMsg('Register成功，但自动Login失败：' + r.error.message, 'error'); return }
+          if (r.error) { showMsg('Account created, but auto sign-in failed: ' + r.error.message, 'error'); return }
         }
-        showMsg('Register成功！正在跳转...', 'success')
+        showMsg('Account created! Redirecting…', 'success')
         setTimeout(() => { window.location.href = target }, 800)
       } catch (e) {
-        btn.disabled = false; btn.textContent = 'Register账号'
-        showMsg('Register异常：' + (e?.message || e), 'error')
+        btn.disabled = false; btn.textContent = 'Create account'
+        showMsg('Sign-up error: ' + (e?.message || e), 'error')
         console.error('handleRegister error:', e)
       }
     }
 
-    // 已Login则跳转
+    // If already signed in, redirect to chat
     if (window.supabase) {
       sb.auth.getSession().then(({ data: { session } }) => {
         if (session) window.location.href = '/chat.html'
