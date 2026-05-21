@@ -440,7 +440,8 @@
       transition: background .15s, border-color .15s, color .15s;
     }
     .todo-sub.done { color: var(--text3); }
-    .todo-sub.done .todo-text { text-decoration: line-through; }
+    /* 打钩就够,不再划句子 */
+    .todo-sub.done .todo-text { text-decoration: none; }
     .todo-sub.done .check {
       background: var(--teal);
       border-color: var(--teal);
