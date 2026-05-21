@@ -2143,10 +2143,7 @@
       }
     } catch (e) { console.warn('[role] failed:', e) }
 
-    // OG：没有房就自动建一个（每个OG固定 1 个房）
-    if (currentRole === 'expert') {
-      await ensureExpertRoom()
-    }
+    // 单例房模型:不再按角色 ensure 新房,所有人共享同一个房(已由 trigger 自动加成员)
 
     // 一次性清理：自己名下叫 "Todo list" 的房（早期测试残留）
     try {
@@ -2400,6 +2397,8 @@
   // tradego 子目录:行业锁口语训练,product='tradego' 跟主站 rooms 隔离
   const DEMO_INDUSTRY = '英语口语'
   const DEMO_PRODUCT = 'speak2go'
+  // 单例房模型:全站只一个房,所有账号登录都进它
+  const SPEAK2GO_SINGLETON_ROOM_ID = '5b622bc4-88b4-47c1-9aa6-643c4b1e0f96'
 
   // admin 邮箱白名单（与 admin.html / is_admin() RPC 保持一致）
   const ADMIN_EMAILS = ['lirui88888862@gmail.com']
@@ -2432,51 +2431,18 @@
     const list = document.getElementById('roomsList')
     list.innerHTML = ''
 
-    let rooms = []
-    if (currentRole === 'expert') {
-      // OG：自己 owned 的房（理论上只有 1 个）
-      const { data, error } = await sb
-        .from('rooms').select('*')
-        .eq('expert_id', currentUser.id)
-        .eq('product', DEMO_PRODUCT)
-        .order('created_at', { ascending: false })
-      if (error) { console.warn('[loadRooms expert] error:', error); return }
-      rooms = data || []
-    } else {
-      // 小白：RLS 已经限定为成员才可读,加 product filter 隔离两边产品的房间
-      const { data, error } = await sb
-        .from('rooms').select('*')
-        .eq('product', DEMO_PRODUCT)
-        .order('created_at', { ascending: false })
-      if (error) { console.warn('[loadRooms user] error:', error); return }
-      rooms = data || []
-    }
-
-    if (rooms.length === 0) {
-      if (currentRole === 'expert') {
-        list.innerHTML = `<div class="rooms-empty">还没有 Chat（自动创建中…）</div>`
-      } else {
-        // 小白：没房 → 显示「选OG follow」面板
-        await renderFollowExpertsPanel()
-      }
+    // 单例房模型:直接拿固定的那个房,不再按角色分支
+    const { data: room, error } = await sb
+      .from('rooms').select('*')
+      .eq('id', SPEAK2GO_SINGLETON_ROOM_ID)
+      .maybeSingle()
+    if (error || !room) {
+      console.warn('[loadRooms] singleton room not found:', error)
+      list.innerHTML = `<div class="rooms-empty">房间未就绪</div>`
       return
     }
-
-    // 置顶排序:pinned 房间永远在最前面,内部仍按 created_at desc
-    const pinnedSet = await findPinnedRooms(rooms)
-    rooms.sort((a, b) => {
-      const ap = pinnedSet.has(a.id) ? 1 : 0
-      const bp = pinnedSet.has(b.id) ? 1 : 0
-      if (ap !== bp) return bp - ap
-      return (b.created_at || '').localeCompare(a.created_at || '')
-    })
-
-    rooms.forEach(room => renderRoomItem(room, pinnedSet.has(room.id)))
-
-    // 自动打开第一个房间（小白和OG都一样），但已经有打开的就不动
-    if (!currentRoom && rooms.length > 0) {
-      openRoom(rooms[0])
-    }
+    renderRoomItem(room, false)
+    if (!currentRoom) openRoom(room)
   }
 
   // ── OG：首次登录自动建一个房（每个OG固定 1 个）──
