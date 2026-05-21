@@ -1315,6 +1315,7 @@
     }
     .classroom-btn:hover { background: var(--bg2); color: var(--teal); border-color: var(--teal-100); }
     .classroom-btn i { font-size: 13px; }
+    .classroom-btn svg { display: block; }
     .classroom-btn.active { background: var(--teal); color: #fff; border-color: var(--teal); }
 
     .classroom-bar {
@@ -1994,12 +1995,17 @@
             onblur="setTimeout(hideMentionPopover, 150)"
             onpaste="onPasteImage(event)"
           ></textarea>
-          <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" title="按住说话（中文识别）">
-            <i class="ti ti-microphone"></i>
-          </button>
           <button class="classroom-btn" id="classroomBtn" onclick="Classroom.toggle()"
                   title="开始课堂录音（1v1 实时转写 + AI 助教）" style="display:none">
-            <i class="ti ti-school"></i>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="2" width="6" height="11" rx="3"/>
+              <line x1="9.5" y1="5.5" x2="14.5" y2="5.5"/>
+              <line x1="9.5" y1="8" x2="14.5" y2="8"/>
+              <line x1="9.5" y1="10.5" x2="14.5" y2="10.5"/>
+              <path d="M5 10v2a7 7 0 0 0 14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+              <line x1="8" y1="22" x2="16" y2="22"/>
+            </svg>
           </button>
           <button class="send-btn" id="sendBtn" onclick="sendMessage()">
             GO
