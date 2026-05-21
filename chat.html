@@ -4876,12 +4876,11 @@ window.Classroom = (function() {
     if (active) b.classList.add('active'); else b.classList.remove('active')
   }
 
-  // Show button only in 1-on-1 + from the Coach's view
+  // Show mic for the room OG. focal_user_id 不再是门槛(三角色架构纠偏:无第三方学生)
   function refreshButton() {
     if (!currentRoom || !currentUser) { showBtn(false); return }
     const isExpertRole = currentRoom.expert_id === currentUser.id
-    const has1v1 = !!currentRoom.focal_user_id
-    showBtn(isExpertRole && has1v1)
+    showBtn(isExpertRole)
   }
 
   // ─── WebSocket ────────────────────────────────────────────────────────────
@@ -4993,7 +4992,6 @@ window.Classroom = (function() {
     if (lesson) { endLesson(); return }
     if (!currentRoom || !currentUser) { showToast('Pick a room first'); return }
     if (currentRoom.expert_id !== currentUser.id) { showToast('Only the teacher can start a class'); return }
-    if (!currentRoom.focal_user_id) { showToast('1v1 class needs a student to join first'); return }
 
     let row
     try {
