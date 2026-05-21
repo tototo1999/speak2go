@@ -2963,9 +2963,6 @@
     ;(payload || []).forEach((group, gi) => {
       const groupEl = document.createElement('div')
       groupEl.className = 'todo-group'
-      // First render: lock groups with gi>0 by default to avoid an unlock flash before refreshQuizState runs;
-      // Editing mode doesn't lock; refreshQuizState recomputes locks based on real `passed` afterwards
-      if (!sectionEditing && gi > 0) groupEl.classList.add('locked')
       groupEl.dataset.group = `g${gi}`
       groupEl.dataset.groupStart = String(idx)
       const subsHtml = (group.items || []).map((it, ii) => {
@@ -2978,12 +2975,7 @@
             <button type="button" class="todo-row-del" title="Delete" onclick="event.stopPropagation();deleteTodoItem(${gi},${ii})">×</button>
           </div>`
       }).join('')
-      // gi=0 is never locked, no lock icon; gi>0 renders left lock-state (red padlock / green open lock; CSS toggles via .locked)
-      const lockHtml = gi > 0 ? `
-          <span class="todo-lock-state" aria-hidden="true">
-            <svg class="lk-closed" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-            <svg class="lk-open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>
-          </span>` : ''
+      const lockHtml = ''
       groupEl.innerHTML = `
         <div class="todo-pill" onclick="toggleTodoGroup(this)">
           ${lockHtml}
@@ -3332,12 +3324,12 @@
       const vals = Object.values(r)
       const upCount = vals.filter(v => v === 'up').length
       const downCount = vals.filter(v => v === 'down').length
-      if (upCount >= 2) {
+      if (upCount >= 1) {
         passed++
       } else {
         if (currentAiMsgId === null) {
           currentAiMsgId = m.id
-          currentHalfChecked = (upCount === 1 && downCount === 0)
+          currentHalfChecked = false
         }
       }
     }
@@ -3353,14 +3345,7 @@
       if (isCurrent && currentAiMsgId) sub.dataset.aiMsgId = currentAiMsgId
       else delete sub.dataset.aiMsgId
     })
-    // Group unlock: a group's "start index" must be <= passed to unlock; editing mode forces full unlock
-    const editing = document.getElementById('todoSection')?.classList.contains('editing')
-    document.querySelectorAll('.todo-group').forEach(g => {
-      const start = Number(g.dataset.groupStart || 0)
-      const locked = !editing && passed < start
-      g.classList.toggle('locked', locked)
-      if (locked) g.classList.remove('expanded')
-    })
+    // No group locking — every group is always expandable via its + button
     // Auto-expand the group containing `current` + auto-collapse completed groups
     const currentSub = document.querySelector('.todo-sub.current')
     const currentGroup = currentSub?.closest('.todo-group') || null
@@ -3989,9 +3974,9 @@
     if (error) { showToast('Rating failed: ' + error.message); return }
     applyRatingsToMsg(msgId, data || {})
     refreshQuizState()
-    // Just pushed up-count from <2 to >=2 → summary copy to DM + main channel posts a random positive reply so AI advances naturally
+    // Just pushed up-count from 0 to >=1 → summary copy to DM + main channel posts a random positive reply so AI advances naturally
     const newUp = Object.values(data || {}).filter(v => v === 'up').length
-    if (newUp >= 2 && oldUp < 2) {
+    if (newUp >= 1 && oldUp < 1) {
       relayPassToPrivate(msgId).catch(e => console.warn('[relay pass]', e))
       const phrase = pickPhrase(PASS_PRAISES)
       sb.from('messages').insert({
@@ -4051,13 +4036,8 @@
         badge.className = 'rate-badge'
         bar.appendChild(badge)
       }
-      if (upCount >= 2) {
-        badge.className = 'rate-badge'
-        badge.textContent = '✓✓ pass'
-      } else {
-        badge.className = 'rate-badge half'
-        badge.textContent = '✓'
-      }
+      badge.className = 'rate-badge'
+      badge.textContent = '✓ pass'
     }
   }
   // Back-compat for old applyRateState: called after appendMessage renders, writes ratings back from the message object
