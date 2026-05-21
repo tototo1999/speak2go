@@ -4875,7 +4875,41 @@ window.Classroom = (function() {
     showBtn(isExpertRole)
   }
 
-  // ─── WebSocket ────────────────────────────────────────────────────────────
+  // ─── WebSocket(自动重连) ────────────────────────────────────────────────
+  // 老师上课中后端 asr_server 重启会断 ws。lesson 还在 → 自动指数退避重连,
+  // 重连成功后重发 lesson_start 续接课堂。VAD 在后台继续 push 到 buffer,
+  // 我们不丢段(buffer queue 在 _segBuffer 里),flush 时如果 ws 不在就跳过。
+  let _wsReconnecting = false
+  let _wsReconnectDelay = 1000  // 退避: 1s → 2s → 4s → 8s → 8s ...
+  function _scheduleReconnect() {
+    if (_wsReconnecting) return
+    if (!lesson) return  // 没开课就不重连
+    _wsReconnecting = true
+    setStatus(`Connection lost — reconnecting in ${Math.round(_wsReconnectDelay/1000)}s…`, 'offline')
+    setTimeout(async () => {
+      _wsReconnecting = false
+      if (!lesson) return  // 用户已结课
+      try {
+        await wsConnect()
+        // 重连成功 → resume lesson(后端会重新建 LessonState)
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'lesson_start',
+            lesson_session_id: lesson.id,
+            room_id: lesson.room_id,
+            expert_id: lesson.expert_id,
+            focal_user_id: lesson.focal_user_id,
+          }))
+          showToast('Reconnected — recording resumed')
+          setStatus('Listening to class…', null)
+          _wsReconnectDelay = 1000  // 重置退避
+        }
+      } catch (e) {
+        _wsReconnectDelay = Math.min(_wsReconnectDelay * 2, 8000)
+        _scheduleReconnect()  // 退避重试
+      }
+    }, _wsReconnectDelay)
+  }
   function wsConnect() {
     return new Promise((resolve, reject) => {
       if (ws && wsReady) return resolve(ws)
@@ -4889,7 +4923,16 @@ window.Classroom = (function() {
         if (msg.type === 'hello_ack') { wsReady = true; resolve(ws) }
         else handleWsMessage(msg)
       }
-      ws.onclose = () => { wsReady = false; setStatus('Transcript offline (sidecar not running?)', 'offline') }
+      ws.onclose = () => {
+        wsReady = false
+        // lesson 还在 → 自动重连,不然就 offline 静默
+        if (lesson) {
+          showToast('Recording connection dropped — auto-reconnecting…')
+          _scheduleReconnect()
+        } else {
+          setStatus('Transcript offline (sidecar not running?)', 'offline')
+        }
+      }
       ws.onerror = (e) => { console.warn('[ws] error', e); reject(e) }
       setTimeout(() => { if (!wsReady) reject(new Error('ws hello timeout')) }, 6000)
     })
