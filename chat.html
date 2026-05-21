@@ -200,15 +200,16 @@
     }
     .sidebar-room-title-caret.open { transform: rotate(180deg); }
 
-    /* 教学材料文件库:橙胶囊点击展开 */
+    /* 教学材料文件库:橙胶囊点击展开,横铺在 head 和 todo 之间 */
     .materials-library {
-      margin-top: 6px;
+      margin: 6px 6px 0;
       padding: 8px 10px;
       background: #fff;
       border: 1px solid var(--border2);
       border-radius: var(--radius);
       max-height: 280px;
       overflow-y: auto;
+      box-sizing: border-box;
     }
     .materials-empty {
       padding: 18px 6px;
@@ -1940,10 +1941,10 @@
         <span class="sidebar-room-title-text" id="sidebarRoomTitleText">Chat</span>
         <span class="sidebar-room-title-caret" id="sidebarRoomTitleCaret">▾</span>
       </div>
-      <div class="materials-library" id="materialsLibrary" style="display:none;">
-        <div class="materials-empty" id="materialsEmpty">No materials yet</div>
-        <div class="materials-list" id="materialsList"></div>
-      </div>
+    </div>
+    <div class="materials-library" id="materialsLibrary" style="display:none;">
+      <div class="materials-empty" id="materialsEmpty">No materials yet</div>
+      <div class="materials-list" id="materialsList"></div>
     </div>
     <div class="todo-section" id="todoSection">
       <div class="todo-head" id="todoHead">
