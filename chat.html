@@ -4927,17 +4927,48 @@ window.Classroom = (function() {
   }
 
   // ─── Live capture: Silero VAD + WS push ─────────────────────────────────────
+  // Buffer 累积:VAD 切出的短段先攒,凑到 ≥15s 再 push,或者空闲 8s 强制 flush。
+  // 解决 mlx-whisper 对短片段(< 10s)幻觉率高的问题。
+  const SEG_BUFFER_MIN_SEC = 15
+  const SEG_BUFFER_FLUSH_IDLE_MS = 8000
+  let _segBuffer = []
+  let _segBufferSec = 0
+  let _segIdleTimer = null
+
+  function _flushSegBuffer() {
+    if (_segIdleTimer) { clearTimeout(_segIdleTimer); _segIdleTimer = null }
+    if (_segBuffer.length === 0) return
+    // 拼成一个 Float32Array
+    const total = _segBuffer.reduce((n, a) => n + a.length, 0)
+    const merged = new Float32Array(total)
+    let off = 0
+    for (const a of _segBuffer) { merged.set(a, off); off += a.length }
+    _segBuffer = []; _segBufferSec = 0
+    _sendMergedSegment(merged)
+  }
+
   async function startCapture() {
     setBar(true); setBtnActive(true); setStatus('VAD starting…', null); startTimer()
     if (!window.vad) { showToast('VAD library not loaded — refresh and retry'); return }
     try {
       vadInstance = await window.vad.MicVAD.new({
         onSpeechStart: () => {},
-        onSpeechEnd: (audio) => sendSegment(audio),
+        onSpeechEnd: (audio) => {
+          // audio: Float32Array @ 16kHz
+          _segBuffer.push(audio)
+          _segBufferSec += audio.length / SAMPLE_RATE
+          if (_segBufferSec >= SEG_BUFFER_MIN_SEC) {
+            _flushSegBuffer()
+          } else {
+            // 重置空闲计时器
+            if (_segIdleTimer) clearTimeout(_segIdleTimer)
+            _segIdleTimer = setTimeout(_flushSegBuffer, SEG_BUFFER_FLUSH_IDLE_MS)
+          }
+        },
         positiveSpeechThreshold: 0.7,
         negativeSpeechThreshold: 0.5,
-        redemptionFrames: 18,
-        minSpeechFrames: 8,
+        redemptionFrames: 30,   // 18 → 30 (~2.9s grace,合并自然停顿)
+        minSpeechFrames: 12,    // 8 → 12 (~1.15s 最小说话,过滤瞬时噪声)
       })
       vadInstance.start()
       setStatus('Listening to class…', null)
@@ -4946,7 +4977,7 @@ window.Classroom = (function() {
       showToast('VAD startup failed: ' + e.message)
     }
   }
-  function sendSegment(audio) {
+  function _sendMergedSegment(audio) {
     if (!ws || ws.readyState !== WebSocket.OPEN) return
     segSeq += 1
     ws.send(JSON.stringify({
@@ -4986,10 +5017,14 @@ window.Classroom = (function() {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'lesson_end', lesson_session_id: lesson.id }))
     }
+    // 课结束前先 flush 残留 buffer 段
+    _flushSegBuffer()
     cleanup()
   }
 
   function cleanup() {
+    if (_segIdleTimer) { clearTimeout(_segIdleTimer); _segIdleTimer = null }
+    _segBuffer = []; _segBufferSec = 0
     if (vadInstance) {
       try { vadInstance.pause(); vadInstance.destroy && vadInstance.destroy() } catch {}
       vadInstance = null
