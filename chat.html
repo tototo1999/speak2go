@@ -2442,7 +2442,11 @@
       return
     }
     renderRoomItem(room, false)
-    if (!currentRoom) openRoom(room)
+    if (!currentRoom) {
+      await openRoom(room)
+      // 显式触发学士帽按钮的可见性判断 (单例房模型下不依赖 window.openRoom wrapper)
+      try { window.Classroom?.refreshButton?.() } catch (e) { console.warn('[refreshButton]', e) }
+    }
   }
 
   // ── OG：首次登录自动建一个房（每个OG固定 1 个）──
