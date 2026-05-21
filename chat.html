@@ -4471,9 +4471,6 @@
   }
 
   async function uploadOneFile(file) {
-    if (file.size > 20 * 1024 * 1024) {
-      showToast(`${file.name} 超过 20MB，跳过`); return
-    }
     const stub = {
       name: file.name, size: file.size, mime_type: file.type || 'application/octet-stream',
       url: '', storage_path: '', uploading: true,
