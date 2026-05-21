@@ -3494,7 +3494,7 @@
     if (error) { showToast('Failed to load messages'); return }
     if (msgs) msgs.forEach(m => appendMessage(m))
     refreshQuizState()
-    scrollToBottom()
+    scrollToBottom(true)
 
     // Use heartbeat for real bridge status (no more guessing from "AI message in last 10 minutes")
     refreshBridgeStatus()
@@ -4237,9 +4237,20 @@
     html2pdf().set(opt).from(el).save()
   }
 
-  function scrollToBottom() {
+  let autoScrollPinned = true
+  let _scrollListenerAttached = false
+  function scrollToBottom(force = false) {
     const list = document.getElementById('messagesList')
-    list.scrollTop = list.scrollHeight
+    if (!list) return
+    if (!_scrollListenerAttached) {
+      list.addEventListener('scroll', () => {
+        const distFromBottom = list.scrollHeight - list.scrollTop - list.clientHeight
+        autoScrollPinned = distFromBottom < 80
+      }, { passive: true })
+      _scrollListenerAttached = true
+    }
+    if (force) autoScrollPinned = true
+    if (force || autoScrollPinned) list.scrollTop = list.scrollHeight
   }
 
   // Track when we last saw an AI message, to infer bridge online status
@@ -4316,7 +4327,7 @@
     }
 
     appendMessage(msgData)
-    scrollToBottom()
+    scrollToBottom(true)
 
     // AI responds on main / expert_ai channels; expert_user channel (Coach ↔ Learner) is AI-free
     if (currentChannel !== 'expert_user') {
