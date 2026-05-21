@@ -184,11 +184,55 @@
       gap: 6px;
       box-sizing: border-box;
     }
+    .sidebar-room-title { cursor: pointer; transition: background .15s; }
+    .sidebar-room-title:hover { background: var(--teal-600); }
     .sidebar-room-title-text {
       flex: 1;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+    .sidebar-room-title-caret {
+      font-size: 12px;
+      opacity: .8;
+      transition: transform .2s;
+      flex-shrink: 0;
+    }
+    .sidebar-room-title-caret.open { transform: rotate(180deg); }
+
+    /* 教学材料文件库:橙胶囊点击展开 */
+    .materials-library {
+      margin-top: 6px;
+      padding: 8px 10px;
+      background: #fff;
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    .materials-empty {
+      padding: 18px 6px;
+      text-align: center;
+      color: var(--text3);
+      font-size: 12px;
+    }
+    .materials-list { display: flex; flex-direction: column; gap: 4px; }
+    .material-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px;
+      font-size: 12px;
+      color: var(--text);
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background .12s;
+    }
+    .material-row:hover { background: var(--bg2); }
+    .material-row .m-icon { flex-shrink: 0; font-size: 14px; }
+    .material-row .m-name {
+      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .material-row .m-meta {
+      flex-shrink: 0; color: var(--text3); font-size: 11px;
     }
 
     /* Todo list section (below + Chat) */
@@ -1892,8 +1936,13 @@
 
   <aside class="sidebar">
     <div class="sidebar-head">
-      <div class="sidebar-room-title" id="sidebarRoomTitle">
+      <div class="sidebar-room-title" id="sidebarRoomTitle" onclick="toggleMaterialsLibrary()" title="Click to view uploaded teaching materials">
         <span class="sidebar-room-title-text" id="sidebarRoomTitleText">Chat</span>
+        <span class="sidebar-room-title-caret" id="sidebarRoomTitleCaret">▾</span>
+      </div>
+      <div class="materials-library" id="materialsLibrary" style="display:none;">
+        <div class="materials-empty" id="materialsEmpty">No materials yet</div>
+        <div class="materials-list" id="materialsList"></div>
       </div>
     </div>
     <div class="todo-section" id="todoSection">
@@ -2775,6 +2824,13 @@
     unreadCounts = { main: 0, expert_user: 0 }
     // Switching rooms clears the profile name cache (so renames show up next time)
     Object.keys(profilesByUid).forEach(k => delete profilesByUid[k])
+    // 切房 → 折叠教学材料库 + 清空,避免显示上一个房的内容
+    _materialsLibraryOpen = false
+    const _mp = document.getElementById('materialsLibrary')
+    if (_mp) _mp.style.display = 'none'
+    document.getElementById('sidebarRoomTitleCaret')?.classList.remove('open')
+    const _ml = document.getElementById('materialsList')
+    if (_ml) _ml.innerHTML = ''
 
     // Get my role in this room: 'expert' | 'focal' | 'audience' | 'none'
     try {
@@ -3100,6 +3156,70 @@
       .single()
     if (insErr) { console.warn('[seed templates insert]', insErr); return null }
     return created.id
+  }
+
+  // ─── 教学材料文件库(橙胶囊点击展开) ─────────────────────────────────────
+  let _materialsLibraryOpen = false
+  async function toggleMaterialsLibrary() {
+    _materialsLibraryOpen = !_materialsLibraryOpen
+    const panel = document.getElementById('materialsLibrary')
+    const caret = document.getElementById('sidebarRoomTitleCaret')
+    if (panel) panel.style.display = _materialsLibraryOpen ? 'block' : 'none'
+    if (caret) caret.classList.toggle('open', _materialsLibraryOpen)
+    if (_materialsLibraryOpen && currentRoom) await loadMaterials(currentRoom.id)
+  }
+  async function loadMaterials(roomId) {
+    try {
+      const { data, error } = await sb.from('messages')
+        .select('id,created_at,attachments')
+        .eq('room_id', roomId)
+        .not('attachments', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(500)
+      if (error) { console.warn('[materials]', error); return }
+      const flat = []
+      for (const m of data || []) {
+        for (const a of (m.attachments || [])) {
+          if (!a || !a.url || !a.name) continue
+          if (a._event) continue   // pseudo-event markers
+          if (a.asr_meta) continue // asr segment meta
+          flat.push({ ...a, _ts: m.created_at })
+        }
+      }
+      renderMaterialsList(flat)
+    } catch (e) { console.warn('[materials]', e) }
+  }
+  function renderMaterialsList(files) {
+    const list = document.getElementById('materialsList')
+    const empty = document.getElementById('materialsEmpty')
+    if (!list || !empty) return
+    if (!files.length) {
+      empty.style.display = 'block'; list.innerHTML = ''; return
+    }
+    empty.style.display = 'none'
+    list.innerHTML = files.map(f => `
+      <a class="material-row" href="${escHtml(f.url)}" target="_blank" rel="noopener" title="${escHtml(f.name)}">
+        <span class="m-icon">${pickFileIcon(f)}</span>
+        <span class="m-name">${escHtml(f.name)}</span>
+        <span class="m-meta">${formatSize(f.size || 0)} · ${timeAgo(f._ts)}</span>
+      </a>
+    `).join('')
+  }
+  function pickFileIcon(a) {
+    const mime = (a.mime_type || '').toLowerCase()
+    const name = (a.name || '').toLowerCase()
+    if (mime.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp)$/.test(name)) return '🖼'
+    if (mime.startsWith('audio/') || /\.(mp3|m4a|wav|aac|ogg|flac|webm|qta)$/.test(name)) return '🎙'
+    if (/\.(pdf|docx?|txt|md|csv|html?|xml|json)$/.test(name)) return '📄'
+    return '📦'
+  }
+  function timeAgo(iso) {
+    if (!iso) return ''
+    const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+    if (sec < 60) return 'just now'
+    if (sec < 3600) return `${Math.floor(sec/60)}m`
+    if (sec < 86400) return `${Math.floor(sec/3600)}h`
+    return `${Math.floor(sec/86400)}d`
   }
 
   async function loadActiveTodoTemplate(room) {
@@ -3640,6 +3760,14 @@
               }
             } catch (_) {}
           }
+          // 新消息含真实附件 + 库正展开 → reload 材料列表
+          try {
+            if (_materialsLibraryOpen && Array.isArray(payload.new.attachments)) {
+              if (payload.new.attachments.some(a => a && a.url && a.name && !a._event && !a.asr_meta)) {
+                loadMaterials(currentRoom.id)
+              }
+            }
+          } catch (_) {}
           if (inCurChannel) {
             appendMessage(payload.new)
             scrollToBottom()
