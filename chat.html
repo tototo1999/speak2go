@@ -1357,62 +1357,7 @@
     }
     .asr-badge.unknown { background: rgba(156, 163, 175, 0.15); color: #6b7280; }
 
-    .voice-reg-mask {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.45);
-      align-items: center; justify-content: center;
-      z-index: 1000;
-    }
-    .voice-reg-mask.active { display: flex; }
-    .voice-reg-modal {
-      background: #fff; border-radius: 12px; padding: 24px;
-      width: 480px; max-width: 92vw;
-      box-shadow: 0 12px 40px rgba(0,0,0,.2);
-    }
-    .voice-reg-modal h3 { margin: 0 0 8px; font-size: 16px; color: var(--text); }
-    .voice-reg-modal .vrm-sub { color: var(--text2); font-size: 13px; margin-bottom: 16px; line-height: 1.6; }
-    .voice-reg-modal .vrm-step {
-      padding: 12px 14px; border: 1px solid var(--border2); border-radius: 8px;
-      margin-bottom: 10px; display: flex; align-items: center; gap: 10px;
-    }
-    .voice-reg-modal .vrm-step.done { background: rgba(16,185,129,.08); border-color: #10b981; }
-    .voice-reg-modal .vrm-step .vrm-idx {
-      width: 24px; height: 24px; border-radius: 50%;
-      background: var(--bg2); color: var(--text2);
-      font-size: 12px; font-weight: 600;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .voice-reg-modal .vrm-step.done .vrm-idx { background: #10b981; color: #fff; }
-    .voice-reg-modal .vrm-step .vrm-body { flex: 1; font-size: 13px; color: var(--text); }
-    .voice-reg-modal .vrm-step .vrm-action {
-      padding: 5px 12px; font-size: 12px;
-      background: var(--teal); color: #fff;
-      border: 0; border-radius: 6px; cursor: pointer;
-    }
-    .voice-reg-modal .vrm-step .vrm-action:hover { background: var(--teal-600); }
-    .voice-reg-modal .vrm-step .vrm-action:disabled { background: #d1d5db; cursor: not-allowed; }
-    .voice-reg-modal .vrm-step .vrm-action.recording { background: #ef4444; animation: voicePulse 1s ease-in-out infinite; }
-    .voice-reg-modal .vrm-text {
-      background: var(--bg2); border-radius: 6px;
-      padding: 10px 14px; font-size: 13px;
-      color: var(--text); line-height: 1.6;
-      margin-bottom: 12px; font-style: italic;
-    }
-    .voice-reg-modal .vrm-footer {
-      display: flex; justify-content: flex-end; gap: 8px;
-      margin-top: 16px;
-    }
-    .voice-reg-modal .vrm-cancel {
-      padding: 8px 16px; background: transparent;
-      border: 1px solid var(--border2); color: var(--text2);
-      border-radius: 6px; cursor: pointer;
-    }
-    .voice-reg-modal .vrm-go {
-      padding: 8px 18px; background: var(--teal);
-      color: #fff; border: 0; border-radius: 6px; cursor: pointer;
-    }
-    .voice-reg-modal .vrm-go:disabled { background: #d1d5db; cursor: not-allowed; }
+    /* voice-reg-modal CSS 已删除(2026-05-21):三角色架构纠偏 */
 
     .attach-preview {
       display: flex;
@@ -4693,28 +4638,7 @@
   <img alt="">
 </div>
 
-<!-- ── speak2go 声纹注册 modal ── -->
-<div class="voice-reg-mask" id="voiceRegMask">
-  <div class="voice-reg-modal">
-    <h3>开课前声纹注册（一次性）</h3>
-    <p class="vrm-sub">为了让 AI 实时区分老师 / 学生说话,开课前各录一段示范文本（约 10 秒）。<br>注册后绑定账号,下次开课自动复用。</p>
-    <div class="vrm-text" id="vrmText">"The quick brown fox jumps over the lazy dog. Today is a great day to learn English with a private tutor."</div>
-    <div class="vrm-step" id="vrmStepExpert" data-role="expert">
-      <div class="vrm-idx">T</div>
-      <div class="vrm-body">老师：<span id="vrmExpertName" style="color:var(--text2)">读上面这句</span></div>
-      <button class="vrm-action" id="vrmExpertBtn" onclick="Classroom.recordVoice('expert')">开始录音</button>
-    </div>
-    <div class="vrm-step" id="vrmStepStudent" data-role="student">
-      <div class="vrm-idx">S</div>
-      <div class="vrm-body">学生：<span id="vrmStudentName" style="color:var(--text2)">读上面这句</span></div>
-      <button class="vrm-action" id="vrmStudentBtn" onclick="Classroom.recordVoice('student')">开始录音</button>
-    </div>
-    <div class="vrm-footer">
-      <button class="vrm-cancel" onclick="Classroom.cancelRegistration()">取消</button>
-      <button class="vrm-go" id="vrmGoBtn" onclick="Classroom.startAfterRegistration()" disabled>开始课堂</button>
-    </div>
-  </div>
-</div>
+<!-- speak2go 声纹注册 modal 已删除(2026-05-21):三角色架构纠偏,系统内只有老师+AI,不分说话人 -->
 
 <!-- @ricky0123/vad-web 加载 Silero VAD（CDN） -->
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/ort.js"></script>
@@ -4728,7 +4652,6 @@
 // ────────────────────────────────────────────────────────────────────────────
 window.Classroom = (function() {
   const WS_URL = 'ws://127.0.0.1:8765'
-  const REG_SAMPLE_MS = 10000          // 注册录音时长
   const SAMPLE_RATE = 16000
 
   let ws = null
@@ -4738,7 +4661,6 @@ window.Classroom = (function() {
   let segSeq = 0
   let timerStart = 0
   let timerHandle = null
-  let pendingReg = { expert: false, student: false }
 
   // ─── UI helpers ────────────────────────────────────────────────────────────
   function setBar(active) {
@@ -4808,92 +4730,16 @@ window.Classroom = (function() {
   }
   function handleWsMessage(msg) {
     if (msg.type === 'lesson_ack') {
-      const missing = msg.missing_voices || []
-      if (missing.length === 0) startCapture()
-      else {
-        pendingReg.expert = missing.includes('expert')
-        pendingReg.student = missing.includes('student')
-        openRegistrationModal()
-      }
-    } else if (msg.type === 'register_ack') {
-      const role = msg.role
-      const step = document.getElementById(role === 'expert' ? 'vrmStepExpert' : 'vrmStepStudent')
-      if (step) step.classList.add('done')
-      pendingReg[role] = false
-      const goBtn = document.getElementById('vrmGoBtn')
-      if (goBtn) goBtn.disabled = (pendingReg.expert || pendingReg.student)
+      // 三角色纠偏:无声纹注册,直接开录
+      startCapture()
     } else if (msg.type === 'segment_ack') {
-      if (msg.role === 'expert') setStatus(`老师 (${msg.latency_ms}ms)`, 'talking-expert')
-      else if (msg.role === 'user') setStatus(`学生 (${msg.latency_ms}ms)`, 'talking-student')
-      else setStatus(`未识别说话人 (${msg.latency_ms}ms)`, null)
+      setStatus(`转写中 (${msg.latency_ms}ms)`, null)
       setTimeout(() => setStatus('听课中…', null), 1500)
     } else if (msg.type === 'error') {
       console.error('[asr error]', msg)
       showToast('转写错误:' + (msg.message || ''))
     }
   }
-
-  // ─── 录音注册 ──────────────────────────────────────────────────────────────
-  function openRegistrationModal() {
-    document.getElementById('voiceRegMask')?.classList.add('active')
-    document.getElementById('vrmExpertName').textContent = currentDisplayName || '老师'
-    const sName = profilesByUid[currentRoom.focal_user_id] || '学生'
-    document.getElementById('vrmStudentName').textContent = sName
-    if (!pendingReg.expert) document.getElementById('vrmStepExpert')?.classList.add('done')
-    if (!pendingReg.student) document.getElementById('vrmStepStudent')?.classList.add('done')
-    const goBtn = document.getElementById('vrmGoBtn')
-    if (goBtn) goBtn.disabled = (pendingReg.expert || pendingReg.student)
-  }
-  function closeRegistrationModal() {
-    document.getElementById('voiceRegMask')?.classList.remove('active')
-  }
-
-  async function recordVoice(role) {
-    const btn = document.getElementById(role === 'expert' ? 'vrmExpertBtn' : 'vrmStudentBtn')
-    if (!btn) return
-    btn.disabled = true
-    btn.classList.add('recording')
-    btn.textContent = '录音中 10s…'
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { sampleRate: SAMPLE_RATE, channelCount: 1, echoCancellation: true, noiseSuppression: true },
-      })
-      const ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE })
-      const source = ctx.createMediaStreamSource(stream)
-      const chunks = []
-      const processor = ctx.createScriptProcessor(4096, 1, 1)
-      processor.onaudioprocess = (e) => {
-        chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)))
-      }
-      source.connect(processor)
-      processor.connect(ctx.destination)
-      await new Promise(r => setTimeout(r, REG_SAMPLE_MS))
-      processor.disconnect(); source.disconnect()
-      stream.getTracks().forEach(t => t.stop())
-      ctx.close()
-
-      const total = chunks.reduce((n, c) => n + c.length, 0)
-      const pcm = new Float32Array(total)
-      let off = 0
-      for (const c of chunks) { pcm.set(c, off); off += c.length }
-
-      const userId = role === 'expert' ? currentRoom.expert_id : currentRoom.focal_user_id
-      ws.send(JSON.stringify({
-        type: 'register_voice',
-        lesson_session_id: lesson.id,
-        role, user_id: userId, sample_rate: SAMPLE_RATE,
-      }))
-      ws.send(pcm.buffer)
-      btn.classList.remove('recording')
-      btn.textContent = '✓ 已注册'
-    } catch (e) {
-      console.error('[recordVoice] failed', e)
-      showToast('录音失败:' + e.message)
-      btn.disabled = false; btn.classList.remove('recording'); btn.textContent = '重试'
-    }
-  }
-  async function startAfterRegistration() { closeRegistrationModal(); await startCapture() }
-  function cancelRegistration() { closeRegistrationModal(); cleanup() }
 
   // ─── 实录:Silero VAD + WS push ─────────────────────────────────────────────
   async function startCapture() {
@@ -5007,7 +4853,7 @@ window.Classroom = (function() {
     }))
   }
 
-  return { toggle, refreshButton, recordVoice, cancelRegistration, startAfterRegistration, markKnowledgeEnd, endLesson }
+  return { toggle, refreshButton, markKnowledgeEnd, endLesson }
 })()
 
 // 房间切换时刷新按钮可见性
