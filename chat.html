@@ -144,15 +144,6 @@
       flex-direction: column;
       overflow: hidden;
     }
-    .sidebar-head {
-      padding: 0 6px;
-      min-height: 64px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      box-sizing: border-box;
-      border-bottom: 0.5px solid var(--border);
-    }
     .invite-btn {
       flex-shrink: 0;
       width: 26px; height: 26px;
@@ -167,174 +158,6 @@
     }
     .invite-btn:hover { background: var(--teal-50); color: var(--teal-600); transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,.1); }
     .invite-btn svg { width: 13px; height: 13px; }
-    /* Sidebar top: current chat title (minimal version, no New button) */
-    .sidebar-room-title {
-      width: 100%;
-      padding: 10px 14px;
-      font-size: 14px;
-      font-family: 'Playfair Display', serif;
-      font-weight: 600;
-      letter-spacing: -0.2px;
-      background: var(--teal);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      box-sizing: border-box;
-    }
-    .sidebar-room-title { cursor: pointer; transition: background .15s; }
-    .sidebar-room-title:hover { background: var(--teal-600); }
-    .sidebar-room-title-text {
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .sidebar-room-title-caret {
-      font-size: 12px;
-      opacity: .8;
-      transition: transform .2s;
-      flex-shrink: 0;
-    }
-    .sidebar-room-title-caret.open { transform: rotate(180deg); }
-
-    /* 教学材料文件库:橙胶囊点击展开,横铺在 head 和 todo 之间 */
-    .materials-library {
-      margin: 6px 6px 0;
-      padding: 8px 10px;
-      background: #fff;
-      border: 1px solid var(--border2);
-      border-radius: var(--radius);
-      max-height: 280px;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-    .materials-empty {
-      padding: 18px 6px;
-      text-align: center;
-      color: var(--text3);
-      font-size: 12px;
-    }
-    .materials-list { display: flex; flex-direction: column; gap: 4px; }
-    .material-row {
-      display: flex; align-items: center; gap: 8px;
-      padding: 6px 8px;
-      font-size: 12px;
-      color: var(--text);
-      text-decoration: none;
-      border-radius: 5px;
-      transition: background .12s;
-    }
-    .material-row:hover { background: var(--bg2); }
-    .material-row .m-icon { flex-shrink: 0; font-size: 14px; }
-    .material-row .m-name {
-      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .material-row .m-meta {
-      flex-shrink: 0; color: var(--text3); font-size: 11px;
-    }
-
-    /* 材料库 v2 树状目录 — 胶囊 head 跟 todo 同款 */
-    .mat-head {
-      padding: 7px 10px;
-      background: var(--teal-50);
-      border: 0.5px solid var(--teal-100);
-      border-radius: var(--radius);
-      font-family: 'Inter', -apple-system, sans-serif;
-      font-size: 13px;
-      font-weight: 300;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-bottom: 8px;
-    }
-    .mat-head-name {
-      flex: 1; text-align: center;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .mat-head-btn {
-      width: 22px; height: 22px;
-      background: transparent; border: 0;
-      border-radius: 6px;
-      color: var(--text2);
-      cursor: pointer;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: 12px; line-height: 1; padding: 0;
-      flex-shrink: 0;
-    }
-    .mat-head-btn:hover { background: var(--teal-100); color: var(--teal-600); }
-    .mat-head-btn.on { background: var(--teal); color: #fff; }
-
-    .mat-folder { margin-bottom: 4px; }
-    .mat-folder-head {
-      display: flex; align-items: center; gap: 6px;
-      padding: 5px 6px; cursor: pointer;
-      font-size: 12px; color: var(--text);
-      border-radius: 5px;
-      transition: background .12s;
-    }
-    .mat-folder-head:hover { background: var(--bg2); }
-    .mat-folder-caret { font-size: 10px; color: var(--text3); flex-shrink: 0; width: 10px; }
-    .mat-folder-icon { font-size: 14px; flex-shrink: 0; }
-    .mat-folder-label {
-      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      font-weight: 500;
-    }
-    .mat-folder-label[contenteditable="true"] {
-      outline: 1px solid var(--teal-100); padding: 0 4px;
-      background: #fff; border-radius: 3px;
-    }
-    .mat-folder-add, .mat-folder-del {
-      flex-shrink: 0; padding: 0 6px; font-size: 12px;
-      background: transparent; border: 1px solid var(--border2);
-      border-radius: 4px; cursor: pointer; color: var(--text2);
-      line-height: 18px;
-    }
-    .mat-folder-add:hover { background: var(--teal-50); color: var(--teal-600); border-color: var(--teal-100); }
-    .mat-folder-del:hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
-
-    .mat-folder-items {
-      padding-left: 18px;
-      display: flex; flex-direction: column; gap: 2px;
-    }
-    .mat-folder-empty {
-      padding: 4px 6px; font-size: 11px; color: var(--text3); font-style: italic;
-    }
-    .mat-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 4px 6px;
-      font-size: 12px; color: var(--text);
-      text-decoration: none; border-radius: 4px;
-    }
-    .mat-item:hover { background: var(--bg2); }
-    .mat-item .m-icon { flex-shrink: 0; font-size: 13px; }
-    .mat-item .m-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .mat-item .m-meta { flex-shrink: 0; color: var(--text3); font-size: 10px; }
-    .mat-item-btn {
-      flex-shrink: 0; padding: 0 5px; font-size: 11px;
-      background: transparent; border: 1px solid var(--border2);
-      border-radius: 3px; cursor: pointer; color: var(--text2); line-height: 16px;
-    }
-    .mat-item-btn:hover { background: var(--bg2); color: var(--text); }
-
-    .mat-new-folder {
-      display: block; width: 100%;
-      padding: 6px; margin-top: 6px;
-      font-size: 12px; color: var(--teal-600);
-      background: var(--teal-50); border: 1px dashed var(--teal-100);
-      border-radius: 5px; cursor: pointer;
-    }
-    .mat-new-folder:hover { background: var(--teal-100); }
-
-    .mat-move-hint {
-      padding: 6px 8px; margin-top: 6px;
-      background: rgba(245,158,11,.08); border-left: 2px solid #f59e0b;
-      border-radius: 4px; font-size: 11px; color: var(--text2);
-    }
-    .mat-move-hint a { color: var(--teal); text-decoration: underline; }
 
     /* Todo list section (below + Chat) */
     .todo-section {
@@ -1995,12 +1818,6 @@
       <input type="text" id="profileDisplayName" placeholder="Pick a display name" style="padding:.5rem;font-size:13px;">
       <label style="font-size:12px;color:var(--text2);margin-top:.3rem;">Email</label>
       <input type="text" id="profileEmail" disabled style="padding:.5rem;font-size:13px;background:var(--bg);color:var(--text3);">
-
-      <!-- Current room title inline; shown only when Coach is in their own room -->
-      <div id="roomTitleSection" style="display:none;flex-direction:column;gap:.3rem;margin-top:.3rem;">
-        <label style="font-size:12px;color:var(--text2);">Room title (max 13 chars, blank falls back to display name)</label>
-        <input type="text" id="roomSidebarTitle" maxlength="13" placeholder="Blank falls back to display name" style="padding:.5rem;font-size:13px;">
-      </div>
     </div>
 
     <!-- Agent Keys (Coach only) -->
@@ -2036,16 +1853,6 @@
 <div class="layout">
 
   <aside class="sidebar">
-    <div class="sidebar-head">
-      <div class="sidebar-room-title" id="sidebarRoomTitle" onclick="toggleMaterialsLibrary()" title="Click to view uploaded teaching materials">
-        <span class="sidebar-room-title-text" id="sidebarRoomTitleText">Chat</span>
-        <span class="sidebar-room-title-caret" id="sidebarRoomTitleCaret">▾</span>
-      </div>
-    </div>
-    <div class="materials-library" id="materialsLibrary" style="display:none;">
-      <div class="materials-empty" id="materialsEmpty">No materials yet</div>
-      <div class="materials-list" id="materialsList"></div>
-    </div>
     <div class="todo-section" id="todoSection">
       <div class="todo-head" id="todoHead">
         <button type="button" class="todo-head-btn" id="todoEditBtn" title="Edit plan" onclick="toggleTodoEditing()">
@@ -2404,13 +2211,6 @@
     document.getElementById('agentKeysSection').style.display =
       currentRole === 'expert' ? '' : 'none'
     if (currentRole === 'expert') loadAgentKeys()
-    // Room title: only shown when in a room you own as Coach
-    const showRoomTitle = !!currentRoom && isExpert(currentRoom)
-    const roomTitleSection = document.getElementById('roomTitleSection')
-    if (roomTitleSection) roomTitleSection.style.display = showRoomTitle ? 'flex' : 'none'
-    if (showRoomTitle) {
-      document.getElementById('roomSidebarTitle').value = (currentRoom.sidebar_title || '').slice(0, 13)
-    }
     // Admin entry visible only to admin whitelist
     document.getElementById('adminSection').style.display =
       ADMIN_EMAILS.includes(currentUser?.email) ? '' : 'none'
@@ -2486,13 +2286,7 @@
       document.querySelectorAll('.msg-sender[data-own="1"]').forEach(el => {
         el.textContent = name
       })
-      // Also save the current room title (if visible)
-      const roomSection = document.getElementById('roomTitleSection')
-      if (roomSection && roomSection.style.display !== 'none' && currentRoom && isExpert(currentRoom)) {
-        await saveRoomSidebarTitle(name)
-      } else {
-        showToast('Profile saved')
-      }
+      showToast('Profile saved')
       // Auto-close modal after save (minimal — click outside the modal to cancel changes)
       document.getElementById('settingsModal').classList.remove('show')
     } catch (e) {
@@ -2903,35 +2697,12 @@
     return room.expert_id === currentUser?.id
   }
 
-  async function saveRoomSidebarTitle(fallbackName) {
-    if (!currentRoom || !isExpert(currentRoom)) { showToast("Only this room's Coach can change this"); return }
-    const inputEl = document.getElementById('roomSidebarTitle')
-    const newTitle = (inputEl?.value || '').trim().slice(0, 13)  // Extra trim to 13 chars in case maxlength is bypassed
-    const { error } = await sb.from('rooms')
-      .update({ sidebar_title: newTitle || null })
-      .eq('id', currentRoom.id)
-    if (error) { showToast('Save failed: ' + (error.message || error.code)); return }
-    currentRoom.sidebar_title = newTitle || null
-    const titleTextEl = document.getElementById('sidebarRoomTitleText')
-    if (titleTextEl) {
-      titleTextEl.textContent = newTitle || (fallbackName || '').trim() || 'Chat'
-    }
-    showToast('Saved')
-  }
-
   async function openRoom(room) {
     currentRoom = room
     currentChannel = 'main'
     unreadCounts = { main: 0, expert_user: 0 }
     // Switching rooms clears the profile name cache (so renames show up next time)
     Object.keys(profilesByUid).forEach(k => delete profilesByUid[k])
-    // 切房 → 折叠教学材料库 + 清空,避免显示上一个房的内容
-    _materialsLibraryOpen = false
-    const _mp = document.getElementById('materialsLibrary')
-    if (_mp) _mp.style.display = 'none'
-    document.getElementById('sidebarRoomTitleCaret')?.classList.remove('open')
-    const _ml = document.getElementById('materialsList')
-    if (_ml) _ml.innerHTML = ''
 
     // Get my role in this room: 'expert' | 'focal' | 'audience' | 'none'
     try {
@@ -2945,21 +2716,6 @@
     document.querySelectorAll('.room-item').forEach(el => {
       el.classList.toggle('active', el.dataset.id === room.id)
     })
-
-    // Sidebar room title: rooms.sidebar_title preferred, falls back to expert.display_name
-    // Edit entry is in "Settings → Room title" (visible only to Coach inside their own room)
-    const titleTextEl = document.getElementById('sidebarRoomTitleText')
-    if (titleTextEl) {
-      let title = (room.sidebar_title || '').trim()
-      if (!title && room.expert_id) {
-        try {
-          const { data } = await sb.from('profiles')
-            .select('display_name').eq('user_id', room.expert_id).maybeSingle()
-          title = (data?.display_name || '').trim()
-        } catch (e) { console.warn('[sidebar title]', e) }
-      }
-      titleTextEl.textContent = title || 'Chat'
-    }
 
     updateInputPlaceholder()
 
@@ -3258,341 +3014,6 @@
     if (insErr) { console.warn('[seed templates insert]', insErr); return null }
     return created.id
   }
-
-  // ─── 教学材料文件库 v2 — 可编辑树状目录 ────────────────────────────────
-  // 📥 Inbox(虚拟): messages.attachments 中未分类的;老师手动拖/移入正式 folder
-  // 自定义 folders: expert_material_folders.payload jsonb,owner OR speak2go 单例房可写
-  let _materialsLibraryOpen = false
-  let _materialEditMode = false
-  let _materialFolder = null  // {id, name, payload}; null 表示表/行不存在(回退扁平)
-  let _materialInbox = []     // 未分类的 attachments
-  let _materialMoveBuf = null // {item, fromFolderIdx} 等待选目标 folder
-  // 折叠状态(folder.label → bool),默认全展开
-  const _materialCollapsed = {}
-
-  async function toggleMaterialsLibrary() {
-    _materialsLibraryOpen = !_materialsLibraryOpen
-    const panel = document.getElementById('materialsLibrary')
-    const caret = document.getElementById('sidebarRoomTitleCaret')
-    if (panel) panel.style.display = _materialsLibraryOpen ? 'block' : 'none'
-    if (caret) caret.classList.toggle('open', _materialsLibraryOpen)
-    if (_materialsLibraryOpen && currentRoom) await loadMaterialFolder(currentRoom.id)
-  }
-
-  // 拉树 + 算 Inbox。表不存在时优雅 fallback 到旧扁平视图
-  async function loadMaterialFolder(roomId) {
-    // 1) 先拉所有附件(给 Inbox 算)
-    let allFiles = []
-    try {
-      const { data: msgs } = await sb.from('messages')
-        .select('id,created_at,attachments')
-        .eq('room_id', roomId)
-        .not('attachments', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(500)
-      for (const m of msgs || []) {
-        for (const a of (m.attachments || [])) {
-          if (!a || !a.url || !a.name) continue
-          if (a._event || a.asr_meta) continue
-          allFiles.push({ ...a, _ts: m.created_at })
-        }
-      }
-    } catch (e) { console.warn('[material attachments]', e) }
-
-    // 2) 拉 folder 行(可能不存在 → 表未建,fallback 扁平)
-    try {
-      const { data: row, error } = await sb.from('expert_material_folders')
-        .select('id,name,payload')
-        .eq('room_id', roomId)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle()
-      if (error) {
-        if (error.code === '42P01' || /does not exist/i.test(error.message || '')) {
-          // 表未建 → 退回 v1 扁平
-          _materialFolder = null
-          renderMaterialsFlatFallback(allFiles)
-          return
-        }
-        console.warn('[material folder load]', error); return
-      }
-      _materialFolder = row
-      // 不存在行就插一行(speak2go 单例房 RLS 允许)
-      if (!_materialFolder && currentUser) {
-        const { data: created } = await sb.from('expert_material_folders')
-          .insert({
-            owner_id: currentRoom.expert_id || currentUser.id,
-            room_id: roomId,
-            name: 'Materials',
-            payload: [],
-            product: DEMO_PRODUCT,
-          }).select('id,name,payload').maybeSingle()
-        _materialFolder = created || { id: null, name: 'Materials', payload: [] }
-      }
-    } catch (e) {
-      console.warn('[material folder]', e)
-      _materialFolder = null
-      renderMaterialsFlatFallback(allFiles)
-      return
-    }
-
-    // 3) 算 Inbox = 全集 - 已分类 storage_path
-    const claimedPaths = new Set()
-    for (const g of (_materialFolder?.payload || [])) {
-      for (const it of (g.items || [])) {
-        if (it && it.storage_path) claimedPaths.add(it.storage_path)
-      }
-    }
-    _materialInbox = allFiles.filter(f => !f.storage_path || !claimedPaths.has(f.storage_path))
-    _renderMaterialTree()
-  }
-
-  // v1 扁平视图 fallback(SQL 没跑时)
-  function renderMaterialsFlatFallback(files) {
-    const empty = document.getElementById('materialsEmpty')
-    const list = document.getElementById('materialsList')
-    if (!list || !empty) return
-    if (!files.length) {
-      empty.style.display = 'block'; list.innerHTML = ''; return
-    }
-    empty.style.display = 'none'
-    list.innerHTML = files.map(f => `
-      <a class="material-row" href="${escHtml(f.url)}" target="_blank" rel="noopener" title="${escHtml(f.name)}">
-        <span class="m-icon">${pickFileIcon(f)}</span>
-        <span class="m-name">${escHtml(f.name)}</span>
-        <span class="m-meta">${formatSize(f.size || 0)} · ${timeAgo(f._ts)}</span>
-      </a>
-    `).join('') + '<div style="color:var(--text3);font-size:11px;padding:6px;text-align:center;">⚠ Tree mode disabled — run material_folders SQL migration to enable folders</div>'
-  }
-
-  function pickFileIcon(a) {
-    const mime = (a.mime_type || '').toLowerCase()
-    const name = (a.name || '').toLowerCase()
-    if (mime.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp)$/.test(name)) return '🖼'
-    if (mime.startsWith('audio/') || /\.(mp3|m4a|wav|aac|ogg|flac|webm|qta)$/.test(name)) return '🎙'
-    if (/\.(pdf|docx?|txt|md|csv|html?|xml|json)$/.test(name)) return '📄'
-    return '📦'
-  }
-  function timeAgo(iso) {
-    if (!iso) return ''
-    const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-    if (sec < 60) return 'just now'
-    if (sec < 3600) return `${Math.floor(sec/60)}m`
-    if (sec < 86400) return `${Math.floor(sec/3600)}h`
-    return `${Math.floor(sec/86400)}d`
-  }
-
-  // 树渲染:工具栏 + Inbox + 自定义 folders + (edit 模式) New folder
-  function _renderMaterialTree() {
-    const empty = document.getElementById('materialsEmpty')
-    const list = document.getElementById('materialsList')
-    if (!list || !empty) return
-    empty.style.display = 'none'
-
-    const folders = (_materialFolder?.payload || [])
-    const inbox = _materialInbox || []
-    const editing = _materialEditMode
-    const moveTarget = _materialMoveBuf
-
-    let html = `
-      <div class="mat-head">
-        <button class="mat-head-btn ${editing ? 'on' : ''}" onclick="toggleMaterialEditMode()" title="${editing ? 'Done editing (save)' : 'Edit folders'}">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        </button>
-        <span class="mat-head-name">Materials</span>
-        <button class="mat-head-btn" title="Switch library (coming soon)" onclick="event.stopPropagation(); showToast && showToast('Switch library — coming soon');">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-      </div>
-    `
-
-    // Inbox 永远显示在顶部
-    const inboxCollapsed = _materialCollapsed['__inbox__'] === true
-    html += `
-      <div class="mat-folder" data-folder="__inbox__">
-        <div class="mat-folder-head" onclick="toggleMaterialFolderCollapse('__inbox__')">
-          <span class="mat-folder-caret">${inboxCollapsed ? '▸' : '▾'}</span>
-          <span class="mat-folder-icon">📥</span>
-          <span class="mat-folder-label">Inbox (${inbox.length})</span>
-        </div>
-        ${inboxCollapsed ? '' : `<div class="mat-folder-items">${inbox.map((f, i) => _renderInboxItem(f, i, editing, folders)).join('') || '<div class="mat-folder-empty">empty</div>'}</div>`}
-      </div>
-    `
-
-    // 用户自定义 folders
-    folders.forEach((g, gi) => {
-      const collapsed = _materialCollapsed[g.label] === true
-      html += `
-        <div class="mat-folder" data-folder-idx="${gi}">
-          <div class="mat-folder-head" onclick="toggleMaterialFolderCollapse(${JSON.stringify(g.label).replace(/"/g, '&quot;')})">
-            <span class="mat-folder-caret">${collapsed ? '▸' : '▾'}</span>
-            <span class="mat-folder-icon">📁</span>
-            ${editing
-              ? `<span class="mat-folder-label" contenteditable="true" onblur="renameMaterialFolder(${gi}, this.textContent)" onclick="event.stopPropagation()">${escHtml(g.label || '')}</span>`
-              : `<span class="mat-folder-label">${escHtml(g.label || '')}</span>`}
-            ${editing ? `
-              <button class="mat-folder-add" onclick="event.stopPropagation(); uploadToMaterialFolder(${gi})" title="Upload to this folder">+</button>
-              <button class="mat-folder-del" onclick="event.stopPropagation(); deleteMaterialFolder(${gi})" title="Delete folder">✕</button>
-            ` : (moveTarget ? `<button class="mat-folder-add" onclick="event.stopPropagation(); confirmMoveItem(${gi})" title="Move here">⤓</button>` : '')}
-          </div>
-          ${collapsed ? '' : `<div class="mat-folder-items">${(g.items || []).map((it, ii) => _renderTreeItem(it, gi, ii, editing)).join('') || '<div class="mat-folder-empty">empty</div>'}</div>`}
-        </div>
-      `
-    })
-
-    if (editing) {
-      html += `<button class="mat-new-folder" onclick="addMaterialFolder()">+ New folder</button>`
-    }
-    if (moveTarget) {
-      html += `<div class="mat-move-hint">Moving "${escHtml(moveTarget.item.name)}" — pick a folder above, or <a href="#" onclick="cancelMoveItem(); return false">cancel</a></div>`
-    }
-
-    list.innerHTML = html
-  }
-
-  function _renderInboxItem(f, idx, editing, folders) {
-    const moveBtn = (folders.length > 0)
-      ? `<button class="mat-item-btn" onclick="event.stopPropagation(); startMoveItem(${JSON.stringify(f).replace(/"/g, '&quot;')}, null)" title="Move to folder...">📂</button>`
-      : ''
-    return `
-      <a class="mat-item" href="${escHtml(f.url)}" target="_blank" rel="noopener" title="${escHtml(f.name)}">
-        <span class="m-icon">${pickFileIcon(f)}</span>
-        <span class="m-name">${escHtml(f.name)}</span>
-        <span class="m-meta">${formatSize(f.size || 0)} · ${timeAgo(f._ts)}</span>
-        ${moveBtn}
-      </a>
-    `
-  }
-  function _renderTreeItem(it, gi, ii, editing) {
-    const rmBtn = editing
-      ? `<button class="mat-item-btn" onclick="event.stopPropagation(); removeMaterialItem(${gi}, ${ii})" title="Remove from folder">✕</button>`
-      : ''
-    return `
-      <a class="mat-item" href="${escHtml(it.url)}" target="_blank" rel="noopener" title="${escHtml(it.name)}">
-        <span class="m-icon">${pickFileIcon(it)}</span>
-        <span class="m-name">${escHtml(it.name)}</span>
-        <span class="m-meta">${formatSize(it.size || 0)}</span>
-        ${rmBtn}
-      </a>
-    `
-  }
-
-  function toggleMaterialEditMode() {
-    _materialEditMode = !_materialEditMode
-    _renderMaterialTree()
-  }
-  function toggleMaterialFolderCollapse(key) {
-    _materialCollapsed[key] = !_materialCollapsed[key]
-    _renderMaterialTree()
-  }
-
-  async function addMaterialFolder() {
-    if (!_materialFolder) { showToast('Run the material_folders SQL first'); return }
-    const label = (prompt('New folder name:') || '').trim()
-    if (!label) return
-    _materialFolder.payload = _materialFolder.payload || []
-    _materialFolder.payload.push({ label, items: [] })
-    await saveMaterialFolder()
-    _renderMaterialTree()
-  }
-  async function renameMaterialFolder(idx, newLabel) {
-    if (!_materialFolder) return
-    const trimmed = (newLabel || '').trim() || _materialFolder.payload[idx]?.label
-    if (_materialFolder.payload[idx]) {
-      _materialFolder.payload[idx].label = trimmed
-      await saveMaterialFolder()
-    }
-  }
-  async function deleteMaterialFolder(idx) {
-    if (!_materialFolder) return
-    const folder = _materialFolder.payload[idx]
-    if (!folder) return
-    if (!confirm(`Delete folder "${folder.label}"? Its files move back to Inbox.`)) return
-    _materialFolder.payload.splice(idx, 1)
-    await saveMaterialFolder()
-    await loadMaterialFolder(currentRoom.id)  // re-render with refreshed Inbox
-  }
-  async function removeMaterialItem(gi, ii) {
-    if (!_materialFolder) return
-    if (!_materialFolder.payload[gi]) return
-    _materialFolder.payload[gi].items.splice(ii, 1)
-    await saveMaterialFolder()
-    await loadMaterialFolder(currentRoom.id)
-  }
-
-  // Move: Inbox 文件 → 目标 folder
-  function startMoveItem(file, fromFolderIdx) {
-    _materialMoveBuf = { item: file, fromFolderIdx }
-    _renderMaterialTree()
-  }
-  function cancelMoveItem() {
-    _materialMoveBuf = null
-    _renderMaterialTree()
-  }
-  async function confirmMoveItem(toFolderIdx) {
-    if (!_materialFolder || !_materialMoveBuf) return
-    const { item } = _materialMoveBuf
-    const dst = _materialFolder.payload[toFolderIdx]
-    if (!dst) { cancelMoveItem(); return }
-    dst.items = dst.items || []
-    dst.items.push({
-      name: item.name, url: item.url, size: item.size || 0,
-      mime_type: item.mime_type || '', storage_path: item.storage_path || '',
-      added_at: new Date().toISOString(),
-    })
-    _materialMoveBuf = null
-    await saveMaterialFolder()
-    await loadMaterialFolder(currentRoom.id)
-  }
-
-  // Upload to specific folder — 调 Supabase Storage 上传 + push 进 payload[gi].items
-  async function uploadToMaterialFolder(gi) {
-    if (!_materialFolder) return
-    const folder = _materialFolder.payload[gi]
-    if (!folder) return
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.onchange = async (e) => {
-      const file = e.target.files[0]
-      if (!file) return
-      showToast('Uploading…')
-      try {
-        const userId = currentUser.id
-        const ts = Date.now()
-        const rand = Math.random().toString(36).slice(2, 8)
-        const safeName = file.name.replace(/[^\w.\-]/g, '_').slice(0, 80)
-        const storage_path = `${userId}/${ts}_${rand}_${safeName}`
-        const { error: upErr } = await sb.storage.from('chat-uploads').upload(storage_path, file, {
-          cacheControl: '3600', upsert: false,
-        })
-        if (upErr) { showToast('Upload failed: ' + upErr.message); return }
-        const { data: signed } = await sb.storage.from('chat-uploads').createSignedUrl(storage_path, 365 * 24 * 3600)
-        folder.items = folder.items || []
-        folder.items.push({
-          name: file.name, url: signed?.signedUrl || '', size: file.size,
-          mime_type: file.type || 'application/octet-stream',
-          storage_path, added_at: new Date().toISOString(),
-        })
-        await saveMaterialFolder()
-        _renderMaterialTree()
-        showToast(`Uploaded to "${folder.label}"`)
-      } catch (e) { showToast('Upload error: ' + (e.message || e)) }
-    }
-    input.click()
-  }
-
-  async function saveMaterialFolder() {
-    if (!_materialFolder?.id) return
-    try {
-      const { error } = await sb.from('expert_material_folders')
-        .update({ payload: _materialFolder.payload })
-        .eq('id', _materialFolder.id)
-      if (error) { showToast('Save failed: ' + error.message); return }
-    } catch (e) { showToast('Save error: ' + (e.message || e)) }
-  }
-
-  // 老的 v1 入口保留(其它代码可能引用),委托到 v2
-  async function loadMaterials(roomId) { return loadMaterialFolder(roomId) }
 
   async function loadActiveTodoTemplate(room) {
     let templateId = room.active_todo_template_id
@@ -4132,14 +3553,6 @@
               }
             } catch (_) {}
           }
-          // 新消息含真实附件 + 库正展开 → reload 材料列表
-          try {
-            if (_materialsLibraryOpen && Array.isArray(payload.new.attachments)) {
-              if (payload.new.attachments.some(a => a && a.url && a.name && !a._event && !a.asr_meta)) {
-                loadMaterials(currentRoom.id)
-              }
-            }
-          } catch (_) {}
           if (inCurChannel) {
             appendMessage(payload.new)
             scrollToBottom()
