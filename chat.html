@@ -159,6 +159,148 @@
     .invite-btn:hover { background: var(--teal-50); color: var(--teal-600); transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,.1); }
     .invite-btn svg { width: 13px; height: 13px; }
 
+    /* Materials modal (folder-tree popup) */
+    .materials-modal {
+      max-width: 520px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      max-height: 80vh;
+    }
+    .materials-modal-head {
+      display: flex; align-items: center; gap: 8px;
+      padding: 14px 18px;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .materials-modal-title {
+      flex: 1;
+      font-size: 15px; font-weight: 600;
+      font-family: 'Inter', -apple-system, sans-serif;
+      color: var(--text);
+    }
+    .materials-modal-close {
+      width: 28px; height: 28px;
+      background: transparent; border: 0;
+      font-size: 22px; line-height: 1;
+      color: var(--text2); cursor: pointer;
+      border-radius: 6px;
+    }
+    .materials-modal-close:hover { background: var(--bg2); color: var(--text); }
+    .materials-modal-body {
+      padding: 12px 16px 16px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .materials-empty {
+      padding: 24px 6px;
+      text-align: center;
+      color: var(--text3);
+      font-size: 13px;
+    }
+    .materials-list { display: flex; flex-direction: column; gap: 4px; }
+    .material-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px;
+      font-size: 12px;
+      color: var(--text);
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background .12s;
+    }
+    .material-row:hover { background: var(--bg2); }
+    .material-row .m-icon { flex-shrink: 0; font-size: 14px; }
+    .material-row .m-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .material-row .m-meta { flex-shrink: 0; color: var(--text3); font-size: 11px; }
+
+    /* Toolbar inside modal (edit/switch) */
+    .mat-head {
+      padding: 7px 10px;
+      background: var(--teal-50);
+      border: 0.5px solid var(--teal-100);
+      border-radius: var(--radius);
+      font-family: 'Inter', -apple-system, sans-serif;
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--text);
+      display: flex; align-items: center; gap: 4px;
+      margin-bottom: 10px;
+    }
+    .mat-head-name { flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mat-head-btn {
+      width: 22px; height: 22px;
+      background: transparent; border: 0;
+      border-radius: 6px;
+      color: var(--text2);
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 12px; line-height: 1; padding: 0;
+      flex-shrink: 0;
+    }
+    .mat-head-btn:hover { background: var(--teal-100); color: var(--teal-600); }
+    .mat-head-btn.on { background: var(--teal); color: #fff; }
+
+    .mat-folder { margin-bottom: 4px; }
+    .mat-folder-head {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 6px; cursor: pointer;
+      font-size: 13px; color: var(--text);
+      border-radius: 5px; transition: background .12s;
+    }
+    .mat-folder-head:hover { background: var(--bg2); }
+    .mat-folder-caret { font-size: 10px; color: var(--text3); flex-shrink: 0; width: 10px; }
+    .mat-folder-icon { font-size: 15px; flex-shrink: 0; }
+    .mat-folder-label {
+      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-weight: 500;
+    }
+    .mat-folder-label[contenteditable="true"] {
+      outline: 1px solid var(--teal-100); padding: 0 4px;
+      background: #fff; border-radius: 3px;
+    }
+    .mat-folder-add, .mat-folder-del {
+      flex-shrink: 0; padding: 0 6px; font-size: 12px;
+      background: transparent; border: 1px solid var(--border2);
+      border-radius: 4px; cursor: pointer; color: var(--text2);
+      line-height: 18px;
+    }
+    .mat-folder-add:hover { background: var(--teal-50); color: var(--teal-600); border-color: var(--teal-100); }
+    .mat-folder-del:hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+
+    .mat-folder-items { padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
+    .mat-folder-empty { padding: 4px 6px; font-size: 11px; color: var(--text3); font-style: italic; }
+    .mat-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 6px;
+      font-size: 12px; color: var(--text);
+      text-decoration: none; border-radius: 4px;
+    }
+    .mat-item:hover { background: var(--bg2); }
+    .mat-item .m-icon { flex-shrink: 0; font-size: 13px; }
+    .mat-item .m-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mat-item .m-meta { flex-shrink: 0; color: var(--text3); font-size: 10px; }
+    .mat-item-btn {
+      flex-shrink: 0; padding: 0 5px; font-size: 11px;
+      background: transparent; border: 1px solid var(--border2);
+      border-radius: 3px; cursor: pointer; color: var(--text2); line-height: 16px;
+    }
+    .mat-item-btn:hover { background: var(--bg2); color: var(--text); }
+
+    .mat-new-folder {
+      display: block; width: 100%;
+      padding: 6px; margin-top: 8px;
+      font-size: 12px; color: var(--teal-600);
+      background: var(--teal-50); border: 1px dashed var(--teal-100);
+      border-radius: 5px; cursor: pointer;
+    }
+    .mat-new-folder:hover { background: var(--teal-100); }
+
+    .mat-move-hint {
+      padding: 6px 8px; margin-top: 6px;
+      background: rgba(245,158,11,.08); border-left: 2px solid #f59e0b;
+      border-radius: 4px; font-size: 11px; color: var(--text2);
+    }
+    .mat-move-hint a { color: var(--teal); text-decoration: underline; }
+
     /* Todo list section (below + Chat) */
     .todo-section {
       padding: 6px;
@@ -1791,6 +1933,20 @@
   </div>
 </nav>
 
+<!-- Materials Modal — Inbox + custom folders (triggered from chat-head toolbar) -->
+<div class="modal-overlay" id="materialsModal" onclick="closeMaterialsModal(event)">
+  <div class="modal materials-modal" onclick="event.stopPropagation()">
+    <div class="materials-modal-head">
+      <span class="materials-modal-title">Materials</span>
+      <button class="materials-modal-close" title="Close" onclick="closeMaterialsModal()">×</button>
+    </div>
+    <div class="materials-modal-body">
+      <div class="materials-empty" id="materialsEmpty">No materials yet</div>
+      <div class="materials-list" id="materialsList"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Settings Modal (Coach only — includes Agent Keys management) -->
 <div class="modal-overlay" id="settingsModal" onclick="closeSettings(event)">
   <div class="modal" style="max-width:640px;" onclick="event.stopPropagation()">
@@ -1900,6 +2056,11 @@
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9"/>
               <path d="M13.5 2.5v3h-3"/>
+            </svg>
+          </button>
+          <button id="materialsBtn" class="invite-btn" title="Materials — folders & files" onclick="openMaterialsModal()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M1.5 4.2a1.2 1.2 0 0 1 1.2-1.2h3.1l1.4 1.6h5.6a1.2 1.2 0 0 1 1.2 1.2v6.6a1.2 1.2 0 0 1-1.2 1.2H2.7a1.2 1.2 0 0 1-1.2-1.2V4.2Z"/>
             </svg>
           </button>
         </div>
@@ -3015,6 +3176,329 @@
     return created.id
   }
 
+  // ─── Materials modal — Inbox + editable folder tree ──────────────────────
+  // 📥 Inbox: messages.attachments that aren't claimed; Coach moves files into folders
+  // Custom folders: expert_material_folders.payload jsonb, owner OR speak2go singleton room writable
+  let _materialsModalOpen = false
+  let _materialEditMode = false
+  let _materialFolder = null    // {id, name, payload}; null = table/row missing (flat fallback)
+  let _materialInbox = []
+  let _materialMoveBuf = null   // {item, fromFolderIdx} waiting for target folder
+  const _materialCollapsed = {}
+
+  function openMaterialsModal() {
+    if (!currentRoom) { showToast && showToast('Open a chat first'); return }
+    _materialsModalOpen = true
+    document.getElementById('materialsModal').classList.add('show')
+    loadMaterialFolder(currentRoom.id)
+  }
+  function closeMaterialsModal(e) {
+    if (e && e.currentTarget !== e.target) return
+    _materialsModalOpen = false
+    document.getElementById('materialsModal').classList.remove('show')
+    _materialMoveBuf = null
+    _materialEditMode = false
+  }
+
+  // Pull tree + compute Inbox. Table missing → flat fallback.
+  async function loadMaterialFolder(roomId) {
+    let allFiles = []
+    try {
+      const { data: msgs } = await sb.from('messages')
+        .select('id,created_at,attachments')
+        .eq('room_id', roomId)
+        .not('attachments', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(500)
+      for (const m of msgs || []) {
+        for (const a of (m.attachments || [])) {
+          if (!a || !a.url || !a.name) continue
+          if (a._event || a.asr_meta) continue
+          allFiles.push({ ...a, _ts: m.created_at })
+        }
+      }
+    } catch (e) { console.warn('[material attachments]', e) }
+
+    try {
+      const { data: row, error } = await sb.from('expert_material_folders')
+        .select('id,name,payload')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      if (error) {
+        if (error.code === '42P01' || /does not exist/i.test(error.message || '')) {
+          _materialFolder = null
+          renderMaterialsFlatFallback(allFiles)
+          return
+        }
+        console.warn('[material folder load]', error); return
+      }
+      _materialFolder = row
+      if (!_materialFolder && currentUser) {
+        const { data: created } = await sb.from('expert_material_folders')
+          .insert({
+            owner_id: currentRoom.expert_id || currentUser.id,
+            room_id: roomId,
+            name: 'Materials',
+            payload: [],
+            product: DEMO_PRODUCT,
+          }).select('id,name,payload').maybeSingle()
+        _materialFolder = created || { id: null, name: 'Materials', payload: [] }
+      }
+    } catch (e) {
+      console.warn('[material folder]', e)
+      _materialFolder = null
+      renderMaterialsFlatFallback(allFiles)
+      return
+    }
+
+    const claimedPaths = new Set()
+    for (const g of (_materialFolder?.payload || [])) {
+      for (const it of (g.items || [])) {
+        if (it && it.storage_path) claimedPaths.add(it.storage_path)
+      }
+    }
+    _materialInbox = allFiles.filter(f => !f.storage_path || !claimedPaths.has(f.storage_path))
+    _renderMaterialTree()
+  }
+
+  function renderMaterialsFlatFallback(files) {
+    const empty = document.getElementById('materialsEmpty')
+    const list = document.getElementById('materialsList')
+    if (!list || !empty) return
+    if (!files.length) {
+      empty.style.display = 'block'; list.innerHTML = ''; return
+    }
+    empty.style.display = 'none'
+    list.innerHTML = files.map(f => `
+      <a class="material-row" href="${escHtml(f.url)}" target="_blank" rel="noopener" title="${escHtml(f.name)}">
+        <span class="m-icon">${pickFileIcon(f)}</span>
+        <span class="m-name">${escHtml(f.name)}</span>
+        <span class="m-meta">${formatSize(f.size || 0)} · ${timeAgo(f._ts)}</span>
+      </a>
+    `).join('') + '<div style="color:var(--text3);font-size:11px;padding:6px;text-align:center;">⚠ Tree mode disabled — run material_folders SQL migration to enable folders</div>'
+  }
+
+  function pickFileIcon(a) {
+    const mime = (a.mime_type || '').toLowerCase()
+    const name = (a.name || '').toLowerCase()
+    if (mime.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp)$/.test(name)) return '🖼'
+    if (mime.startsWith('audio/') || /\.(mp3|m4a|wav|aac|ogg|flac|webm|qta)$/.test(name)) return '🎙'
+    if (/\.(pdf|docx?|txt|md|csv|html?|xml|json)$/.test(name)) return '📄'
+    return '📦'
+  }
+  function timeAgo(iso) {
+    if (!iso) return ''
+    const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+    if (sec < 60) return 'just now'
+    if (sec < 3600) return `${Math.floor(sec/60)}m`
+    if (sec < 86400) return `${Math.floor(sec/3600)}h`
+    return `${Math.floor(sec/86400)}d`
+  }
+
+  function _renderMaterialTree() {
+    const empty = document.getElementById('materialsEmpty')
+    const list = document.getElementById('materialsList')
+    if (!list || !empty) return
+    empty.style.display = 'none'
+
+    const folders = (_materialFolder?.payload || [])
+    const inbox = _materialInbox || []
+    const editing = _materialEditMode
+    const moveTarget = _materialMoveBuf
+
+    let html = `
+      <div class="mat-head">
+        <button class="mat-head-btn ${editing ? 'on' : ''}" onclick="toggleMaterialEditMode()" title="${editing ? 'Done editing (save)' : 'Edit folders'}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </button>
+        <span class="mat-head-name">Folders</span>
+        <span class="mat-head-btn" style="cursor:default;visibility:hidden;"></span>
+      </div>
+    `
+
+    const inboxCollapsed = _materialCollapsed['__inbox__'] === true
+    html += `
+      <div class="mat-folder" data-folder="__inbox__">
+        <div class="mat-folder-head" onclick="toggleMaterialFolderCollapse('__inbox__')">
+          <span class="mat-folder-caret">${inboxCollapsed ? '▸' : '▾'}</span>
+          <span class="mat-folder-icon">📥</span>
+          <span class="mat-folder-label">Inbox (${inbox.length})</span>
+        </div>
+        ${inboxCollapsed ? '' : `<div class="mat-folder-items">${inbox.map((f, i) => _renderInboxItem(f, i, editing, folders)).join('') || '<div class="mat-folder-empty">empty</div>'}</div>`}
+      </div>
+    `
+
+    folders.forEach((g, gi) => {
+      const collapsed = _materialCollapsed[g.label] === true
+      html += `
+        <div class="mat-folder" data-folder-idx="${gi}">
+          <div class="mat-folder-head" onclick="toggleMaterialFolderCollapse(${JSON.stringify(g.label).replace(/"/g, '&quot;')})">
+            <span class="mat-folder-caret">${collapsed ? '▸' : '▾'}</span>
+            <span class="mat-folder-icon">📁</span>
+            ${editing
+              ? `<span class="mat-folder-label" contenteditable="true" onblur="renameMaterialFolder(${gi}, this.textContent)" onclick="event.stopPropagation()">${escHtml(g.label || '')}</span>`
+              : `<span class="mat-folder-label">${escHtml(g.label || '')}</span>`}
+            ${editing ? `
+              <button class="mat-folder-add" onclick="event.stopPropagation(); uploadToMaterialFolder(${gi})" title="Upload to this folder">+</button>
+              <button class="mat-folder-del" onclick="event.stopPropagation(); deleteMaterialFolder(${gi})" title="Delete folder">✕</button>
+            ` : (moveTarget ? `<button class="mat-folder-add" onclick="event.stopPropagation(); confirmMoveItem(${gi})" title="Move here">⤓</button>` : '')}
+          </div>
+          ${collapsed ? '' : `<div class="mat-folder-items">${(g.items || []).map((it, ii) => _renderTreeItem(it, gi, ii, editing)).join('') || '<div class="mat-folder-empty">empty</div>'}</div>`}
+        </div>
+      `
+    })
+
+    if (editing) {
+      html += `<button class="mat-new-folder" onclick="addMaterialFolder()">+ New folder</button>`
+    }
+    if (moveTarget) {
+      html += `<div class="mat-move-hint">Moving "${escHtml(moveTarget.item.name)}" — pick a folder above, or <a href="#" onclick="cancelMoveItem(); return false">cancel</a></div>`
+    }
+
+    list.innerHTML = html
+  }
+
+  function _renderInboxItem(f, idx, editing, folders) {
+    const moveBtn = (folders.length > 0)
+      ? `<button class="mat-item-btn" onclick="event.stopPropagation(); startMoveItem(${JSON.stringify(f).replace(/"/g, '&quot;')}, null)" title="Move to folder...">📂</button>`
+      : ''
+    return `
+      <a class="mat-item" href="${escHtml(f.url)}" target="_blank" rel="noopener" title="${escHtml(f.name)}">
+        <span class="m-icon">${pickFileIcon(f)}</span>
+        <span class="m-name">${escHtml(f.name)}</span>
+        <span class="m-meta">${formatSize(f.size || 0)} · ${timeAgo(f._ts)}</span>
+        ${moveBtn}
+      </a>
+    `
+  }
+  function _renderTreeItem(it, gi, ii, editing) {
+    const rmBtn = editing
+      ? `<button class="mat-item-btn" onclick="event.stopPropagation(); removeMaterialItem(${gi}, ${ii})" title="Remove from folder">✕</button>`
+      : ''
+    return `
+      <a class="mat-item" href="${escHtml(it.url)}" target="_blank" rel="noopener" title="${escHtml(it.name)}">
+        <span class="m-icon">${pickFileIcon(it)}</span>
+        <span class="m-name">${escHtml(it.name)}</span>
+        <span class="m-meta">${formatSize(it.size || 0)}</span>
+        ${rmBtn}
+      </a>
+    `
+  }
+
+  function toggleMaterialEditMode() {
+    _materialEditMode = !_materialEditMode
+    _renderMaterialTree()
+  }
+  function toggleMaterialFolderCollapse(key) {
+    _materialCollapsed[key] = !_materialCollapsed[key]
+    _renderMaterialTree()
+  }
+
+  async function addMaterialFolder() {
+    if (!_materialFolder) { showToast('Run the material_folders SQL first'); return }
+    const label = (prompt('New folder name:') || '').trim()
+    if (!label) return
+    _materialFolder.payload = _materialFolder.payload || []
+    _materialFolder.payload.push({ label, items: [] })
+    await saveMaterialFolder()
+    _renderMaterialTree()
+  }
+  async function renameMaterialFolder(idx, newLabel) {
+    if (!_materialFolder) return
+    const trimmed = (newLabel || '').trim() || _materialFolder.payload[idx]?.label
+    if (_materialFolder.payload[idx]) {
+      _materialFolder.payload[idx].label = trimmed
+      await saveMaterialFolder()
+    }
+  }
+  async function deleteMaterialFolder(idx) {
+    if (!_materialFolder) return
+    const folder = _materialFolder.payload[idx]
+    if (!folder) return
+    if (!confirm(`Delete folder "${folder.label}"? Its files move back to Inbox.`)) return
+    _materialFolder.payload.splice(idx, 1)
+    await saveMaterialFolder()
+    await loadMaterialFolder(currentRoom.id)
+  }
+  async function removeMaterialItem(gi, ii) {
+    if (!_materialFolder) return
+    if (!_materialFolder.payload[gi]) return
+    _materialFolder.payload[gi].items.splice(ii, 1)
+    await saveMaterialFolder()
+    await loadMaterialFolder(currentRoom.id)
+  }
+
+  function startMoveItem(file, fromFolderIdx) {
+    _materialMoveBuf = { item: file, fromFolderIdx }
+    _renderMaterialTree()
+  }
+  function cancelMoveItem() {
+    _materialMoveBuf = null
+    _renderMaterialTree()
+  }
+  async function confirmMoveItem(toFolderIdx) {
+    if (!_materialFolder || !_materialMoveBuf) return
+    const { item } = _materialMoveBuf
+    const dst = _materialFolder.payload[toFolderIdx]
+    if (!dst) { cancelMoveItem(); return }
+    dst.items = dst.items || []
+    dst.items.push({
+      name: item.name, url: item.url, size: item.size || 0,
+      mime_type: item.mime_type || '', storage_path: item.storage_path || '',
+      added_at: new Date().toISOString(),
+    })
+    _materialMoveBuf = null
+    await saveMaterialFolder()
+    await loadMaterialFolder(currentRoom.id)
+  }
+
+  async function uploadToMaterialFolder(gi) {
+    if (!_materialFolder) return
+    const folder = _materialFolder.payload[gi]
+    if (!folder) return
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.onchange = async (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+      showToast('Uploading…')
+      try {
+        const userId = currentUser.id
+        const ts = Date.now()
+        const rand = Math.random().toString(36).slice(2, 8)
+        const safeName = file.name.replace(/[^\w.\-]/g, '_').slice(0, 80)
+        const storage_path = `${userId}/${ts}_${rand}_${safeName}`
+        const { error: upErr } = await sb.storage.from('chat-uploads').upload(storage_path, file, {
+          cacheControl: '3600', upsert: false,
+        })
+        if (upErr) { showToast('Upload failed: ' + upErr.message); return }
+        const { data: signed } = await sb.storage.from('chat-uploads').createSignedUrl(storage_path, 365 * 24 * 3600)
+        folder.items = folder.items || []
+        folder.items.push({
+          name: file.name, url: signed?.signedUrl || '', size: file.size,
+          mime_type: file.type || 'application/octet-stream',
+          storage_path, added_at: new Date().toISOString(),
+        })
+        await saveMaterialFolder()
+        _renderMaterialTree()
+        showToast(`Uploaded to "${folder.label}"`)
+      } catch (e) { showToast('Upload error: ' + (e.message || e)) }
+    }
+    input.click()
+  }
+
+  async function saveMaterialFolder() {
+    if (!_materialFolder?.id) return
+    try {
+      const { error } = await sb.from('expert_material_folders')
+        .update({ payload: _materialFolder.payload })
+        .eq('id', _materialFolder.id)
+      if (error) { showToast('Save failed: ' + error.message); return }
+    } catch (e) { showToast('Save error: ' + (e.message || e)) }
+  }
+
   async function loadActiveTodoTemplate(room) {
     let templateId = room.active_todo_template_id
 
@@ -3553,6 +4037,14 @@
               }
             } catch (_) {}
           }
+          // Materials modal open + new real attachment → reload tree
+          try {
+            if (_materialsModalOpen && currentRoom && Array.isArray(payload.new.attachments)) {
+              if (payload.new.attachments.some(a => a && a.url && a.name && !a._event && !a.asr_meta)) {
+                loadMaterialFolder(currentRoom.id)
+              }
+            }
+          } catch (_) {}
           if (inCurChannel) {
             appendMessage(payload.new)
             scrollToBottom()
