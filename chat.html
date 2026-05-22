@@ -1080,6 +1080,21 @@
     .msg-translation:hover { background: var(--bg2); }
     .msg-translation.loading::before { content: '⟳ '; }
 
+    /* Swap T↔S button on transcript_full messages (safety net for heuristic miscalls) */
+    .transcript-swap-btn {
+      margin: 6px 0 0;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--text2);
+      background: var(--bg2);
+      border: 0.5px solid var(--border2);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .transcript-swap-btn:hover { background: var(--teal-50); color: var(--teal-600); border-color: var(--teal-100); }
+    .transcript-swap-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
     /* 课中 10-min review banner: 淡灰 + 默认折叠 + 点击展开 */
     .msg-review-banner {
       display: flex; align-items: center; gap: 8px;
@@ -4252,6 +4267,11 @@
         ${translateBtnHtml}
       </div>`
 
+    // Swap T↔S button for transcript_full (speaker labels heuristic safety net)
+    const swapBtnHtml = (msg.message_type === 'transcript_full')
+      ? `<button class="transcript-swap-btn" onclick="swapSpeakerLabels('${msg.id}', this)" title="Heuristic got T and S backwards? One click to flip them in this transcript.">⇄ Swap T ↔ S</button>`
+      : ''
+
     el.innerHTML = `
       <div class="msg-av ${displayRole}"${aiAvClick}>${avText}</div>
       <div class="msg-body">
@@ -4265,6 +4285,7 @@
           </div>
         </div>
         ${bubbleHtml}
+        ${swapBtnHtml}
         <div class="msg-translation" data-translation-for="${msg.id}" style="display:none;"></div>
         ${quoteCardHtml}
         ${attachHtml}
@@ -4616,6 +4637,36 @@
   function highlightMentions(html) {
     // Match @ + 1-30 non-whitespace/punctuation chars after
     return html.replace(/@([^\s@<>,.?!]{1,30})/g, '<span class="mention">@$1</span>')
+  }
+
+  // Swap T↔S labels in a transcript_full message — safety net for heuristic miscalls
+  async function swapSpeakerLabels(msgId, btn) {
+    if (!currentRoom || !currentUser) return
+    if (btn) btn.disabled = true
+    try {
+      const { data: src, error: e1 } = await sb
+        .from('messages').select('content').eq('id', msgId).maybeSingle()
+      if (e1 || !src) { showToast('Load failed: ' + (e1?.message || 'not found')); return }
+      // Swap **T:** ↔ **S:** via temp marker to avoid collision
+      const TMP = ' SWAP '
+      const swapped = (src.content || '')
+        .replace(/\*\*T:\*\*/g, TMP)
+        .replace(/\*\*S:\*\*/g, '**T:**')
+        .replace(new RegExp(TMP, 'g'), '**S:**')
+      if (swapped === src.content) { showToast('No T/S labels to swap'); return }
+      const { error: e2 } = await sb.from('messages')
+        .update({ content: swapped }).eq('id', msgId)
+      if (e2) { showToast('Swap failed: ' + e2.message); return }
+      // Re-render in place — find the md-body and rewrite
+      const mdEl = document.getElementById('md-' + msgId)
+      if (mdEl && window.marked) mdEl.innerHTML = marked.parse(swapped)
+      showToast('T ↔ S swapped')
+    } catch (e) {
+      console.error('[swapSpeakerLabels]', e)
+      showToast('Swap error: ' + (e.message || e))
+    } finally {
+      if (btn) btn.disabled = false
+    }
   }
 
   // Manually sync a main-channel message into DM (the "→ DM" button at the bottom of each message)
