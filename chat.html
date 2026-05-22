@@ -1978,16 +1978,6 @@
         <button type="button" class="todo-head-btn" id="todoCaretBtn" title="Switch plan" onclick="toggleTodoPopup()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-        <button type="button" class="todo-head-btn" id="todoExtractBtn" title="Pull todos from the latest class recording into the sidebar" onclick="extractTodosFromLatestRecording()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="9" y="2" width="6" height="11" rx="3"/>
-            <line x1="9.5" y1="5.5" x2="14.5" y2="5.5"/>
-            <line x1="9.5" y1="8" x2="14.5" y2="8"/>
-            <path d="M5 10v2a7 7 0 0 0 14 0v-2"/>
-            <line x1="12" y1="19" x2="12" y2="22"/>
-            <line x1="8" y1="22" x2="16" y2="22"/>
-          </svg>
-        </button>
       </div>
       <div class="todo-popup" id="todoPopup" style="display:none;"></div>
       <div class="todo-body" id="todoBody"></div>
@@ -3477,7 +3467,6 @@
     const expert = isExpert(room)
     document.getElementById('todoEditBtn')?.classList.toggle('visible', expert && !!currentTemplate)
     document.getElementById('todoCaretBtn')?.classList.toggle('visible', expert)
-    document.getElementById('todoExtractBtn')?.classList.toggle('visible', expert)
 
     document.getElementById('todoSection')?.classList.remove('editing')
     hideTodoPopup()
@@ -3504,35 +3493,6 @@
           renderTodos(currentTemplate.payload)
         })
         .subscribe()
-    }
-  }
-
-  // Coach taps 🎙 → INSERT message_type='extract_todos' → Hermes routes to
-  // handle_extract_todos_from_recording → pulls latest transcript_full (upload path) →
-  // Haiku extracts todo items → appends new group to active template
-  async function extractTodosFromLatestRecording() {
-    if (!currentRoom || !currentUser) { showToast('Pick a room first'); return }
-    try {
-      const { data } = await sb.from('messages')
-        .select('id').eq('room_id', currentRoom.id)
-        .eq('message_type', 'transcript_full').limit(1).maybeSingle()
-      if (!data) {
-        showToast('No uploaded recording yet — upload a class audio (.mp3/.m4a/.wav) and retry')
-        return
-      }
-      const { error } = await sb.from('messages').insert({
-        room_id: currentRoom.id,
-        user_id: currentUser.id,
-        role: 'user',
-        type: 'text',
-        content: 'Pull todos from the latest recording',
-        message_type: 'extract_todos',
-      })
-      if (error) { showToast('Trigger failed: ' + error.message); return }
-      showToast('AI is listening... ~10-15s')
-    } catch (e) {
-      console.error('[extract_todos]', e)
-      showToast('Trigger failed: ' + (e.message || e))
     }
   }
 
