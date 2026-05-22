@@ -5418,11 +5418,10 @@ window.Classroom = (function() {
     if (active) b.classList.add('active'); else b.classList.remove('active')
   }
 
-  // Show mic for the room OG. focal_user_id 不再是门槛(三角色架构纠偏:无第三方学生)
+  // 2026-05-22: 实时课堂录音流暂停,聚焦上传录音转写。mic 按钮恒隐 —
+  //   backend asr_server / WS / Classroom 代码全留,future toggle 这条 return 即可
   function refreshButton() {
-    if (!currentRoom || !currentUser) { showBtn(false); return }
-    const isExpertRole = currentRoom.expert_id === currentUser.id
-    showBtn(isExpertRole)
+    showBtn(false)
   }
 
   // ─── WebSocket(自动重连) ────────────────────────────────────────────────
