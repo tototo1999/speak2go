@@ -1484,62 +1484,7 @@
       50%      { box-shadow: 0 0 0 6px rgba(155, 28, 28, 0); }
     }
 
-    /* ── speak2go classroom recording ── */
-    .classroom-btn {
-      width: 27px; height: 30px; flex-shrink: 0;
-      background: transparent;
-      border: 0.5px solid var(--border2);
-      border-radius: var(--radius);
-      color: var(--text2);
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all .15s;
-    }
-    .classroom-btn:hover { background: var(--bg2); color: var(--teal); border-color: var(--teal-100); }
-    .classroom-btn i { font-size: 13px; }
-    .classroom-btn svg { display: block; }
-    .classroom-btn.active { background: var(--teal); color: #fff; border-color: var(--teal); }
-
-    .classroom-bar {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      margin-bottom: 6px;
-      background: linear-gradient(to right, rgba(20, 184, 166, 0.06), rgba(20, 184, 166, 0.02));
-      border: 1px solid var(--teal-100);
-      border-radius: var(--radius);
-      font-size: 12px;
-      color: var(--text2);
-    }
-    .classroom-bar.active { display: flex; }
-    .classroom-bar .cb-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #9ca3af; transition: background .2s;
-    }
-    .classroom-bar .cb-dot.talking-expert { background: #10b981; animation: voicePulse 1s ease-in-out infinite; }
-    .classroom-bar .cb-dot.talking-student { background: #f59e0b; animation: voicePulse 1s ease-in-out infinite; }
-    .classroom-bar .cb-dot.offline { background: #ef4444; }
-    .classroom-bar .cb-timer { font-variant-numeric: tabular-nums; color: var(--text); font-weight: 500; }
-    .classroom-bar .cb-status { flex: 1; }
-    .classroom-bar .cb-btn {
-      padding: 4px 10px; font-size: 11px;
-      background: transparent; border: 0.5px solid var(--border2);
-      border-radius: 12px; color: var(--text2); cursor: pointer;
-    }
-    .classroom-bar .cb-btn:hover { background: var(--bg2); border-color: var(--teal-100); color: var(--teal); }
-    .classroom-bar .cb-btn.warn { color: #b91c1c; border-color: #fca5a5; }
-    .classroom-bar .cb-btn.warn:hover { background: #fee2e2; }
-
-    .asr-badge {
-      display: inline-block; font-size: 10px;
-      padding: 1px 6px; margin-right: 4px;
-      background: rgba(20, 184, 166, 0.1); color: var(--teal-600);
-      border-radius: 8px; vertical-align: middle;
-    }
-    .asr-badge.unknown { background: rgba(156, 163, 175, 0.15); color: #6b7280; }
-
-    /* voice-reg-modal CSS removed (2026-05-21): three-role architecture cleanup */
+    /* speak2go realtime classroom UI removed (2026-05-22): upload-only workflow now */
 
     .attach-preview {
       display: flex;
@@ -2140,30 +2085,11 @@
             onblur="setTimeout(hideMentionPopover, 150)"
             onpaste="onPasteImage(event)"
           ></textarea>
-          <button class="classroom-btn" id="classroomBtn" onclick="Classroom.toggle()"
-                  title="Start class recording (live transcription + AI assistant)" style="display:none">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="9" y="2" width="6" height="11" rx="3"/>
-              <line x1="9.5" y1="5.5" x2="14.5" y2="5.5"/>
-              <line x1="9.5" y1="8" x2="14.5" y2="8"/>
-              <line x1="9.5" y1="10.5" x2="14.5" y2="10.5"/>
-              <path d="M5 10v2a7 7 0 0 0 14 0v-2"/>
-              <line x1="12" y1="19" x2="12" y2="22"/>
-              <line x1="8" y1="22" x2="16" y2="22"/>
-            </svg>
-          </button>
           <button class="send-btn" id="sendBtn" onclick="sendMessage()">
             GO
           </button>
         </div>
-        <!-- Classroom recording status bar (shown once class starts) -->
-        <div class="classroom-bar" id="classroomBar">
-          <span class="cb-dot" id="cbDot"></span>
-          <span class="cb-status" id="cbStatus">Connecting…</span>
-          <span class="cb-timer" id="cbTimer">00:00</span>
-          <button class="cb-btn" id="cbKnowledgeBtn" onclick="Classroom.markKnowledgeEnd()" title="Click when you finish a unit — AI assistant drops three short tips">📍 End unit</button>
-          <button class="cb-btn warn" id="cbEndBtn" onclick="Classroom.endLesson()" title="End class — AI generates homework + plan for next class">End class</button>
-        </div>
+        <!-- realtime classroom UI removed 2026-05-22 — upload-only workflow -->
         <div class="input-hint" id="roleHint" style="display:none"></div>
       </div>
     </div>
@@ -2583,8 +2509,6 @@
     renderRoomItem(room, false)
     if (!currentRoom) {
       await openRoom(room)
-      // Explicitly re-check classroom button visibility (singleton room model doesn't rely on window.openRoom wrapper)
-      try { window.Classroom?.refreshButton?.() } catch (e) { console.warn('[refreshButton]', e) }
     }
   }
 
@@ -3531,6 +3455,7 @@
     const expert = isExpert(room)
     document.getElementById('todoEditBtn')?.classList.toggle('visible', expert && !!currentTemplate)
     document.getElementById('todoCaretBtn')?.classList.toggle('visible', expert)
+    document.getElementById('todoExtractBtn')?.classList.toggle('visible', expert)
 
     document.getElementById('todoSection')?.classList.remove('editing')
     hideTodoPopup()
@@ -3560,17 +3485,17 @@
     }
   }
 
-  // Coach taps mic button → writes a message_type='extract_todos' to route to Hermes → backend pulls latest
-  // source='asr' transcripts → Haiku extracts todo items → append to current template → writes AI reply (with
-  // attachments _event marker) → frontend Realtime INSERT detects marker → reloads template
+  // Coach taps 🎙 → INSERT message_type='extract_todos' → Hermes routes to
+  // handle_extract_todos_from_recording → pulls latest transcript_full (upload path) →
+  // Haiku extracts todo items → appends new group to active template
   async function extractTodosFromLatestRecording() {
     if (!currentRoom || !currentUser) { showToast('Pick a room first'); return }
     try {
       const { data } = await sb.from('messages')
         .select('id').eq('room_id', currentRoom.id)
-        .eq('source', 'asr').limit(1).maybeSingle()
+        .eq('message_type', 'transcript_full').limit(1).maybeSingle()
       if (!data) {
-        showToast('No class recording yet — upload one and retry')
+        showToast('No uploaded recording yet — upload a class audio (.mp3/.m4a/.wav) and retry')
         return
       }
       const { error } = await sb.from('messages').insert({
@@ -4244,10 +4169,8 @@
       // No cache — fetch async and update DOM when it returns
       if (!profilesByUid[msg.user_id]) ensureProfileName(msg.user_id)
     }
-    // Add small badge for ASR live transcription source
-    let asrBadge = ''
-    if (msg.source === 'asr') asrBadge = '<span class="asr-badge" title="Live transcript">🎙</span>'
-    else if (msg.source === 'asr-unknown') asrBadge = '<span class="asr-badge unknown" title="Unknown speaker">🎙?</span>'
+    // ASR badge (realtime live transcript) removed 2026-05-22 — upload-only now
+    const asrBadge = ''
     const ts = formatTime(msg.created_at)
 
     const el = document.createElement('div')
@@ -5355,342 +5278,7 @@
   <img alt="">
 </div>
 
-<!-- speak2go voiceprint registration modal removed (2026-05-21): three-role architecture cleanup — system only has Coach + AI, no per-speaker split -->
+<!-- speak2go realtime classroom Classroom IIFE removed (2026-05-22): upload-only workflow now -->
 
-<!-- Load @ricky0123/vad-web Silero VAD (CDN) -->
-<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/ort.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.24/dist/bundle.min.js"></script>
-
-<script>
-// ────────────────────────────────────────────────────────────────────────────
-// speak2go 1-on-1 classroom live recording + AI Assistant module
-// Depends on external globals: sb (Supabase client), currentRoom, currentUser, appendMessage, showToast
-// Backend: local sidecar ws://127.0.0.1:8765 + Supabase tables lesson_sessions / messages
-// ────────────────────────────────────────────────────────────────────────────
-window.Classroom = (function() {
-  const WS_URL = 'ws://127.0.0.1:8765'
-  const SAMPLE_RATE = 16000
-
-  let ws = null
-  let wsReady = false
-  let lesson = null              // { id, room_id, expert_id, focal_user_id }
-  let vadInstance = null
-  let segSeq = 0
-  let timerStart = 0
-  let timerHandle = null
-
-  // ─── UI helpers ────────────────────────────────────────────────────────────
-  function setBar(active) {
-    const bar = document.getElementById('classroomBar')
-    if (!bar) return
-    if (active) bar.classList.add('active'); else bar.classList.remove('active')
-  }
-  function setStatus(text, dotClass) {
-    const s = document.getElementById('cbStatus')
-    const d = document.getElementById('cbDot')
-    if (s) s.textContent = text
-    if (d) {
-      d.classList.remove('talking-expert', 'talking-student', 'offline')
-      if (dotClass) d.classList.add(dotClass)
-    }
-  }
-  function startTimer() {
-    timerStart = Date.now()
-    const el = document.getElementById('cbTimer')
-    timerHandle = setInterval(() => {
-      const s = Math.floor((Date.now() - timerStart) / 1000)
-      const mm = String(Math.floor(s / 60)).padStart(2, '0')
-      const ss = String(s % 60).padStart(2, '0')
-      if (el) el.textContent = mm + ':' + ss
-    }, 500)
-  }
-  function stopTimer() {
-    if (timerHandle) clearInterval(timerHandle)
-    timerHandle = null
-  }
-  function showBtn(visible) {
-    const b = document.getElementById('classroomBtn')
-    if (b) b.style.display = visible ? '' : 'none'
-  }
-  function setBtnActive(active) {
-    const b = document.getElementById('classroomBtn')
-    if (!b) return
-    if (active) b.classList.add('active'); else b.classList.remove('active')
-  }
-
-  // 2026-05-22: 实时课堂录音流暂停,聚焦上传录音转写。mic 按钮恒隐 —
-  //   backend asr_server / WS / Classroom 代码全留,future toggle 这条 return 即可
-  function refreshButton() {
-    showBtn(false)
-  }
-
-  // ─── WebSocket(自动重连) ────────────────────────────────────────────────
-  // 老师上课中后端 asr_server 重启会断 ws。lesson 还在 → 自动指数退避重连,
-  // 重连成功后重发 lesson_start 续接课堂。VAD 在后台继续 push 到 buffer,
-  // 我们不丢段(buffer queue 在 _segBuffer 里),flush 时如果 ws 不在就跳过。
-  let _wsReconnecting = false
-  let _wsReconnectDelay = 1000  // 退避: 1s → 2s → 4s → 8s → 8s ...
-  function _scheduleReconnect() {
-    if (_wsReconnecting) return
-    if (!lesson) return  // 没开课就不重连
-    _wsReconnecting = true
-    setStatus(`Connection lost — reconnecting in ${Math.round(_wsReconnectDelay/1000)}s…`, 'offline')
-    setTimeout(async () => {
-      _wsReconnecting = false
-      if (!lesson) return  // 用户已结课
-      try {
-        await wsConnect()
-        // 重连成功 → resume lesson(后端会重新建 LessonState)
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({
-            type: 'lesson_start',
-            lesson_session_id: lesson.id,
-            room_id: lesson.room_id,
-            expert_id: lesson.expert_id,
-            focal_user_id: lesson.focal_user_id,
-          }))
-          showToast('Reconnected — recording resumed')
-          setStatus('Listening to class…', null)
-          _wsReconnectDelay = 1000  // 重置退避
-        }
-      } catch (e) {
-        _wsReconnectDelay = Math.min(_wsReconnectDelay * 2, 8000)
-        _scheduleReconnect()  // 退避重试
-      }
-    }, _wsReconnectDelay)
-  }
-  function wsConnect() {
-    return new Promise((resolve, reject) => {
-      if (ws && wsReady) return resolve(ws)
-      try { ws = new WebSocket(WS_URL) } catch (e) { return reject(e) }
-      ws.binaryType = 'arraybuffer'
-      ws.onopen = () => { ws.send(JSON.stringify({ type: 'hello' })) }
-      ws.onmessage = (ev) => {
-        if (typeof ev.data !== 'string') return
-        let msg
-        try { msg = JSON.parse(ev.data) } catch { return }
-        if (msg.type === 'hello_ack') { wsReady = true; resolve(ws) }
-        else handleWsMessage(msg)
-      }
-      ws.onclose = () => {
-        wsReady = false
-        // lesson 还在 → 自动重连,不然就 offline 静默
-        if (lesson) {
-          showToast('Recording connection dropped — auto-reconnecting…')
-          _scheduleReconnect()
-        } else {
-          setStatus('Transcript offline (sidecar not running?)', 'offline')
-        }
-      }
-      ws.onerror = (e) => { console.warn('[ws] error', e); reject(e) }
-      setTimeout(() => { if (!wsReady) reject(new Error('ws hello timeout')) }, 6000)
-    })
-  }
-  function handleWsMessage(msg) {
-    if (msg.type === 'lesson_ack') {
-      // Three-role cleanup: no voiceprint registration, start recording directly
-      startCapture()
-      _startReviewTimer()  // T+10/20/30/.../60 min review
-    } else if (msg.type === 'segment_ack') {
-      setStatus(`Transcribing (${msg.latency_ms}ms)`, null)
-      setTimeout(() => setStatus('Listening to class…', null), 1500)
-    } else if (msg.type === 'error') {
-      console.error('[asr error]', msg)
-      showToast('Transcription error: ' + (msg.message || ''))
-    }
-  }
-
-  // ─── Live capture: Silero VAD + WS push ─────────────────────────────────────
-  // Buffer 累积:VAD 切出的短段先攒,凑到 ≥15s 再 push,或者空闲 8s 强制 flush。
-  // 解决 mlx-whisper 对短片段(< 10s)幻觉率高的问题。
-  const SEG_BUFFER_MIN_SEC = 15
-  const SEG_BUFFER_FLUSH_IDLE_MS = 8000
-  let _segBuffer = []
-  let _segBufferSec = 0
-  let _segIdleTimer = null
-
-  function _flushSegBuffer() {
-    if (_segIdleTimer) { clearTimeout(_segIdleTimer); _segIdleTimer = null }
-    if (_segBuffer.length === 0) return
-    // 拼成一个 Float32Array
-    const total = _segBuffer.reduce((n, a) => n + a.length, 0)
-    const merged = new Float32Array(total)
-    let off = 0
-    for (const a of _segBuffer) { merged.set(a, off); off += a.length }
-    _segBuffer = []; _segBufferSec = 0
-    _sendMergedSegment(merged)
-  }
-
-  async function startCapture() {
-    setBar(true); setBtnActive(true); setStatus('VAD starting…', null); startTimer()
-    if (!window.vad) { showToast('VAD library not loaded — refresh and retry'); return }
-    try {
-      vadInstance = await window.vad.MicVAD.new({
-        onSpeechStart: () => {},
-        onSpeechEnd: (audio) => {
-          // audio: Float32Array @ 16kHz
-          _segBuffer.push(audio)
-          _segBufferSec += audio.length / SAMPLE_RATE
-          if (_segBufferSec >= SEG_BUFFER_MIN_SEC) {
-            _flushSegBuffer()
-          } else {
-            // 重置空闲计时器
-            if (_segIdleTimer) clearTimeout(_segIdleTimer)
-            _segIdleTimer = setTimeout(_flushSegBuffer, SEG_BUFFER_FLUSH_IDLE_MS)
-          }
-        },
-        positiveSpeechThreshold: 0.7,
-        negativeSpeechThreshold: 0.5,
-        redemptionFrames: 30,   // 18 → 30 (~2.9s grace,合并自然停顿)
-        minSpeechFrames: 12,    // 8 → 12 (~1.15s 最小说话,过滤瞬时噪声)
-      })
-      vadInstance.start()
-      setStatus('Listening to class…', null)
-    } catch (e) {
-      console.error('[vad] failed', e)
-      showToast('VAD startup failed: ' + e.message)
-    }
-  }
-  function _sendMergedSegment(audio) {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return
-    segSeq += 1
-    ws.send(JSON.stringify({
-      type: 'segment', lesson_session_id: lesson.id,
-      seq: segSeq, sample_rate: SAMPLE_RATE,
-    }))
-    ws.send(audio.buffer)
-  }
-
-  async function markKnowledgeEnd() {
-    if (!lesson) return
-    try {
-      await sb.from('messages').insert({
-        room_id: lesson.room_id, user_id: currentUser.id,
-        role: 'expert', type: 'text',
-        content: '📍 End of unit',
-        source: 'system', message_type: 'knowledge_unit_end',
-        lesson_session_id: lesson.id,
-      })
-      showToast('Unit marked done — AI tips generating…')
-    } catch (e) { showToast('Mark failed: ' + (e.message || e)) }
-  }
-
-  async function endLesson() {
-    if (!lesson) return
-    if (!confirm('End class? Will generate homework + plan for next class.')) return
-    try {
-      await sb.from('messages').insert({
-        room_id: lesson.room_id, user_id: currentUser.id,
-        role: 'expert', type: 'text',
-        content: '🔔 Class ended',
-        source: 'system', message_type: 'lesson_ended',
-        lesson_session_id: lesson.id,
-      })
-      showToast('Class ended — homework + next-class plan generating…')
-    } catch (e) { console.error('[endLesson]', e) }
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'lesson_end', lesson_session_id: lesson.id }))
-    }
-    // 课结束前先 flush 残留 buffer 段
-    _flushSegBuffer()
-    cleanup()
-  }
-
-  function cleanup() {
-    if (_segIdleTimer) { clearTimeout(_segIdleTimer); _segIdleTimer = null }
-    _segBuffer = []; _segBufferSec = 0
-    if (_reviewTimer) { clearInterval(_reviewTimer); _reviewTimer = null }
-    _lastReviewAt = null
-    if (vadInstance) {
-      try { vadInstance.pause(); vadInstance.destroy && vadInstance.destroy() } catch {}
-      vadInstance = null
-    }
-    if (ws) { try { ws.close() } catch {}; ws = null; wsReady = false }
-    lesson = null; segSeq = 0
-    stopTimer(); setBar(false); setBtnActive(false)
-  }
-
-  // ─── 课中每 10 分钟 review 定时器 ─────────────────────────────────────────
-  // 课开始 → 每 10 min 写一条隐藏的 message_type='timed_review' 触发消息,
-  // 携带 since/until ISO 时间戳;后端 Hermes 拉这个窗口的 ASR → Haiku 总结 → 写群聊 AI 消息。
-  const REVIEW_INTERVAL_MS = 10 * 60 * 1000
-  let _reviewTimer = null
-  let _lastReviewAt = null  // ISO string, 上一次 review 的 until(下次的 since)
-  function _startReviewTimer() {
-    if (_reviewTimer) clearInterval(_reviewTimer)
-    _lastReviewAt = new Date().toISOString()
-    _reviewTimer = setInterval(async () => {
-      if (!lesson || !currentRoom || !currentUser) return
-      const now = new Date().toISOString()
-      try {
-        await sb.from('messages').insert({
-          room_id: currentRoom.id,
-          user_id: currentUser.id,
-          role: 'user',
-          type: 'text',
-          content: '__SYS_TIMED_REVIEW__',
-          message_type: 'timed_review',
-          attachments: [{ since: _lastReviewAt, until: now }],
-        })
-        _lastReviewAt = now
-      } catch (e) {
-        console.warn('[timed_review trigger]', e)
-      }
-    }, REVIEW_INTERVAL_MS)
-  }
-
-  async function toggle() {
-    if (lesson) { endLesson(); return }
-    if (!currentRoom || !currentUser) { showToast('Pick a room first'); return }
-    if (currentRoom.expert_id !== currentUser.id) { showToast('Only the teacher can start a class'); return }
-
-    let row
-    try {
-      const { data, error } = await sb.from('lesson_sessions').insert({
-        room_id: currentRoom.id,
-        expert_id: currentRoom.expert_id,
-        focal_user_id: currentRoom.focal_user_id,
-        status: 'active',
-      }).select().single()
-      if (error) throw error
-      row = data
-    } catch (e) {
-      showToast('Failed to create class: ' + (e.message || e))
-      return
-    }
-    lesson = { id: row.id, room_id: row.room_id, expert_id: row.expert_id, focal_user_id: row.focal_user_id }
-    setBar(true)
-    setStatus('Connecting to local sidecar…', null)
-
-    try { await wsConnect() }
-    catch (e) {
-      setStatus('Transcript offline (sidecar not running?)', 'offline')
-      showToast('Failed to connect local ASR service — make sure asr_server is running\nCmd: python ~/.hermes/asr_server.py')
-      return
-    }
-    ws.send(JSON.stringify({
-      type: 'lesson_start',
-      lesson_session_id: lesson.id,
-      room_id: lesson.room_id,
-      expert_id: lesson.expert_id,
-      focal_user_id: lesson.focal_user_id,
-    }))
-  }
-
-  return { toggle, refreshButton, markKnowledgeEnd, endLesson }
-})()
-
-// Refresh button visibility when switching rooms
-if (typeof window !== 'undefined') {
-  const origOpenRoom = window.openRoom
-  if (typeof origOpenRoom === 'function') {
-    window.openRoom = async function(room) {
-      const r = await origOpenRoom(room)
-      try { Classroom.refreshButton() } catch (e) { console.warn('Classroom.refreshButton', e) }
-      return r
-    }
-  }
-}
-</script>
 </body>
 </html>
