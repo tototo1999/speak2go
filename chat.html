@@ -5043,12 +5043,20 @@
     const baseInput = estimateContextTokens()
     const tick = () => {
       const s = Math.floor((Date.now() - _typingStartAt) / 1000)
-      // Fake streaming output: Claude API ~60 tokens/s, add ±15 jitter so the number actually moves
-      const out = Math.max(0, Math.floor(s * 60 + (Math.random() * 30 - 15)))
+      // mm:ss for long durations (audio processing can hit minutes)
+      const mmss = s >= 60 ? `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}` : `${s}s`
+      // Audio mode: ditch the fake brain-token stream display — meaningless for whisper/diarize/Haiku
+      const audioActive = !!audioPlaceholderId
       if (elapsedEl) {
-        elapsedEl.textContent = baseInput > 0
-          ? `(${s}s · ↑ ~${formatTokens(baseInput)} · ↓ ~${formatTokens(out)} tokens)`
-          : `(${s}s)`
+        if (audioActive) {
+          elapsedEl.textContent = `(${mmss} · processing audio…)`
+        } else {
+          // Fake streaming output: Claude API ~60 tokens/s, ±15 jitter so number actually moves
+          const out = Math.max(0, Math.floor(s * 60 + (Math.random() * 30 - 15)))
+          elapsedEl.textContent = baseInput > 0
+            ? `(${mmss} · ↑ ~${formatTokens(baseInput)} · ↓ ~${formatTokens(out)} tokens)`
+            : `(${mmss})`
+        }
       }
     }
     tick()
