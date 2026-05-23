@@ -3943,6 +3943,9 @@
     } catch (e) { console.warn('[refresh focal]', e) }
   }
 
+  // Audio upload placeholder tracking — while non-null, typing indicator stays on (audio still cooking)
+  let audioPlaceholderId = null
+
   function subscribeRoom(roomId) {
     if (realtimeChannel) sb.removeChannel(realtimeChannel)
 
@@ -3973,6 +3976,12 @@
               } else {
                 bubble.textContent = newRow.content || ''
               }
+            }
+            // Audio placeholder reached step 5/5 (starts with ✅) → clear gate + hide typing for real
+            if (audioPlaceholderId === newRow.id && (newRow.content || '').startsWith('✅')) {
+              audioPlaceholderId = null
+              clearTimeout(typingTimer)
+              hideTyping()
             }
           }
         } catch (e) { console.warn('[msg UPDATE content re-render]', e) }
@@ -4013,9 +4022,26 @@
         const exists = document.querySelector(`[data-msg-id="${payload.new.id}"]`)
         if (!exists) {
           if (payload.new.role === 'ai') {
-            // Typing is global UI — any incoming AI message clears it (avoids stale state when switching channels)
-            clearTimeout(typingTimer)
-            hideTyping()
+            // Audio upload placeholder (content starts with "🎙 [▰..." or "📝 [▰") → track ID + keep typing on
+            const _c = payload.new.content || ''
+            const _isAudioPh = _c.startsWith('🎙 [▰') || _c.startsWith('📝 [▰') || _c.startsWith('🧠 [▰')
+            if (_isAudioPh) {
+              audioPlaceholderId = payload.new.id
+              // Extend typing fallback to 10min for long-running audio processing
+              clearTimeout(typingTimer)
+              typingTimer = setTimeout(() => {
+                audioPlaceholderId = null
+                hideTyping()
+                setBridgeStatus(false)
+              }, 600000)
+              // Make sure typing is showing
+              showTyping()
+            } else if (!audioPlaceholderId) {
+              // No audio in flight → normal "AI replied, hide typing" behavior
+              clearTimeout(typingTimer)
+              hideTyping()
+            }
+            // else: brain replied while audio is still cooking — KEEP typing on (don't hide)
             setBridgeStatus(true)
             lastAiMessageAt = Date.now()
             // AI reply complete → bridge just wrote model_usage row → refresh cost badge
