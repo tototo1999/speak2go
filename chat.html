@@ -2974,7 +2974,7 @@
   async function resetRoom() {
     if (!currentRoom) return
     if (currentRoomRole !== 'expert') { showToast('Only Coach can reset the room'); return }
-    const ok = confirm('Reset this room?\n\n• Kick all members\n• Wipe all messages\n• Clear ALL todo groups (sidebar)\n• Regenerate invite links (old ones invalidate)\n\nCannot be undone.')
+    const ok = confirm('Reset this room?\n\n• Kick all members\n• Wipe all messages\n• Clear ALL todo groups (sidebar)\n• Clear ALL Materials folders (modal)\n• Regenerate invite links (old ones invalidate)\n\nCannot be undone.')
     if (!ok) return
     const { error } = await sb.rpc('reset_room', { p_room_id: currentRoom.id })
     if (error) { showToast('Reset failed: ' + (error.message || error.code)); return }
@@ -2984,6 +2984,13 @@
         .update({ payload: [] })
         .eq('id', currentRoom.active_todo_template_id)
       if (tpErr) console.warn('[reset: clear todo template payload]', tpErr)
+    }
+    // Also clear Materials folders (expert_material_folders.payload) for this room
+    {
+      const { error: mfErr } = await sb.from('expert_material_folders')
+        .update({ payload: [] })
+        .eq('room_id', currentRoom.id)
+      if (mfErr) console.warn('[reset: clear material folders payload]', mfErr)
     }
     showToast('Reset done, reloading…')
     setTimeout(() => location.reload(), 800)
