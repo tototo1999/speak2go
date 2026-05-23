@@ -5235,7 +5235,11 @@
     '稳住了', '加把劲', '快了', '在搞中', '处理中', '安排中', '推进中', '紧着做', '盘一盘', '过一遍',
     '琢磨着', '想一想', '理一理', '收拾下', '安顿下', '稳推进', '不慌', '稳稳的', '继续', '保持节奏',
   ]
-  const TYPING_VERBS = (window.IS_WELL2GO ? TYPING_VERBS_ZH_REHAB : TYPING_VERBS_EN)
+  // 不在初始化时定死,每次取的时候按 hostname 判断(防 const init 时 window.IS_WELL2GO 未设的 race)
+  function pickTypingVerbs() {
+    return location.hostname.toLowerCase().includes('well2go') ? TYPING_VERBS_ZH_REHAB : TYPING_VERBS_EN
+  }
+  const TYPING_VERBS = pickTypingVerbs()
   let _typingVerbTimer = null
   let _typingElapsedTimer = null
   let _typingStartAt = 0
@@ -5269,7 +5273,11 @@
     if (nameEl) nameEl.textContent = currentRoom?.ai_name || 'AI'
     const verbEl = document.getElementById('typingVerb')
     const cycle = () => {
-      if (verbEl) verbEl.textContent = TYPING_VERBS[Math.floor(Math.random() * TYPING_VERBS.length)]
+      // 每次循环按 hostname 取,well2go.ai → 中文康复短语,speak2go.ai → NYC English
+      if (verbEl) {
+        const arr = pickTypingVerbs()
+        verbEl.textContent = arr[Math.floor(Math.random() * arr.length)]
+      }
     }
     if (!alreadyOn) cycle()
     clearInterval(_typingVerbTimer)
