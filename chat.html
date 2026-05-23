@@ -5190,7 +5190,7 @@
   // Claude Code-style typing verbs (~100 items). English-teacher vibe: evaluate / explain / drill / summarize / casual mix.
   // NYC-flavored short phrases (2-4 words) for an American English teacher vibe.
   // 100 items, 5 groups: Listening / Teaching / Drilling / Tracking / Street slang.
-  const TYPING_VERBS = [
+  const TYPING_VERBS_EN = [
     // Listening / reading the room (20)
     'on it', 'tuning in', 'spotting it', 'catching the drift', 'reading the room',
     'clocking it', 'checking the tape', 'tracking it', 'running the math', 'weighing it',
@@ -5217,6 +5217,25 @@
     'kicking it', 'rolling deep', 'running the play', 'calling the shot', 'stretching it',
     'doing the work', 'punching up', 'leaning in', 'stomping through', 'fielding it',
   ]
+  // well2go 康复治疗师风格短语(中文)
+  const TYPING_VERBS_ZH_REHAB = [
+    // 评估 / 观察 (20)
+    '查看中', '听一下', '观察中', '量一量', '记录中', '对比中', '排查中', '分析中', '判断中', '评估中',
+    '核对中', '盯紧点', '看一眼', '试一下', '复核中', '采集中', '比对中', '权衡中', '梳理中', '辨析中',
+    // 讲解 / 示范 (20)
+    '讲清楚', '拆解开', '说明白', '画个图', '举个例', '比划着', '示范一下', '逐步教', '提要点', '解析中',
+    '打个比方', '理清思路', '细化中', '展开讲', '点出要害', '点拨中', '解释下', '推演中', '梳理思路', '抓重点',
+    // 训练 / 巩固 (20)
+    '再来一次', '加强一下', '重复练', '巩固中', '强化中', '调动作', '校角度', '试节奏', '微调中', '反复练',
+    '打磨中', '稳一稳', '推一推', '稳节奏', '盯姿势', '量动作', '托一把', '推到位', '抓时机', '收一收',
+    // 跟进 / 记录 (20)
+    '记一笔', '存档中', '对账中', '盘点中', '汇总中', '收尾中', '上账中', '归位中', '打卡中', '存日志',
+    '画进度', '排顺序', '整档案', '存证据', '收尾笔记', '统计中', '汇总数据', '归档中', '总结中', '画曲线',
+    // 康复氛围 (20)
+    '稳住了', '加把劲', '快了', '在搞中', '处理中', '安排中', '推进中', '紧着做', '盘一盘', '过一遍',
+    '琢磨着', '想一想', '理一理', '收拾下', '安顿下', '稳推进', '不慌', '稳稳的', '继续', '保持节奏',
+  ]
+  const TYPING_VERBS = (window.IS_WELL2GO ? TYPING_VERBS_ZH_REHAB : TYPING_VERBS_EN)
   let _typingVerbTimer = null
   let _typingElapsedTimer = null
   let _typingStartAt = 0
