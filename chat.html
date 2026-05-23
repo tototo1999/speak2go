@@ -8,21 +8,172 @@
   <meta http-equiv="Expires" content="0">
   <title>Speak2GO.ai · English lesson assistant</title>
   <script>
-    // 双域名共用代码:well2go.ai 自动改 brand + 副标题
+    // 双域名共用代码 — well2go.ai 检测 + 静态 UI 中文化(P1 完整可见 UI)
     (function() {
       const host = location.hostname.toLowerCase();
       const isW2g = host.includes('well2go');
       if (!isW2g) return;
-      window.IS_WELL2GO = true;  // 给后续脚本判断用
-      const SWAP = s => s.replace(/Speak2GO\.ai/g, 'Well2GO.ai').replace(/Speak2(<span)/g, 'Well2$1').replace(/Speak2GO/g, 'Well2GO').replace(/English lesson assistant/g, 'Rehab therapy assistant');
-      document.title = SWAP(document.title);
+      window.IS_WELL2GO = true;
+
+      // brand 替换:Speak2GO → Well2GO
+      const BRAND_SWAP = s => s
+        .replace(/Speak2GO\.ai/g, 'Well2GO.ai')
+        .replace(/Speak2(<span)/g, 'Well2$1')
+        .replace(/Speak2GO/g, 'Well2GO')
+        .replace(/English lesson assistant/g, '康复治疗助理')
+        .replace(/Spoken English AI Lab/g, '康复治疗 AI 工作室');
+
+      // 静态 UI 文本字典 (English → 中文)
+      const TEXT_MAP = {
+        // 顶栏 + 通用
+        'Settings': '设置',
+        'Log out': '登出',
+        'Close': '关闭',
+        'Close (Esc)': '关闭 (Esc)',
+        'Save': '保存',
+        'Cancel': '取消',
+        'Delete': '删除',
+        'Copy': '复制',
+        'Login': '登录',
+        'Register': '注册',
+        'Email': '邮箱',
+        'Password': '密码',
+        // 个人资料
+        'Profile': '个人资料',
+        'Display name': '昵称',
+        'Pick a display name': '起个昵称',
+        // Agent keys
+        'Agent connect keys': 'Agent 连接 Key',
+        'Generate new key': '生成新 Key',
+        'Key name (e.g. My MacBook)': 'Key 名称 (如:我的 MacBook)',
+        // todo 侧栏
+        'Edit plan': '编辑计划',
+        'Switch plan': '切换计划',
+        'Delete plan': '删除计划',
+        '+ New group': '+ 新建分组',
+        '+ New folder': '+ 新建文件夹',
+        '+ Add': '+ 添加',
+        // chat-head 工具栏 + 角色
+        'Copy invite link': '复制邀请链接',
+        'Reset room (kick all members + wipe messages + new invite link)': '重置房间 (踢出全部成员 + 清空消息 + 换新邀请链接)',
+        'Materials — folders & files': '教学材料 — 文件夹 / 文件',
+        'Context used this turn / room budget': '本轮上下文用量 / 房间预算',
+        'AI disconnected — click to request restart': 'AI 已离线 — 点击请求重启',
+        'Restart hermes': '重启 Hermes',
+        'Your role': '你的角色',
+        'Click to edit AI name': '点击修改 AI 名称',
+        'Click to open settings': '打开设置',
+        // 输入区
+        'Upload a file for the AI to read': '上传文件给 AI 阅读',
+        'Voice input (tap to start/stop)': '语音输入 (点开始 / 再点停止)',
+        'Clear quote': '清除引用',
+        'Quote in input': '在输入框中引用',
+        'Sync to private chat': '同步到私聊',
+        'Translate (EN ↔ ZH)': '翻译 (中 ↔ 英)',
+        'Correct — one-tap praise + quote': '对 — 一键表扬 + 引用',
+        'Wrong — one-tap correct + quote': '错 — 一键纠正 + 引用',
+        // 提交与互动
+        'Joined': '已加入',
+        'Follow OG': '关注 OG',
+        'View followers': '查看关注者',
+        'Rename chat': '重命名房间',
+        'Delete chat': '删除房间',
+        'Waiting for the other side to confirm': '等对方确认',
+        'Delete group': '删除分组',
+        // 材料库
+        'No materials yet': '暂无材料',
+        'Materials': '材料库',
+        'Folders': '文件夹',
+        'Upload to this folder': '上传到此文件夹',
+        'Delete folder': '删除文件夹',
+        'Move here': '移到此处',
+        'Move to folder...': '移到文件夹...',
+        'Remove from folder': '从文件夹移除',
+        // diarize / transcript
+        'Heuristic got T and S backwards? One click to flip them in this transcript.': '说话人识别反了?点这里翻转本条 transcript 的 T/S 标签',
+        // 占位与示例
+        "e.g. Sarah's English Class": '例:张师傅的康复诊室',
+        'Display name (e.g. Sarah)': '昵称 (例:张师傅)',
+        // 房间名
+        'iamarobot 的 Chat': '康复治疗室',
+        // 状态
+        'AI assistant': 'AI 助理',
+        'AI': 'AI',
+        'todo': '待办',
+        'Todo': '待办',
+        'empty': '空',
+      };
+
+      const swapText = txt => {
+        if (typeof txt !== 'string') return txt;
+        // 完全匹配优先 — 不破坏 HTML 实体
+        const trimmed = txt.trim();
+        if (TEXT_MAP[trimmed]) {
+          // 保留 leading / trailing 空白
+          const lead = txt.match(/^\s*/)[0];
+          const trail = txt.match(/\s*$/)[0];
+          return lead + TEXT_MAP[trimmed] + trail;
+        }
+        return txt;
+      };
+
       const apply = () => {
+        document.title = BRAND_SWAP(document.title);
+
+        // brand 替换:logo / card-logo 等
         document.querySelectorAll('.logo, .card-logo, .expert-name, .back-link, footer p, h1, h2, h3').forEach(el => {
-          if (el.innerHTML.includes('Speak2')) el.innerHTML = SWAP(el.innerHTML);
+          if (el.innerHTML.includes('Speak2')) el.innerHTML = BRAND_SWAP(el.innerHTML);
+        });
+
+        // 翻译 placeholder / title / alt 属性
+        document.querySelectorAll('[placeholder], [title], [alt]').forEach(el => {
+          for (const attr of ['placeholder', 'title', 'alt']) {
+            const v = el.getAttribute(attr);
+            if (!v) continue;
+            const t = TEXT_MAP[v.trim()];
+            if (t) el.setAttribute(attr, t);
+          }
+        });
+
+        // 翻译可见文本节点(仅 trimmed 命中 TEXT_MAP 的)
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+        const targets = [];
+        while (walker.nextNode()) targets.push(walker.currentNode);
+        targets.forEach(node => {
+          const v = node.nodeValue;
+          if (!v || !v.trim()) return;
+          const t = TEXT_MAP[v.trim()];
+          if (t) {
+            const lead = v.match(/^\s*/)[0];
+            const trail = v.match(/\s*$/)[0];
+            node.nodeValue = lead + t + trail;
+          }
         });
       };
+
       if (document.readyState !== 'loading') apply();
       else document.addEventListener('DOMContentLoaded', apply);
+
+      // 对动态写入(setText 等)再扫一遍 — 房间打开后 sidebar 等会动态插入
+      // 简易策略:每 1.5s 兜底重扫一次(性能可接受,DOM 不大)
+      let _i18nLastApply = 0;
+      const reapply = () => {
+        const now = Date.now();
+        if (now - _i18nLastApply < 1200) return;
+        _i18nLastApply = now;
+        try {
+          // 只补属性 + 文本(避免重复改 brand)
+          document.querySelectorAll('[placeholder], [title], [alt]').forEach(el => {
+            for (const attr of ['placeholder', 'title', 'alt']) {
+              const v = el.getAttribute(attr);
+              if (!v) continue;
+              const t = TEXT_MAP[v.trim()];
+              if (t && t !== v) el.setAttribute(attr, t);
+            }
+          });
+        } catch (_) {}
+      };
+      setInterval(reapply, 1500);
     })();
   </script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23DC2626'/%3E%3Ctext x='32' y='44' font-family='Helvetica,Arial,sans-serif' font-size='30' font-weight='800' text-anchor='middle' fill='%23fff'%3EGO%3C/text%3E%3C/svg%3E">

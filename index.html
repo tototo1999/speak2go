@@ -8,16 +8,52 @@
   <meta http-equiv="Expires" content="0">
   <title>Speak2GO.ai · Spoken English AI Lab</title>
   <script>
-    // 双域名共用代码:well2go.ai 自动改 brand
+    // well2go.ai 自适应 brand + 静态 UI 中文化
     (function() {
       const host = location.hostname.toLowerCase();
       const isW2g = host.includes('well2go');
       if (!isW2g) return;
-      const SWAP = s => s.replace(/Speak2GO\.ai/g, 'Well2GO.ai').replace(/Speak2(<span)/g, 'Well2$1').replace(/Speak2GO/g, 'Well2GO').replace(/Spoken English AI Lab/g, 'Rehab Therapy AI Lab');
-      document.title = SWAP(document.title);
+      const BRAND_SWAP = s => s
+        .replace(/Speak2GO\.ai/g, 'Well2GO.ai')
+        .replace(/Speak2(<span)/g, 'Well2$1')
+        .replace(/Speak2GO/g, 'Well2GO')
+        .replace(/Spoken English AI Lab/g, '康复治疗 AI 工作室')
+        .replace(/Spoken English/g, '康复治疗')
+        .replace(/English Teacher/g, '康复治疗师')
+        .replace(/Teacher/g, '康复治疗师');
+      const TEXT_MAP = {
+        'Login': '登录',
+        'Register': '注册',
+        'Get started': '立即开始',
+        'Try the demo': '试用 Demo',
+        'beta': 'beta',
+        'AI Engineers × Frontier LLMs = Your Personal AI Assistant.': 'AI 工程师 × 顶级大模型 = 你的私人 AI 助理',
+      };
       const apply = () => {
-        document.querySelectorAll('.logo, .card-logo, .expert-name, .back-link, footer p, h1, h2, h3, title').forEach(el => {
-          if (el.innerHTML.includes('Speak2')) el.innerHTML = SWAP(el.innerHTML);
+        document.title = BRAND_SWAP(document.title);
+        document.querySelectorAll('.logo, .card-logo, .expert-name, .back-link, footer p, h1, h2, h3').forEach(el => {
+          if (el.innerHTML.includes('Speak2') || el.innerHTML.includes('Spoken English')) el.innerHTML = BRAND_SWAP(el.innerHTML);
+        });
+        document.querySelectorAll('[placeholder], [title], [alt]').forEach(el => {
+          for (const attr of ['placeholder', 'title', 'alt']) {
+            const v = el.getAttribute(attr);
+            if (!v) continue;
+            const t = TEXT_MAP[v.trim()];
+            if (t) el.setAttribute(attr, t);
+          }
+        });
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+        const targets = [];
+        while (walker.nextNode()) targets.push(walker.currentNode);
+        targets.forEach(node => {
+          const v = node.nodeValue;
+          if (!v || !v.trim()) return;
+          const t = TEXT_MAP[v.trim()];
+          if (t) {
+            const lead = v.match(/^\s*/)[0];
+            const trail = v.match(/\s*$/)[0];
+            node.nodeValue = lead + t + trail;
+          }
         });
       };
       if (document.readyState !== 'loading') apply();
