@@ -17,17 +17,27 @@
         .replace(/Speak2GO\.ai/g, 'Well2GO.ai')
         .replace(/Speak2(<span)/g, 'Well2$1')
         .replace(/Speak2GO/g, 'Well2GO')
-        .replace(/Spoken English AI Lab/g, '康复治疗 AI 工作室')
-        .replace(/Spoken English/g, '康复治疗')
-        .replace(/English Teacher/g, '康复治疗师')
-        .replace(/Teacher/g, '康复治疗师');
+        .replace(/Spoken English AI Lab/g, '健康健身 AI 工作室')
+        .replace(/Spoken English/g, '健身训练')
+        .replace(/English Teacher/g, '健身教练')
+        .replace(/Teacher/g, '健身教练');
       const TEXT_MAP = {
         'Login': '登录',
         'Register': '注册',
         'Get started': '立即开始',
         'Try the demo': '试用 Demo',
         'beta': 'beta',
-        'AI Engineers × Frontier LLMs = Your Personal AI Assistant.': 'AI 工程师 × 顶级大模型 = 你的私人 AI 助理',
+        // 健康 / 健身 / 拉伸主题(替换原英文教学 4 卡)
+        'speaking': '健身训练',
+        'listening': '拉伸放松',
+        'writing': '营养建议',
+        'test prep': '体测评估',
+        'Ready Go…': '敬请期待…',
+        'Ready Go...': '敬请期待…',
+        // slogan 拆开节点(原 div.tagline 文本节点是两段)
+        'AI Engineers × Frontier LLMs =': 'AI 工程师 × 顶级大模型 =',
+        'Your Personal AI Assistant': '你的私人健康助理',
+        'AI Engineers × Frontier LLMs = Your Personal AI Assistant.': 'AI 工程师 × 顶级大模型 = 你的私人健康助理',
       };
       const apply = () => {
         document.title = BRAND_SWAP(document.title);
