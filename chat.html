@@ -558,6 +558,47 @@
       color: #fff;
     }
 
+    /* Nested sub-group: 录音(顶层)→ 时间段(本层折叠胶囊)→ 知识点(.todo-sub) */
+    .todo-subgroup { margin-top: 5px; }
+    .todo-sub-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+      transition: background .12s;
+    }
+    .todo-sub-pill:hover { background: var(--teal-50); }
+    .todo-sub-toggle {
+      width: 16px; height: 16px;
+      background: transparent; border: 0;
+      font-size: 13px; line-height: 1; padding: 0;
+      color: var(--text2);
+      cursor: pointer;
+      transition: transform .2s, color .15s;
+      flex-shrink: 0;
+    }
+    .todo-subgroup.expanded .todo-sub-toggle {
+      transform: rotate(45deg);
+      color: var(--teal-600);
+    }
+    .todo-sub-pill .todo-text {
+      flex: 1;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .todo-sub-children {
+      display: none;
+      padding: 4px 0 2px 18px;
+    }
+    .todo-subgroup.expanded .todo-sub-children { display: block; }
+
     .rooms-list {
       flex: 1;
       overflow-y: auto;
@@ -3032,7 +3073,27 @@
       groupEl.className = 'todo-group'
       groupEl.dataset.group = `g${gi}`
       groupEl.dataset.groupStart = String(idx)
+      // item 有非空 .items[] → 渲染成嵌套 sub-group(录音→段→点结构里的"段")
+      // 否则 → 老的 .todo-sub 叶子
       const subsHtml = (group.items || []).map((it, ii) => {
+        if (Array.isArray(it.items) && it.items.length > 0) {
+          const leavesHtml = it.items.map((leaf, li) => {
+            const cur = idx++
+            return `
+              <div class="todo-sub" data-quiz-idx="${cur}">
+                <span class="check">&#10003;</span>
+                <span class="todo-text" data-text="leaf" data-gi="${gi}" data-ii="${ii}" data-li="${li}">${escHtml(leaf.label || '')}</span>
+              </div>`
+          }).join('')
+          return `
+            <div class="todo-subgroup" data-gi="${gi}" data-ii="${ii}">
+              <div class="todo-sub-pill" onclick="toggleSubGroup(this)">
+                <button type="button" class="todo-sub-toggle" onclick="event.stopPropagation();toggleSubGroup(this)">+</button>
+                <span class="todo-text" data-text="seg" data-gi="${gi}" data-ii="${ii}">${escHtml(it.label || '')}</span>
+              </div>
+              <div class="todo-sub-children">${leavesHtml}</div>
+            </div>`
+        }
         const cur = idx++
         return `
           <div class="todo-sub" data-quiz-idx="${cur}" onclick="scrollToAiMessage(this.dataset.aiMsgId)">
@@ -3666,6 +3727,11 @@
     if (!group) return
     if (group.classList.contains('locked')) return
     group.classList.toggle('expanded')
+  }
+  function toggleSubGroup(elOrBtn) {
+    const sg = elOrBtn.closest('.todo-subgroup')
+    if (!sg) return
+    sg.classList.toggle('expanded')
   }
   async function refreshQuizState() {
     if (!currentRoom) return
