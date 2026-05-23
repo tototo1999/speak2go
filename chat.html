@@ -2933,8 +2933,11 @@
           appendMessage(msg)
           if (msg.role === 'ai') {
             sawAi = true
-            clearTimeout(typingTimer)
-            hideTyping()
+            // 不要在 audio 还在处理时被 brain 中途回复打断 typing indicator
+            if (!audioPlaceholderId) {
+              clearTimeout(typingTimer)
+              hideTyping()
+            }
             setBridgeStatus(true)
             lastAiMessageAt = Date.now()
           }
