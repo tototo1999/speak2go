@@ -4891,10 +4891,8 @@
     input.value = ''
     autoResize(input)
     lastRatePrepend = ''
-    // Clear voice-recognition accumulator so old text isn't written back by onresult after a mid-recording send
-    voiceTextBefore = ''
-    // Mark all results so far as "sent" so later onresult callbacks skip them (avoid interim→final late-write-back)
-    voiceSkipBeforeIdx = voiceLastResultsLen
+    // (旧 Web Speech API voice cleanup 已删 — 新 MediaRecorder 实现是 stop-then-transcribe,
+    //  不需要 send-time cleanup)
 
     const sendBtn = document.getElementById('sendBtn')
     sendBtn.disabled = true
