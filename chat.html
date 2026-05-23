@@ -2547,10 +2547,14 @@
   }
 
   // tradego subdirectory: industry-locked speaking practice; product='tradego' is isolated from main site rooms
-  const DEMO_INDUSTRY = 'English speaking'
-  const DEMO_PRODUCT = 'speak2go'
+  // 双域名 — hostname-aware config(speak2go.ai = 英文老师 / well2go.ai = 康复师)
+  const _IS_WELL2GO = location.hostname.toLowerCase().includes('well2go')
+  const DEMO_INDUSTRY = _IS_WELL2GO ? 'Rehab therapy' : 'English speaking'
+  const DEMO_PRODUCT = _IS_WELL2GO ? 'well2go' : 'speak2go'
   // Singleton room model: one room for the whole site, every account joins it on login
-  const SPEAK2GO_SINGLETON_ROOM_ID = '5b622bc4-88b4-47c1-9aa6-643c4b1e0f96'
+  const SPEAK2GO_SINGLETON_ROOM_ID = _IS_WELL2GO
+    ? '8980e7e0-e24a-44c4-b542-47c8e9105947'  // well2go: iamaog 的 Chat
+    : '5b622bc4-88b4-47c1-9aa6-643c4b1e0f96'  // speak2go: iamarobot 的 Chat
 
   // Admin email whitelist (must match admin.html / is_admin() RPC)
   const ADMIN_EMAILS = ['lirui88888862@gmail.com']
