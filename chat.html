@@ -1548,6 +1548,16 @@
       0%, 100% { box-shadow: 0 0 0 0 rgba(155, 28, 28, 0.4); }
       50%      { box-shadow: 0 0 0 6px rgba(155, 28, 28, 0); }
     }
+    .voice-btn.uploading {
+      background: var(--teal-50);
+      border-color: var(--teal-100);
+      color: var(--teal-600);
+      animation: voiceUploadSpin 1.2s linear infinite;
+    }
+    @keyframes voiceUploadSpin {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.4; }
+    }
 
     /* speak2go realtime classroom UI removed (2026-05-22): upload-only workflow now */
 
@@ -4007,6 +4017,11 @@
         if (payload.new?.content === '__SYS_ADVANCE_QUIZ__') return
         // Translation trigger message (hidden)
         if (payload.new?.content === '__SYS_TRANSLATE__') return
+        // Voice input trigger message (hidden) — frontend INSERTed, Hermes transcribes
+        if (payload.new?.content === '__VOICE_INPUT__') return
+        if (payload.new?.message_type === 'voice_input') return
+        // Voice transcript callback — fill input field, don't render as bubble
+        if (_handleVoiceTranscriptCallback(payload)) return
         // Translation result AI message (not rendered as its own bubble — fills gray text under the source message)
         try {
           const _atts = payload.new?.attachments || []
@@ -5291,81 +5306,143 @@
     return `${h}:${m}`
   }
 
-  // ── Voice input ──
-  let recognition = null
-  let isRecording = false
-  let voiceTextBefore = ''       // Input content before recording started
-  let voiceLastResultsLen = 0    // results.length from last onresult (watermark for send)
-  let voiceSkipBeforeIdx = 0     // Any result with idx < this is considered already-sent — skip it
+  // ── Voice input (2026-05-23 改造)──
+  // 旧 Web Speech API (浏览器云转写 + 锁 en-US) → 改 MediaRecorder 录音 + Supabase Storage 上传 +
+  // 现有 mlx-whisper 服务转写。质量跟上传录音一致(英语教学 initial_prompt + loop strip)。
+  // 流程:点击 → 录音 → 再点击停止 → 上传 .webm → INSERT message_type='voice_input' → Hermes
+  // 检测到并 transcribe → INSERT callback 含 attachments._event='voice_transcript' → 前端填回输入框
+  let _mediaRecorder = null
+  let _mediaChunks = []
+  let _mediaStream = null
+  let _voiceUploading = false
+  let _voiceTextBefore = ''  // input 原有内容,转写结果会 append 到后面
 
-  function getRecognition() {
-    if (recognition) return recognition
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SR) return null
-    recognition = new SR()
-    recognition.lang = 'en-US'
-    recognition.continuous = true
-    recognition.interimResults = true   // Stream interim text while speaking
+  function _setVoiceBtnState(state) {
+    // state: 'idle' | 'recording' | 'uploading'
+    const b = document.getElementById('voiceBtn')
+    if (!b) return
+    b.classList.remove('recording', 'uploading')
+    if (state === 'recording') b.classList.add('recording')
+    if (state === 'uploading') b.classList.add('uploading')
+  }
 
-    recognition.onresult = (event) => {
-      voiceLastResultsLen = event.results.length
-      let finalText = ''
-      let interimText = ''
-      const startIdx = Math.max(event.resultIndex, voiceSkipBeforeIdx)
-      for (let i = startIdx; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript
-        if (event.results[i].isFinal) finalText += transcript
-        else interimText += transcript
-      }
-      const input = document.getElementById('msgInput')
-      input.value = (voiceTextBefore + finalText + interimText).trim()
-      autoResize(input)
-      // Accumulate confirmed segments
-      if (finalText) voiceTextBefore = (voiceTextBefore + finalText).trim() + ' '
-    }
-
-    recognition.onerror = (e) => {
-      console.error('voice error:', e)
+  async function toggleVoice() {
+    if (_voiceUploading) { showToast('Transcribing… please wait'); return }
+    if (_mediaRecorder && _mediaRecorder.state === 'recording') {
       stopVoice()
-      if (e.error === 'not-allowed') showToast('Mic permission denied — go to chrome://settings to allow speak2go.ai')
-      else if (e.error === 'no-speech') {} // No speech is not an error
-      else showToast('Voice recognition error: ' + e.error)
+    } else {
+      await startVoice()
     }
-
-    recognition.onend = () => {
-      // Browser auto-fires onend when user stops speaking — must start() again to continue
-      if (isRecording) {
-        try { recognition.start() } catch(e) {}
-      }
-    }
-    return recognition
   }
 
-  function toggleVoice() {
-    if (isRecording) stopVoice()
-    else startVoice()
-  }
-
-  function startVoice() {
-    const r = getRecognition()
-    if (!r) {
-      showToast("Your browser doesn't support voice recognition (try Chrome / Edge / Safari)")
+  async function startVoice() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showToast('This browser does not support microphone recording'); return
+    }
+    if (!currentRoom || !currentUser) { showToast('Pick a room first'); return }
+    try {
+      _mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    } catch (e) {
+      showToast('Mic permission denied — allow microphone for this site in browser settings')
+      console.warn('[voice] getUserMedia denied', e)
       return
     }
-    voiceTextBefore = document.getElementById('msgInput').value
-    if (voiceTextBefore && !voiceTextBefore.endsWith(' ')) voiceTextBefore += ' '
-    isRecording = true
-    document.getElementById('voiceBtn').classList.add('recording')
-    try { r.start() } catch(e) { console.warn(e) }
-    showToast('Listening…')
+    _mediaChunks = []
+    // webm/opus 是 Chrome 默认且 mlx-whisper 能直接消化(ffmpeg 后端)
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus' : 'audio/webm'
+    _mediaRecorder = new MediaRecorder(_mediaStream, { mimeType })
+    _mediaRecorder.ondataavailable = ev => { if (ev.data?.size > 0) _mediaChunks.push(ev.data) }
+    _mediaRecorder.onstop = () => _finishVoiceRecording(mimeType)
+    _voiceTextBefore = document.getElementById('msgInput').value
+    if (_voiceTextBefore && !_voiceTextBefore.endsWith(' ')) _voiceTextBefore += ' '
+    _mediaRecorder.start()
+    _setVoiceBtnState('recording')
+    showToast('Listening… tap again to stop')
   }
 
   function stopVoice() {
-    isRecording = false
-    document.getElementById('voiceBtn').classList.remove('recording')
-    if (recognition) {
-      try { recognition.stop() } catch(e) {}
+    if (_mediaRecorder?.state === 'recording') {
+      try { _mediaRecorder.stop() } catch (e) { console.warn(e) }
     }
+    // release mic immediately so the red dot goes away
+    if (_mediaStream) {
+      _mediaStream.getTracks().forEach(t => t.stop())
+      _mediaStream = null
+    }
+    _setVoiceBtnState('uploading')
+  }
+
+  async function _finishVoiceRecording(mimeType) {
+    const blob = new Blob(_mediaChunks, { type: mimeType })
+    _mediaChunks = []
+    if (blob.size < 800) {
+      showToast('Recording too short — try again')
+      _setVoiceBtnState('idle')
+      return
+    }
+    _voiceUploading = true
+    try {
+      const userId = currentUser.id
+      const ts = Date.now()
+      const rand = Math.random().toString(36).slice(2, 8)
+      const ext = mimeType.includes('webm') ? '.webm' : '.ogg'
+      const storage_path = `${userId}/voice_${ts}_${rand}${ext}`
+      const { error: upErr } = await sb.storage.from('chat-uploads').upload(storage_path, blob, {
+        cacheControl: '3600', upsert: false, contentType: mimeType,
+      })
+      if (upErr) { showToast('Upload failed: ' + upErr.message); _setVoiceBtnState('idle'); return }
+      const { data: signed } = await sb.storage.from('chat-uploads')
+        .createSignedUrl(storage_path, 24 * 3600)
+      const url = signed?.signedUrl || ''
+      if (!url) { showToast('Storage URL failed'); _setVoiceBtnState('idle'); return }
+      // 隐藏的 voice_input message — 前端 INSERT 处理器会跳过渲染,Hermes adapter 检测后转写回填
+      const { error: insErr } = await sb.from('messages').insert({
+        room_id: currentRoom.id,
+        user_id: currentUser.id,
+        role: 'user',
+        type: 'text',
+        content: '__VOICE_INPUT__',
+        message_type: 'voice_input',
+        attachments: [{
+          name: `voice_${ts}${ext}`,
+          url, size: blob.size,
+          mime_type: mimeType,
+          storage_path,
+          voice_input: true,  // 前端过滤标志
+        }],
+      })
+      if (insErr) { showToast('Voice insert failed: ' + insErr.message); _setVoiceBtnState('idle'); return }
+      showToast('Transcribing… ~few seconds')
+      // 不切回 idle,等 callback 来填字再切(超时兜底 30s)
+      setTimeout(() => {
+        if (_voiceUploading) { _setVoiceBtnState('idle'); _voiceUploading = false; showToast('Transcribe timed out') }
+      }, 30000)
+    } catch (e) {
+      console.error('[voice finish]', e)
+      showToast('Voice upload error: ' + (e.message || e))
+      _setVoiceBtnState('idle')
+      _voiceUploading = false
+    }
+  }
+
+  // 给 Realtime INSERT handler 用 — 收到 voice_transcript callback 就填输入框
+  function _handleVoiceTranscriptCallback(payload) {
+    try {
+      const atts = payload.new?.attachments || []
+      const tr = atts.find(a => a && a._event === 'voice_transcript')
+      if (!tr) return false
+      const text = (tr.text || '').trim()
+      const input = document.getElementById('msgInput')
+      if (input && text) {
+        input.value = (_voiceTextBefore || '') + text
+        autoResize(input)
+        input.focus()
+      }
+      _setVoiceBtnState('idle')
+      _voiceUploading = false
+      return true
+    } catch (e) { console.warn('[voice callback]', e); return false }
   }
 
   function quoteMessage(b64, sender) {
