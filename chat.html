@@ -7,6 +7,24 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Speak2GO.ai · English lesson assistant</title>
+  <script>
+    // 双域名共用代码:well2go.ai 自动改 brand + 副标题
+    (function() {
+      const host = location.hostname.toLowerCase();
+      const isW2g = host.includes('well2go');
+      if (!isW2g) return;
+      window.IS_WELL2GO = true;  // 给后续脚本判断用
+      const SWAP = s => s.replace(/Speak2GO\.ai/g, 'Well2GO.ai').replace(/Speak2(<span)/g, 'Well2$1').replace(/Speak2GO/g, 'Well2GO').replace(/English lesson assistant/g, 'Rehab therapy assistant');
+      document.title = SWAP(document.title);
+      const apply = () => {
+        document.querySelectorAll('.logo, .card-logo, .expert-name, .back-link, footer p, h1, h2, h3').forEach(el => {
+          if (el.innerHTML.includes('Speak2')) el.innerHTML = SWAP(el.innerHTML);
+        });
+      };
+      if (document.readyState !== 'loading') apply();
+      else document.addEventListener('DOMContentLoaded', apply);
+    })();
+  </script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23DC2626'/%3E%3Ctext x='32' y='44' font-family='Helvetica,Arial,sans-serif' font-size='30' font-weight='800' text-anchor='middle' fill='%23fff'%3EGO%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -4147,8 +4165,8 @@
     const tabs = [
       { cls: 'main', ch: 'main', title: `Main (group chat with ${aiName})`, iconHtml: groupCountHtml + groupIconSvg },
     ]
-    // DM tab is only visible to Coach and the focal Learner; guests don't see it
-    if (currentRoomRole === 'expert' || currentRoomRole === 'focal') {
+    // DM tab is visible to Coach, Learner, and Guests/Audience
+    if (currentRoomRole === 'expert' || currentRoomRole === 'focal' || currentRoomRole === 'audience') {
       // DM: icon on the left, count on the right
       const peerInner = `<i class="ti ti-user"></i>` + peerCountHtml
       tabs.push(isExp
