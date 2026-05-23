@@ -1364,6 +1364,15 @@
     .typing-name { color: var(--text); font-weight: 500; font-size: 12px; }
     .typing-sep, .typing-elapsed { color: var(--text3); }
     .typing-elapsed { font-size: 11px; }   /* digits shrink ~20% (14px → 11.2px) */
+    .typing-progress {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11.5px;
+      color: var(--teal-600);
+      letter-spacing: 0.5px;
+      padding: 0 6px;
+      border-right: 0.5px solid var(--border2);
+      margin-right: 2px;
+    }
     /* Radar ping effect: dot → expanding circle → fade → next dot */
     @keyframes typing-pulse {
       0%   { transform: scale(0.2); opacity: 1; }
@@ -2092,6 +2101,7 @@
         <span class="typing-star"></span>
         <span class="typing-name" id="typingName">AI</span>
         <span class="typing-sep">·</span>
+        <span class="typing-progress" id="typingProgress" style="display:none"></span>
         <span class="typing-verb" id="typingVerb">thinking</span>
         <span class="typing-verb">…</span>
         <span class="typing-elapsed" id="typingElapsed">(0s)</span>
@@ -3963,25 +3973,26 @@
           refreshQuizState()
           loadRooms()
         }
-        // Content updates (e.g. upload-transcribe progress bar checkpoints): re-render
-        // the existing bubble in place. Cheap — only one innerHTML write per UPDATE.
+        // Content updates: audio placeholder progress goes to typing-indicator status bar
+        // (no longer rendered as bubble — see appendMessage skip). Other UPDATEs still
+        // re-render bubble in place.
         try {
           const newRow = payload.new
-          if (newRow && newRow.id && newRow.content !== undefined) {
-            const groupEl = document.querySelector(`.msg-group[data-msg-id="${newRow.id}"]`)
-            const bubble = groupEl?.querySelector('.msg-bubble')
-            if (bubble) {
-              if (newRow.type === 'markdown' && window.marked) {
-                bubble.innerHTML = marked.parse(newRow.content || '')
-              } else {
-                bubble.textContent = newRow.content || ''
+          const c = newRow?.content
+          if (newRow && newRow.id && typeof c === 'string') {
+            const isAudioProg = c.startsWith('🎙 [') || c.startsWith('📝 [') || c.startsWith('🧠 [') || c.startsWith('✅ [') || c.startsWith('⚠️ [')
+            if (isAudioProg) {
+              setAudioProgress(newRow.id, c)
+            } else {
+              const groupEl = document.querySelector(`.msg-group[data-msg-id="${newRow.id}"]`)
+              const bubble = groupEl?.querySelector('.msg-bubble')
+              if (bubble) {
+                if (newRow.type === 'markdown' && window.marked) {
+                  bubble.innerHTML = marked.parse(c)
+                } else {
+                  bubble.textContent = c
+                }
               }
-            }
-            // Audio placeholder reached step 5/5 (starts with ✅) → clear gate + hide typing for real
-            if (audioPlaceholderId === newRow.id && (newRow.content || '').startsWith('✅')) {
-              audioPlaceholderId = null
-              clearTimeout(typingTimer)
-              hideTyping()
             }
           }
         } catch (e) { console.warn('[msg UPDATE content re-render]', e) }
@@ -4202,6 +4213,15 @@
     if (msg.content === '__SYS_ADVANCE_QUIZ__') return
     if (msg.content === '__SYS_TRANSLATE__') return  // Translation trigger message
     if (msg.content === '__SYS_TIMED_REVIEW__') return  // Timed-review trigger (hidden)
+    // Audio upload progress placeholder: don't render as bubble — pipe into typing indicator instead
+    // (avoids new chat replies pushing the progress bar out of view)
+    if (msg.role === 'ai' && typeof msg.content === 'string') {
+      const _c = msg.content
+      if (_c.startsWith('🎙 [') || _c.startsWith('📝 [') || _c.startsWith('🧠 [') || _c.startsWith('✅ [') || _c.startsWith('⚠️ [')) {
+        setAudioProgress(msg.id, _c)
+        return
+      }
+    }
     // ── timed_review / todo_proposal 特殊渲染(在 translation_result 分支之前) ──
     try {
       const _atts = msg.attachments || []
@@ -5068,6 +5088,36 @@
     document.getElementById('typingIndicator').classList.remove('show')
     clearInterval(_typingVerbTimer); _typingVerbTimer = null
     clearInterval(_typingElapsedTimer); _typingElapsedTimer = null
+    const tp = document.getElementById('typingProgress')
+    if (tp) { tp.textContent = ''; tp.style.display = 'none' }
+  }
+
+  // Audio upload progress → show in typing-indicator status bar (not as a chat bubble).
+  // Content format: "🎙 [▰▱▱▱▱] 1/5 已收到《name》— 转写中..." → extract bar + step + tail.
+  function setAudioProgress(msgId, content) {
+    if (typeof content !== 'string' || !content) return
+    // ✅ 5/5 done → clear gate + hide typing
+    if (content.startsWith('✅') || content.startsWith('⚠️')) {
+      audioPlaceholderId = null
+      clearTimeout(typingTimer)
+      hideTyping()
+      return
+    }
+    audioPlaceholderId = msgId
+    // Make sure indicator is showing (this triggers phrase cycle + elapsed timer to start)
+    showTyping()
+    const tp = document.getElementById('typingProgress')
+    if (!tp) return
+    // Extract `[▰▰▱▱▱] N/5` part (first ~12 chars after emoji prefix usually)
+    const m = content.match(/[🎙📝🧠]\s*(\[[▰▱]+\]\s*\d+\/\d+)/)
+    if (m) {
+      tp.textContent = m[1]
+      tp.style.display = 'inline-block'
+    } else {
+      // Fallback: show first 20 chars
+      tp.textContent = content.slice(0, 22)
+      tp.style.display = 'inline-block'
+    }
   }
 
   function openNewRoomModal() {
@@ -5149,6 +5199,10 @@
   async function onFilePick(e) {
     const files = Array.from(e.target.files || [])
     e.target.value = ''  // Allow re-selecting the same file
+    // UX: focus 输入框 — 用户挑完文件立刻能打字,不需要再点 textarea(upload 异步跑,不阻塞)
+    if (files.length > 0) {
+      document.getElementById('msgInput')?.focus()
+    }
     for (const file of files) {
       await uploadOneFile(file)
     }
