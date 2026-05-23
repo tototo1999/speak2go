@@ -3957,6 +3957,22 @@
           refreshQuizState()
           loadRooms()
         }
+        // Content updates (e.g. upload-transcribe progress bar checkpoints): re-render
+        // the existing bubble in place. Cheap — only one innerHTML write per UPDATE.
+        try {
+          const newRow = payload.new
+          if (newRow && newRow.id && newRow.content !== undefined) {
+            const groupEl = document.querySelector(`.msg-group[data-msg-id="${newRow.id}"]`)
+            const bubble = groupEl?.querySelector('.msg-bubble')
+            if (bubble) {
+              if (newRow.type === 'markdown' && window.marked) {
+                bubble.innerHTML = marked.parse(newRow.content || '')
+              } else {
+                bubble.textContent = newRow.content || ''
+              }
+            }
+          }
+        } catch (e) { console.warn('[msg UPDATE content re-render]', e) }
       })
       .on('postgres_changes', {
         event: 'INSERT',
