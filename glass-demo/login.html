@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🥽 Glass Demo Login · Speak2GO.ai</title>
+  <script>
+    // well2go.ai 自适应 brand + 静态 UI 中文化
+    (function() {
+      const host = location.hostname.toLowerCase();
+      const isW2g = host.includes('well2go');
+      if (!isW2g) return;
+      const BRAND_SWAP = s => s.replace(/Speak2GO\.ai/g, 'Well2GO.ai').replace(/Speak2(<span)/g, 'Well2$1').replace(/Speak2GO/g, 'Well2GO');
+      const TEXT_MAP = {
+        'Login': '登录',
+        'Register': '注册',
+        'Email': '邮箱',
+        'Password': '密码',
+        'Sign up': '立即注册',
+        'Sign in': '立即登录',
+        '← Speak2GO.ai home': '← 返回 Well2GO.ai',
+        '← Well2GO.ai home': '← 返回 Well2GO.ai',
+        'Terms of Service': '服务条款',
+        'Privacy Policy': '隐私政策',
+        'By signing in you agree to our': '登录即同意我们的',
+        'and': '和',
+        '© 2026 Speak2GO.ai': '© 2026 Well2GO.ai',
+        '© 2026 Well2GO.ai': '© 2026 Well2GO.ai',
+        'Display name': '昵称',
+        'Confirm password': '确认密码',
+      };
+      const apply = () => {
+        document.title = BRAND_SWAP(document.title);
+        document.querySelectorAll('.logo, .card-logo, .expert-name, .back-link, footer p, h1, h2, h3').forEach(el => {
+          if (el.innerHTML.includes('Speak2')) el.innerHTML = BRAND_SWAP(el.innerHTML);
+        });
+        document.querySelectorAll('[placeholder], [title], [alt]').forEach(el => {
+          for (const attr of ['placeholder', 'title', 'alt']) {
+            const v = el.getAttribute(attr);
+            if (!v) continue;
+            const t = TEXT_MAP[v.trim()];
+            if (t) el.setAttribute(attr, t);
+          }
+        });
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+        const targets = [];
+        while (walker.nextNode()) targets.push(walker.currentNode);
+        targets.forEach(node => {
+          const v = node.nodeValue;
+          if (!v || !v.trim()) return;
+          const t = TEXT_MAP[v.trim()];
+          if (t) {
+            const lead = v.match(/^\s*/)[0];
+            const trail = v.match(/\s*$/)[0];
+            node.nodeValue = lead + t + trail;
+          }
+        });
+      };
+      if (document.readyState !== 'loading') apply();
+      else document.addEventListener('DOMContentLoaded', apply);
+    })();
+  </script>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23DC2626'/%3E%3Ctext x='32' y='44' font-family='Helvetica,Arial,sans-serif' font-size='30' font-weight='800' text-anchor='middle' fill='%23fff'%3EGO%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #f97316; --teal-50: #fff7ed; --teal-600: #ea580c;
+      --purple: #534AB7; --purple-50: #EEEDFE;
+      --bg: #FAFAF8; --bg2: #F4F3EF;
+      --border: rgba(60,58,54,0.12); --border2: rgba(60,58,54,0.22);
+      --text: #1a1a18; --text2: #5f5e5a; --text3: #888780;
+      --radius: 8px; --radius-lg: 12px;
+    }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 0 2.5rem; height: 60px; background: #fff; border-bottom: 0.5px solid var(--border); }
+    .logo { font-family: 'Playfair Display', Georgia, serif; font-size: 24px; font-weight: 600; text-decoration: none; color: var(--text); }
+    .logo span { color: var(--teal); }
+    .nav-link { font-size: 13px; color: var(--text2); text-decoration: none; }
+    .main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .card { background: #fff; border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem; width: 100%; max-width: 400px; }
+    .card-header { text-align: center; margin-bottom: 2rem; }
+    .card-logo { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+    .card-logo span { color: var(--teal); }
+    .logo .logo-tld, .card-logo .logo-tld { font-size: 0.65em; font-weight: 500; letter-spacing: 0; }
+    .card-sub { font-size: 14px; color: var(--text2); }
+    .tabs { display: flex; gap: 0; border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.75rem; }
+    .tab { flex: 1; padding: 9px; font-size: 13px; font-family: inherit; cursor: pointer; border: none; background: transparent; color: var(--text2); font-weight: 500; transition: all .15s; }
+    .tab.active { background: var(--teal); color: #fff; }
+    .form { display: flex; flex-direction: column; gap: 14px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 13px; font-weight: 500; color: var(--text2); }
+    input { padding: 10px 12px; font-size: 14px; font-family: inherit; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); outline: none; transition: border-color .15s; }
+    input:focus { border-color: var(--teal); background: #fff; }
+    .submit-btn { padding: 12px; font-size: 14px; font-family: inherit; font-weight: 500; border: none; border-radius: var(--radius); background: var(--teal); color: #fff; cursor: pointer; transition: background .15s; margin-top: 4px; }
+    .submit-btn:hover { background: var(--teal-600); }
+    .submit-btn:disabled { background: var(--text3); cursor: not-allowed; }
+    .msg { padding: 10px 14px; border-radius: var(--radius); font-size: 13px; display: none; }
+    .msg.success { background: var(--teal-50); color: var(--teal-600); display: block; }
+    .msg.error { background: #FDE8E8; color: #9B1C1C; display: block; }
+    .msg.info { background: var(--purple-50); color: var(--purple); display: block; }
+    .footer-note { text-align: center; margin-top: 1.5rem; font-size: 12px; color: var(--text3); line-height: 1.6; }
+    .footer-note a { color: var(--teal); text-decoration: none; }
+    footer { padding: 1.5rem 2.5rem; border-top: 0.5px solid var(--border); display: flex; justify-content: space-between; background: #fff; }
+    footer p { font-size: 12px; color: var(--text3); }
+    .back-link { font-size: 12px; color: var(--text3); text-decoration: none; }
+    .back-link:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">Speak2<span>GO</span><span class="logo-tld">.ai</span></a>
+    <a href="/" class="nav-link">← Back to home</a>
+  </nav>
+
+  <main class="main">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-logo">Speak2<span>GO</span><span class="logo-tld">.ai</span></div>
+      </div>
+
+      <!-- Register tab 已关闭(全站统一不开放注册);要恢复:删 style="display:none;" + 把 form-register 的 display:none 也去掉 -->
+      <div class="tabs" style="display:none;">
+        <button class="tab active" onclick="switchTab(&#39;login&#39;)">Login</button>
+        <button class="tab" onclick="switchTab(&#39;register&#39;)">Register</button>
+      </div>
+
+      <div id="msg" class="msg"></div>
+
+      <!-- Login form -->
+      <div id="form-login" class="form">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="Enter your password" autocomplete="current-password">
+        </div>
+        <button class="submit-btn" onclick="handleLogin()">Login</button>
+      </div>
+
+      <!-- Register form -->
+      <div id="form-register" class="form" style="display:none;">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="your@email.com" autocomplete="email">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="reg-password" placeholder="At least 8 characters" autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label>Display name</label>
+          <input type="text" id="reg-nickname" placeholder="Pick any name" autocomplete="nickname">
+        </div>
+        <div class="field">
+          <label>Your role</label>
+          <select id="reg-role" style="padding:10px 12px;font-size:14px;font-family:inherit;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;">
+            <option value="user">Learner</option>
+            <option value="expert">Coach</option>
+          </select>
+        </div>
+        <button class="submit-btn" onclick="handleRegister()">Create account</button>
+      </div>
+
+      <div class="footer-note">
+        By signing in you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <a href="/" class="back-link">← Speak2GO.ai home</a>
+    <p>© 2026 Speak2GO.ai</p>
+  </footer>
+
+  <script src="/vendor/supabase.js"
+          onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'"></script>
+  <script>
+    const SUPABASE_URL = 'https://qjnagbzqhoansixqharb.supabase.co'
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqbmFnYnpxaG9hbnNpeHFoYXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDIxODIsImV4cCI6MjA5MzkxODE4Mn0.GpMUVTk6JvqeciXagXQiJunc8TLFMHg3_b9reIjJ2Y8'
+    // Use `sb` locally to avoid clashing with the global `supabase` UMD injects
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    function showMsg(text, type) {
+      const el = document.getElementById('msg')
+      el.textContent = text
+      el.className = 'msg ' + type
+    }
+    function clearMsg() {
+      const el = document.getElementById('msg')
+      el.className = 'msg'
+      el.textContent = ''
+    }
+
+    function switchTab(tab) {
+      clearMsg()
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', (tab === 'login' && i === 0) || (tab === 'register' && i === 1))
+      })
+      document.getElementById('form-login').style.display = tab === 'login' ? 'flex' : 'none'
+      document.getElementById('form-register').style.display = tab === 'register' ? 'flex' : 'none'
+    }
+
+    async function handleLogin() {
+      clearMsg()
+      const email = document.getElementById('login-email').value.trim()
+      const password = document.getElementById('login-password').value
+      if (!email || !password) { showMsg('Please enter your email and password', 'error'); return }
+      const btn = document.querySelector('#form-login .submit-btn')
+      btn.disabled = true; btn.textContent = 'Logging in...'
+      const { data, error } = await sb.auth.signInWithPassword({ email, password })
+      btn.disabled = false; btn.textContent = 'Login'
+      if (error) { showMsg('Login failed: ' + (error.message === 'Invalid login credentials' ? 'Incorrect email or password' : error.message), 'error'); return }
+      showMsg('Logged in! Redirecting…', 'success')
+      setTimeout(() => { window.location.href = '/glass-demo/chat.html' }, 1000)
+    }
+
+    async function handleRegister() {
+      clearMsg()
+      if (!window.supabase) { showMsg('Supabase SDK failed to load — please refresh the page or check your network.', 'error'); return }
+      const email = document.getElementById('reg-email').value.trim()
+      const password = document.getElementById('reg-password').value
+      const nickname = document.getElementById('reg-nickname').value.trim()
+      const role = document.getElementById('reg-role').value
+      if (!email || !password) { showMsg('Please enter your email and password', 'error'); return }
+      if (password.length < 6) { showMsg('Password must be at least 6 characters', 'error'); return }
+      if (!nickname) { showMsg('Please pick a display name', 'error'); return }
+      const btn = document.querySelector('#form-register .submit-btn')
+      btn.disabled = true; btn.textContent = 'Creating account…'
+      try {
+        const target = role === 'expert' ? '/glass-demo/chat.html' : '/glass-demo/chat.html'
+        const { data, error } = await sb.auth.signUp({
+          email, password,
+          options: {
+            data: { role, nickname },
+            emailRedirectTo: `${window.location.origin}${target}`,
+          },
+        })
+        btn.disabled = false; btn.textContent = 'Create account'
+        if (error) { showMsg('Sign-up failed: ' + error.message, 'error'); return }
+        // Skip email verification — sign in directly after sign-up
+        if (!data.session) {
+          const r = await sb.auth.signInWithPassword({ email, password })
+          if (r.error) { showMsg('Account created, but auto sign-in failed: ' + r.error.message, 'error'); return }
+        }
+        showMsg('Account created! Redirecting…', 'success')
+        setTimeout(() => { window.location.href = target }, 800)
+      } catch (e) {
+        btn.disabled = false; btn.textContent = 'Create account'
+        showMsg('Sign-up error: ' + (e?.message || e), 'error')
+        console.error('handleRegister error:', e)
+      }
+    }
+
+    // If already signed in, redirect to chat
+    if (window.supabase) {
+      sb.auth.getSession().then(({ data: { session } }) => {
+        if (session) window.location.href = '/glass-demo/chat.html'
+      })
+    }
+  </script>
+
+
+</body></html>
