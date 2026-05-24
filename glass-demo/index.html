@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Glass Demo · Speak2GO.ai</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥽</text></svg>">
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --panel: #15181d;
+      --text1: #f5f5f7;
+      --text2: #aab1bc;
+      --text3: #7a8290;
+      --accent: #6366f1;
+      --border: #232830;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text1);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .nav {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav a {
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .nav a:hover { color: var(--text1); }
+    .nav .sep { color: var(--text3); }
+    .nav .brand {
+      font-weight: 600;
+      color: var(--text1);
+    }
+    .nav .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: #f97316;
+      color: #fff;
+      border-radius: 4px;
+      margin-left: auto;
+    }
+    .main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+    .card {
+      max-width: 560px;
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+    }
+    .card .icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+    }
+    .card h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .card .sub {
+      color: var(--text2);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .pipeline {
+      background: #0e1115;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--text2);
+      margin-bottom: 24px;
+    }
+    .pipeline .arrow { color: var(--accent); }
+    .status-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      font-size: 13px;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+    .status-row:last-child { border-bottom: 0; }
+    .status-row .ok { color: #10b981; }
+    .status-row .pending { color: #f59e0b; }
+    .footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text3);
+      font-size: 12px;
+      text-align: center;
+    }
+    code {
+      background: #0e1115;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      font-size: 12px;
+      color: var(--text1);
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="/">← Speak2GO.ai</a>
+    <span class="sep">/</span>
+    <span class="brand">Glass Demo</span>
+    <span class="badge">experimental</span>
+  </nav>
+
+  <main class="main">
+    <div class="card">
+      <div class="icon">🥽</div>
+      <h1>Mentra Live × AI Lab</h1>
+      <p class="sub">
+        Speak2GO.ai v2 实验路径 — 智能眼镜 + serverless + ElevenLabs Scribe v2 + Gemini Flash 多模态摘要。
+        主路径 <a href="/" style="color:var(--accent);">speak2go.ai</a> 不受影响。
+      </p>
+
+      <div class="pipeline">
+        🥽 Mentra Live 录音 + 板书拍照<br>
+        <span class="arrow">↓</span> POST<br>
+        ⚡ Supabase Edge Function<br>
+        <span class="arrow">↓</span> trigger<br>
+        🐍 Modal Worker (Python)<br>
+        <span class="arrow">↓</span> 转写 + 摘要<br>
+        🎙 ElevenLabs Scribe v2 → 🧠 Gemini 2.5 Flash<br>
+        <span class="arrow">↓</span> 写回<br>
+        💾 Supabase messages + Realtime → 前端
+      </div>
+
+      <div>
+        <div class="status-row">
+          <span>Mentra Live 硬件</span>
+          <span class="pending">🚚 运输中(2026-05-31 前后到货)</span>
+        </div>
+        <div class="status-row">
+          <span>ElevenLabs Scribe v2 转写引擎</span>
+          <span class="ok">✅ Gate 1b 验证(53× 实时比,零 loop)</span>
+        </div>
+        <div class="status-row">
+          <span>Modal worker</span>
+          <span class="pending">📝 代码已写,待 deploy</span>
+        </div>
+        <div class="status-row">
+          <span>Edge Function</span>
+          <span class="pending">📝 代码已写,待 deploy</span>
+        </div>
+        <div class="status-row">
+          <span>chat-demo UI(本页)</span>
+          <span class="ok">✅ 骨架已上线</span>
+        </div>
+      </div>
+
+      <p class="sub" style="margin-top:24px;font-size:12px;color:var(--text3);">
+        Plan ref: <code>~/.claude/plans/wiggly-gliding-whisper.md</code><br>
+        本页是 v2 demo 部署位占位,Mentra 到货后接入完整 chat UI。
+      </p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    Speak2GO.ai · Glass Demo · v0.0.1 · 2026-05-24
+  </footer>
+</body>
+</html>
