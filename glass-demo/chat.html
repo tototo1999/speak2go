@@ -5127,6 +5127,48 @@
     appendMessage(msgData)
     scrollToBottom(true)
 
+    // ⚡ glass-demo: 音频附件 → 触发 Edge Function speak2go-ingest → Modal worker(Scribe v2 + Gemini)
+    // Hermes 在 product='speak2go-demo' 上不响应,所以新链路是唯一处理路径
+    const audioAtt = attachments.find(a =>
+      (a.mime_type || '').startsWith('audio/') ||
+      /\.(m4a|mp3|wav|aac|ogg|webm|mp4|flac)$/i.test(a.name || '')
+    )
+    if (audioAtt && DEMO_PRODUCT === 'speak2go-demo') {
+      const photoPaths = attachments
+        .filter(a => (a.mime_type || '').startsWith('image/') || /\.(png|jpe?g|gif|webp)$/i.test(a.name || ''))
+        .map(a => a.storage_path)
+      const INGEST_URL = 'https://qjnagbzqhoansixqharb.supabase.co/functions/v1/speak2go-ingest'
+      // ⚠️ Demo token,生产改用 user JWT 流
+      const GLASS_TOKEN = 'e339a8f1b45f32eb26aa1f931bacdd1d8f099dcc7e4961743de9f7f6813d81ae'
+      try {
+        const resp = await fetch(INGEST_URL, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-glass-token': GLASS_TOKEN,
+          },
+          body: JSON.stringify({
+            room_id: currentRoom.id,
+            expert_user_id: currentRoom.expert_id,
+            audio_path: audioAtt.storage_path,
+            audio_name: audioAtt.name,
+            photo_paths: photoPaths,
+            captured_at: new Date().toISOString(),
+          }),
+        })
+        const result = await resp.json()
+        if (!resp.ok) {
+          console.error('[glass-demo] ingest failed:', result)
+          showToast('Pipeline trigger failed: ' + (result.error || resp.status))
+        } else {
+          console.log('[glass-demo] ingest queued:', result)
+        }
+      } catch (e) {
+        console.error('[glass-demo] ingest exception:', e)
+        showToast('Pipeline trigger error: ' + (e.message || e))
+      }
+    }
+
     // AI responds on main / expert_ai channels; expert_user channel (Coach ↔ Learner) is AI-free
     if (currentChannel !== 'expert_user') {
       showTyping()
