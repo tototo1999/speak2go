@@ -233,6 +233,109 @@
     let yawObject = new THREE.Object3D();
     const PI_2 = Math.PI / 2;
 
+    // ── Web Audio API 实时合成音频引擎 ──
+    let audioCtx = null;
+    let schedulerTimer = null;
+    let nextNoteTime = 0.0;
+    let beatCount = 0;
+    const chords = [
+      [110, 165, 196, 246], // Am9
+      [146, 196, 220, 293], // Dm9
+      [98, 146, 174, 246],  // G13
+      [130, 196, 246, 261]  // Cmaj9
+    ];
+    let currentChordIdx = 0;
+
+    function initAudio() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // 1. 模拟黑胶唱片的沙沙背景电流声 (Procedural Vinyl crackle)
+      createVinylNoise();
+      
+      // 2. 启动步进音序调度器 (Start scheduler)
+      nextNoteTime = audioCtx.currentTime;
+      scheduler();
+    }
+
+    function createVinylNoise() {
+      const bufferSize = audioCtx.sampleRate * 2;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() - 0.5) * 0.015; // 细腻的白噪声
+      }
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      const gain = audioCtx.createGain();
+      gain.gain.value = 0.2; // 极轻微的底噪
+      source.connect(gain);
+      gain.connect(audioCtx.destination);
+      source.start();
+    }
+
+    function playKick(time) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      // 瞬态音高扫描 (Pitch sweep for Kick thump)
+      osc.frequency.setValueAtTime(150, time);
+      osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.3);
+      
+      // 音量包络衰减
+      gain.gain.setValueAtTime(0.8, time);
+      gain.gain.linearRampToValueAtTime(0.0, time + 0.3);
+      
+      osc.start(time);
+      osc.stop(time + 0.32);
+    }
+
+    function playChordSynth(ch, time, duration) {
+      const gain = audioCtx.createGain();
+      gain.connect(audioCtx.destination);
+      
+      // 呼吸式 Sidechain Pumping 音量包络 (Sidechain simulation against kick!)
+      gain.gain.setValueAtTime(0.0, time);
+      gain.gain.linearRampToValueAtTime(0.2, time + 0.15);
+      gain.gain.linearRampToValueAtTime(0.05, time + duration - 0.1);
+      gain.gain.linearRampToValueAtTime(0.0, time + duration);
+
+      ch.forEach(freq => {
+        const osc = audioCtx.createOscillator();
+        osc.type = 'triangle'; // 温暖的三角波模拟 Rhodes 柔润电钢
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        osc.start(time);
+        osc.stop(time + duration);
+      });
+    }
+
+    function scheduler() {
+      while (nextNoteTime < audioCtx.currentTime + 0.1) {
+        const tempo = (currentMood === 'party' ? 120 : 72);
+        const secondsPerBeat = 60.0 / tempo;
+        
+        // 播放 4/4 拍 Kick (Lounge 模式下偶数拍休止)
+        if (currentMood === 'party' || beatCount % 2 === 0) {
+          playKick(nextNoteTime);
+        }
+        
+        // 每 4 拍循环播放 Rhodes 和弦和 sidechain 包络
+        if (beatCount % 4 === 0) {
+          const chord = chords[currentChordIdx];
+          playChordSynth(chord, nextNoteTime, secondsPerBeat * 4);
+          currentChordIdx = (currentChordIdx + 1) % chords.length;
+        }
+        
+        nextNoteTime += secondsPerBeat;
+        beatCount++;
+      }
+      schedulerTimer = setTimeout(scheduler, 25);
+    }
+
     function init() {
       // 1. Scene setup
       scene = new THREE.Scene();
@@ -355,6 +458,7 @@
       const instructions = document.getElementById('instructions');
       instructions.addEventListener('click', () => {
         instructions.requestPointerLock();
+        initAudio(); // 激活网页实时合成音频引擎
       });
 
       document.addEventListener('pointerlockchange', () => {
