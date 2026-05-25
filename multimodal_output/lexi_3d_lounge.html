@@ -479,6 +479,15 @@
       // Front Desk Receptionist NPC
       let frontNpc = createNPC(14, 1.8, -4, 0x10b981, 'receptionist', '【公寓接待前台】', '校验成功。已通过 local bypass 权限授权。系统处于极度健康态。');
 
+      // 接待大楼经理 NPC
+      createNPC(-4, 1.8, 2, 0xf59e0b, 'host', '【接待大楼经理】', '欢迎来到公寓派对！在大堂沙发上尽情放松吧，或者去吧台尝尝明星调酒师的新品。[按 E 深入对话]');
+      // 房客 Lily NPC
+      createNPC(-3, 1.8, -4, 0xa78bfa, 'dancing_lily', '【房客 Lily】', '这个 120 BPM 的 Deep House 鼓点太带感了！侧链压制（Sidechain）的颤动感简直像心跳一样！[按 E 深入对话]');
+      // 房客 Alex NPC
+      createNPC(8, 1.8, 2, 0x3b82f6, 'chilling_alex', '【房客 Alex】', '刚刚用 100万 上下文跑了一遍情绪提取，不得不说，AGY 总制片人的多智能体分工太让人工智能震撼了。[按 E 深入对话]');
+      // 房客 Chloe NPC
+      createNPC(0, 1.8, -12, 0xf472b6, 'chatting_chloe', '【房客 Chloe】', '听说 Zine 部门今天通宵在画册里画了红发少女 Lexi 头戴亚克力头冠的样子，瞧，就在您 3D Avatar 头上顶着呢！[按 E 深入对话]');
+
       // 12. Star Dust / Floating neon particles
       const starGeo = new THREE.BufferGeometry();
       const starCount = 300;
@@ -559,12 +568,30 @@
       const group = new THREE.Group();
       group.position.set(x, y, z);
 
-      // Capsule body (aesthetic cyberpunk capsule NPC)
+      // Capsule body (aesthetic cyberpunk capsule NPC with custom color blending)
       const bodyGeo = new THREE.CylinderGeometry(0.4, 0.4, 1.8, 16);
-      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.3, metalness: 0.8 });
+      const bodyColor = new THREE.Color(glowColor).multiplyScalar(0.12).add(new THREE.Color(0x111317));
+      const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.2, metalness: 0.9 });
       const body = new THREE.Mesh(bodyGeo, bodyMat);
       body.castShadow = true;
+      body.receiveShadow = true;
       group.add(body);
+
+      // Sleek head sphere representing their virtual avatar head
+      const headGeo = new THREE.SphereGeometry(0.3, 16, 16);
+      const headMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.1, metalness: 0.95 });
+      const head = new THREE.Mesh(headGeo, headMat);
+      head.position.y = 1.0;
+      head.castShadow = true;
+      group.add(head);
+
+      // Cyberpunk glowing visor (half-torus neon eye visor)
+      const visorGeo = new THREE.TorusGeometry(0.32, 0.04, 8, 16, Math.PI);
+      const visorMat = new THREE.MeshBasicMaterial({ color: glowColor });
+      const visor = new THREE.Mesh(visorGeo, visorMat);
+      visor.position.set(0, 1.0, 0.05);
+      visor.rotation.x = -Math.PI / 8;
+      group.add(visor);
 
       // Glowing headphones or visualizer halo
       const ringGeo = new THREE.TorusGeometry(0.5, 0.08, 8, 24);
@@ -674,7 +701,7 @@
         } else if (closestNpc.roleId === 'bartender') {
           prompt.textContent = '【按 Q 改变微醺氛围色彩】';
         } else {
-          prompt.textContent = '【靠近自动对齐凭证】';
+          prompt.textContent = '【按 E 深入对话】';
           showDialog(closestNpc.name, closestNpc.dialogText);
         }
       } else {
@@ -716,6 +743,14 @@
           showDialog('【派对 DJ】', '已为您拉升律动：120 BPM 深邃浩室电声。霓虹光栅正弦跃动开启！');
           scene.userData.starParticles.material.color.setHex(0xec4899);
         }
+      } else if (currentActiveNpc.roleId === 'host') {
+        showDialog('【接待大楼经理】', '呼... 昨晚 100M Token 的吞吐量把大楼的主网络都占满了，当时整个控制面板的仪表盘都在爆表呢！不过今天派对的无限特调鸡尾酒，大家都喝开心了吗？');
+      } else if (currentActiveNpc.roleId === 'dancing_lily') {
+        showDialog('【房客 Lily】', '噢！你的亚克力头冠也随着和弦起伏而闪烁呢！这简直像黑客帝国的数字跳动，配合 120 BPM 的 Deep House 节奏，我们来斗个舞吧！');
+      } else if (currentActiveNpc.roleId === 'chilling_alex') {
+        showDialog('【房客 Alex】', '听着 Procedural Vinyl 的沙沙底噪，喝着莫吉托，看 AGY SDK 编排的这套 3D 元宇宙互动... 这大概就是未来数字游民的下午茶吧。');
+      } else if (currentActiveNpc.roleId === 'chatting_chloe') {
+        showDialog('【房客 Chloe】', '你看，那边的发光毛玻璃隔断做得很漂亮吧？听说这是 Orbit 引擎使用 PhysicalMaterial 特意拉升了 transmission（透光率）打磨的哦！');
       }
     }
 
@@ -785,6 +820,28 @@
       if (starParticles) {
         starParticles.rotation.y += (currentMood === 'party' ? 0.002 : 0.0005);
       }
+
+      // Rhythmic animations for NPCs based on BPM (tempo)
+      const tempo = (currentMood === 'party' ? 120 : 72);
+      npcs.forEach(npc => {
+        if (npc.roleId === 'dancing_lily') {
+          // Dancing Lily: bounces and rotates rhythmically
+          npc.mesh.position.y = 1.8 + Math.sin(time * 0.006 * (tempo / 60.0)) * 0.22;
+          npc.mesh.rotation.y = Math.sin(time * 0.004 * (tempo / 60.0)) * 0.4;
+        } else if (npc.roleId === 'chilling_alex') {
+          // Chilling Alex: sways left to right and tilts slightly
+          npc.mesh.position.x = 8.0 + Math.sin(time * 0.003 * (tempo / 60.0)) * 0.15;
+          npc.mesh.rotation.z = Math.sin(time * 0.002 * (tempo / 60.0)) * 0.06;
+        } else if (npc.roleId === 'chatting_chloe') {
+          // Chatting Chloe: hovers gently up and down and drifts slightly
+          npc.mesh.position.y = 1.8 + Math.sin(time * 0.002 * (tempo / 60.0)) * 0.08;
+          npc.mesh.position.z = -12.0 + Math.cos(time * 0.002 * (tempo / 60.0)) * 0.15;
+        } else if (npc.roleId === 'dj') {
+          // DJ: headbangs and swings side to side to BGM beats
+          npc.mesh.position.y = 1.8 + Math.sin(time * 0.008 * (tempo / 60.0)) * 0.05;
+          npc.mesh.rotation.y = Math.sin(time * 0.004 * (tempo / 60.0)) * 0.15;
+        }
+      });
 
       checkNPCProximity();
 
