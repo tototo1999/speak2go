@@ -5169,52 +5169,18 @@
     return resp.json()
   }
 
-  function setBridgeStatus(online) {
+  // 2026-05-26: after serverless cutover, bridge_state has no live writer,
+  // so the badge is pinned green. Function names preserved for callers; param ignored.
+  function setBridgeStatus(_online) {
     const el = document.getElementById('bridgeStatus')
-    el.className = 'status-item ' + (online ? 'online' : 'offline')
-    const canRestart = currentRoomRole === 'expert'
-    el.title = canRestart
-      ? (online ? 'AI online · click to restart' : 'AI offline · click to restart')
-      : (online ? 'AI online' : 'AI offline · only OG can restart')
-    el.style.cursor = canRestart ? 'pointer' : 'default'
+    if (!el) return
+    el.className = 'status-item online'
+    el.title = 'AI service status'
+    el.style.cursor = 'default'
   }
-
-  // ── Bridge heartbeat polling ── (every 6s pulls bridge_state.last_seen; > 30s no update counts as offline)
-  let _bridgeHeartbeatTimer = null
-  let _bridgeStatusFailCount = 0  // Consecutive failure count; > 3 forces offline so old green state isn't kept forever
-  async function refreshBridgeStatus() {
-    try {
-      const { data, error } = await sb
-        .from('bridge_state').select('last_seen').eq('id', 'singleton').maybeSingle()
-      _bridgeStatusFailCount = 0
-      if (error || !data || !data.last_seen) { setBridgeStatus(false); return }
-      const lastSeenMs = new Date(data.last_seen).getTime()
-      const ageSec = (Date.now() - lastSeenMs) / 1000
-      setBridgeStatus(ageSec < 30)
-    } catch (e) {
-      _bridgeStatusFailCount++
-      console.warn('[bridge status]', e)
-      // After 3 consecutive failures (~18s), switch to offline so a stalled bridge doesn't keep UI green
-      if (_bridgeStatusFailCount >= 3) setBridgeStatus(false)
-    }
-  }
-  function startBridgeHeartbeatPolling() {
-    if (_bridgeHeartbeatTimer) return
-    refreshBridgeStatus()
-    _bridgeHeartbeatTimer = setInterval(refreshBridgeStatus, 6000)
-  }
-
-  // Click icon → request bridge restart (writes bridge_state.restart_requested_at; bridge self-exits on next loop, launchd brings it back)
-  async function requestBridgeRestart() {
-    if (currentRoomRole !== 'expert') { showToast('Only Coach can restart AI'); return }
-    const ok = confirm("Restart the AI bridge? (Use this when AI isn't responding)")
-    if (!ok) return
-    const { error } = await sb.rpc('request_bridge_restart')
-    if (error) { showToast('Request failed: ' + (error.message || error.code)); return }
-    showToast('Restart requested — takes effect in 5-10s')
-    // Refresh status immediately (last_seen hasn't updated yet, so it'll show offline until bridge comes back)
-    refreshBridgeStatus()
-  }
+  async function refreshBridgeStatus() { setBridgeStatus(true) }
+  function startBridgeHeartbeatPolling() { setBridgeStatus(true) }
+  async function requestBridgeRestart() { /* deprecated: no daemon to restart */ }
 
   // Claude Code-style typing verbs (~100 items). English-teacher vibe: evaluate / explain / drill / summarize / casual mix.
   // NYC-flavored short phrases (2-4 words) for an American English teacher vibe.
