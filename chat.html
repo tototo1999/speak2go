@@ -58,8 +58,8 @@
         'Reset room (kick all members + wipe messages + new invite link)': '重置房间 (踢出全部成员 + 清空消息 + 换新邀请链接)',
         'Materials — folders & files': '教学材料 — 文件夹 / 文件',
         'Context used this turn / room budget': '本轮上下文用量 / 房间预算',
-        'AI disconnected — click to request restart': 'AI 已离线 — 点击请求重启',
-        'Restart hermes': '重启 Hermes',
+        'AI service status': 'AI 服务状态',
+        'AI backend online indicator': 'AI 后端在线指示',
         'Your role': '你的角色',
         'Click to edit AI name': '点击修改 AI 名称',
         'Click to open settings': '打开设置',
@@ -2258,9 +2258,9 @@
             </span>
           </div>
           <div class="chat-status">
-            <div class="status-item offline" id="bridgeStatus" title="AI disconnected — click to request restart" onclick="requestBridgeRestart()" style="cursor:pointer;">
+            <div class="status-item offline" id="bridgeStatus" title="AI service status">
               <div class="dot"></div>
-              <span class="brain-badge" id="brainBadge" title="Restart hermes">hermes</span>
+              <span class="brain-badge" id="brainBadge" title="AI backend online indicator">serverless</span>
               <span id="chatRoomModel">AI</span>
               <svg class="signal-online" width="14" height="11" viewBox="0 0 14 11" fill="currentColor" aria-hidden="true">
                 <rect x="1"   y="7" width="3" height="3" rx="0.5"/>
@@ -4201,7 +4201,7 @@
         if (payload.new?.content === '__SYS_ADVANCE_QUIZ__') return
         // Translation trigger message (hidden)
         if (payload.new?.content === '__SYS_TRANSLATE__') return
-        // Voice input trigger message (hidden) — frontend INSERTed, Hermes transcribes
+        // Voice input trigger message (hidden) — frontend INSERTed, backend transcribes
         if (payload.new?.content === '__VOICE_INPUT__') return
         if (payload.new?.message_type === 'voice_input') return
         // Voice transcript callback — fill input field, don't render as bubble
@@ -5138,7 +5138,35 @@
         hideTyping()
         setBridgeStatus(false)
       }, 600000)
+
+      // 2026-05-26: serverless 房走 chat2go-ingest Edge Function。
+      // speak2go / well2go / tradego 全部走同一个 ingest,worker 按 room.industry 选 prompt。
+      if (currentRoom.serverless) {
+        triggerChat2goIngest(currentRoom.id, msgData.id, currentChannel).catch(err => {
+          console.warn('[chat2go-ingest] trigger failed:', err)
+          showToast('AI trigger failed: ' + (err?.message ?? err).toString().slice(0, 80))
+        })
+      }
     }
+  }
+
+  async function triggerChat2goIngest(roomId, messageId, channel) {
+    const { data: { session } } = await sb.auth.getSession()
+    const token = session?.access_token || SUPABASE_ANON_KEY
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/chat2go-ingest`, {
+      method: 'POST',
+      headers: {
+        'authorization': `Bearer ${token}`,
+        'apikey': SUPABASE_ANON_KEY,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ room_id: roomId, message_id: messageId, channel }),
+    })
+    if (!resp.ok) {
+      const txt = await resp.text().catch(() => '')
+      throw new Error(`HTTP ${resp.status} ${txt.slice(0, 200)}`)
+    }
+    return resp.json()
   }
 
   function setBridgeStatus(online) {
@@ -5244,7 +5272,7 @@
   let _typingVerbTimer = null
   let _typingElapsedTimer = null
   let _typingStartAt = 0
-  // Token estimation: ~1.5 chars/token for CJK, ~4 chars/token for Latin (rough; real value comes back from Hermes brain)
+  // Token estimation: ~1.5 chars/token for CJK, ~4 chars/token for Latin (rough; real value comes back from backend)
   function estimateTokens(text) {
     if (!text) return 0
     let zh = 0, other = 0
@@ -5516,10 +5544,9 @@
   }
 
   // ── Voice input (2026-05-23 改造)──
-  // 旧 Web Speech API (浏览器云转写 + 锁 en-US) → 改 MediaRecorder 录音 + Supabase Storage 上传 +
-  // 现有 mlx-whisper 服务转写。质量跟上传录音一致(英语教学 initial_prompt + loop strip)。
-  // 流程:点击 → 录音 → 再点击停止 → 上传 .webm → INSERT message_type='voice_input' → Hermes
-  // 检测到并 transcribe → INSERT callback 含 attachments._event='voice_transcript' → 前端填回输入框
+  // MediaRecorder 录音 + Supabase Storage 上传 + serverless 转写(Scribe v2 / Gemini Flash)。
+  // 流程:点击 → 录音 → 再点击停止 → 上传 .webm → INSERT message_type='voice_input' →
+  // 后端 worker 转写 → INSERT callback 含 attachments._event='voice_transcript' → 前端填回输入框
   let _mediaRecorder = null
   let _mediaChunks = []
   let _mediaStream = null
@@ -5605,7 +5632,7 @@
         .createSignedUrl(storage_path, 24 * 3600)
       const url = signed?.signedUrl || ''
       if (!url) { showToast('Storage URL failed'); _setVoiceBtnState('idle'); return }
-      // 隐藏的 voice_input message — 前端 INSERT 处理器会跳过渲染,Hermes adapter 检测后转写回填
+      // 隐藏的 voice_input message — 前端 INSERT 处理器会跳过渲染,后端 worker 检测后转写回填
       const { error: insErr } = await sb.from('messages').insert({
         room_id: currentRoom.id,
         user_id: currentUser.id,
@@ -5661,10 +5688,10 @@
     if (input) input.focus()
   }
 
-  // Coach/Learner taps 🌐 button under message → writes hidden message_type='translate' → Hermes routes to
-  // libs/speak2go.handle_translate_message → Haiku does EN↔ZH translation → writes an AI message with
-  // attachments._event='translation_result' + source_message_id + translation.
-  // Frontend Realtime onInsert catches it and fills the .msg-translation container (gray text under original).
+  // Coach/Learner taps 🌐 button under message → writes hidden message_type='translate' → backend worker
+  // does EN↔ZH translation → writes an AI message with attachments._event='translation_result' +
+  // source_message_id + translation. Frontend Realtime onInsert catches it and fills the
+  // .msg-translation container (gray text under original).
   async function translateMessage(msgId, btn) {
     if (!currentRoom || !currentUser) { showToast('Pick a room first'); return }
     const slot = document.querySelector(`.msg-translation[data-translation-for="${msgId}"]`)
