@@ -1008,36 +1008,11 @@
       background: color-mix(in srgb, var(--tab-c) 7%, #fff);
       border-color: color-mix(in srgb, var(--tab-c) 28%, var(--border));
     }
-    /* Glossary modal — iframe-based, fills most of viewport */
-    .glossary-modal {
-      max-width: min(960px, 95vw);
-      width: 100%;
-      height: 90vh;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .glossary-modal-head {
-      padding: 12px 18px;
-      border-bottom: 0.5px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center;
-      flex-shrink: 0;
-    }
-    .glossary-modal-title { font-weight: 600; font-size: 14px; color: var(--text); }
-    .glossary-modal-actions { display: flex; gap: 10px; align-items: center; }
-    .glossary-modal-actions a {
-      font-size: 11px; color: var(--text2); text-decoration: none;
-      padding: 3px 8px; border-radius: 5px; border: 0.5px solid var(--border);
-    }
-    .glossary-modal-actions a:hover { background: var(--teal-50); color: var(--teal-600); border-color: var(--teal-600); }
-    .glossary-modal-close {
-      background: none; border: none; font-size: 22px; line-height: 1;
-      cursor: pointer; padding: 2px 8px; color: var(--text2);
-    }
-    .glossary-modal-close:hover { color: var(--text); }
-    .glossary-modal-body { flex: 1; overflow: hidden; }
-    .glossary-modal-body iframe { width: 100%; height: 100%; border: none; display: block; }
+    /* Glossary tab view — inline (replaces messages area when "词" pill active) */
+    body.glossary-tab #messagesList,
+    body.glossary-tab #typingIndicator,
+    body.glossary-tab .input-area { display: none !important; }
+    body.glossary-tab #glossaryTabView { display: flex !important; }
     /* DM pill has a slight tint by default for emphasis */
     .presence-tab.peer-expert,
     .presence-tab.peer-user {
@@ -2159,22 +2134,6 @@
 </nav>
 
 <!-- Materials Modal — Inbox + custom folders (triggered from chat-head toolbar) -->
-<!-- Glossary Modal — iframe loads /glossary/ on demand -->
-<div class="modal-overlay" id="glossaryModal" onclick="closeGlossaryModal(event)">
-  <div class="modal glossary-modal" onclick="event.stopPropagation()">
-    <div class="glossary-modal-head">
-      <span class="glossary-modal-title">📚 单词表 · 罗马注音练习</span>
-      <div class="glossary-modal-actions">
-        <a href="/glossary/" target="_blank" title="在新标签页打开">↗ 全屏</a>
-        <button class="glossary-modal-close" title="关闭 (Esc)" onclick="closeGlossaryModal()">×</button>
-      </div>
-    </div>
-    <div class="glossary-modal-body">
-      <iframe id="glossaryIframe" src="about:blank" loading="lazy" title="单词表"></iframe>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="materialsModal" onclick="closeMaterialsModal(event)">
   <div class="modal materials-modal" onclick="event.stopPropagation()">
     <div class="materials-modal-head">
@@ -2276,7 +2235,7 @@
         <!-- Online avatars -->
         <div class="presence-row" style="position:relative;">
           <div id="presenceRow" style="display:flex;align-items:center;gap:6px;"></div>
-          <button class="presence-tab glossary" id="glossaryBtn" onclick="openGlossaryModal()" title="单词表 / 罗马注音练习" style="min-width:auto;padding:0 12px;">
+          <button class="presence-tab glossary" id="glossaryBtn" onclick="showGlossaryTab()" title="单词表 / 罗马注音练习" style="min-width:auto;padding:0 12px;">
             <span class="group-count">词</span>
             <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 5c2-1 5-1 7 0v14c-2-1-5-1-7 0V5Z"/><path d="M22 5c-2-1-5-1-7 0v14c2-1 5-1 7 0V5Z"/></svg>
           </button>
@@ -2385,6 +2344,10 @@
         </div>
         <!-- realtime classroom UI removed 2026-05-22 — upload-only workflow -->
         <div class="input-hint" id="roleHint" style="display:none"></div>
+      </div>
+      <!-- Glossary tab view — fills the same space as messages+input when "词" pill is active -->
+      <div id="glossaryTabView" style="display:none;flex:1;overflow:hidden;flex-direction:column;min-height:0;">
+        <iframe id="glossaryIframe" src="about:blank" style="flex:1;width:100%;border:none;display:block;" title="单词表"></iframe>
       </div>
     </div>
   </div>
@@ -3277,6 +3240,8 @@
   }
 
   async function switchChannel(ch) {
+    // Always exit glossary tab when user clicks any chat pill
+    hideGlossaryTab()
     if (!currentRoom || ch === currentChannel) return
     currentChannel = ch
     unreadCounts[ch] = 0
@@ -3459,25 +3424,20 @@
   let _materialMoveBuf = null   // {item, fromFolderIdx} waiting for target folder
   const _materialCollapsed = {}
 
-  // Glossary modal — lazy-load iframe
-  let _glossaryModalOpen = false
-  function _glossaryEscHandler(e) {
-    if (e.key === 'Escape') closeGlossaryModal()
-  }
-  function openGlossaryModal() {
+  // Glossary tab — inline view (third tab next to main / DM pills)
+  function showGlossaryTab() {
     const iframe = document.getElementById('glossaryIframe')
     if (!iframe.src || iframe.src === 'about:blank' || !iframe.src.includes('/glossary/')) {
       iframe.src = '/glossary/'
     }
-    document.getElementById('glossaryModal').classList.add('show')
-    _glossaryModalOpen = true
-    document.addEventListener('keydown', _glossaryEscHandler)
+    document.body.classList.add('glossary-tab')
+    // Mark "词" pill active, deactivate other presence-tabs
+    document.querySelectorAll('.presence-tab').forEach(el => el.classList.remove('active'))
+    document.getElementById('glossaryBtn').classList.add('active')
   }
-  function closeGlossaryModal(e) {
-    if (e && e.currentTarget !== e.target) return
-    document.getElementById('glossaryModal').classList.remove('show')
-    _glossaryModalOpen = false
-    document.removeEventListener('keydown', _glossaryEscHandler)
+  function hideGlossaryTab() {
+    document.body.classList.remove('glossary-tab')
+    document.getElementById('glossaryBtn').classList.remove('active')
   }
 
   function openMaterialsModal() {
