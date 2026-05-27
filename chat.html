@@ -3249,7 +3249,7 @@
   // Question order is items.flat() of the active todo template (data-quiz-idx auto-derived in renderTodos).
   // An AI message with messages.ratings showing 'up' >= 2 → that question passes, pointer advances.
   // Sidebar items [0..passed-1] marked done; item at index `passed` highlighted as "current question".
-  const DEFAULT_TODO_PAYLOAD = [
+  const DEFAULT_TODO_PAYLOAD_SPEAK2GO = [
     { label: 'Level Check', items: [{ label: 'Listening baseline' }, { label: 'Speaking baseline' }, { label: 'Vocab size check' }] },
     { label: 'Learning Goals', items: [{ label: 'Short-term (1-2 wks)' }, { label: 'Long-term (3-6 mos)' }, { label: 'Areas of interest' }] },
     { label: 'Materials', items: [{ label: 'Textbook pick' }, { label: 'Level match' }, { label: 'Practice set ready' }] },
@@ -3261,6 +3261,20 @@
     { label: 'Stage Quiz', items: [{ label: 'Speaking mini-test' }, { label: 'Listening test' }, { label: 'Vocab test' }] },
     { label: 'Next Stage', items: [{ label: 'Review last stage' }, { label: 'Set next direction' }, { label: 'Showcase wins' }] },
   ]
+  const DEFAULT_TODO_PAYLOAD_WELL2GO = [
+    { label: '评估建档', items: [{ label: '主诉问诊' }, { label: '既往史/用药' }, { label: '功能评估' }] },
+    { label: '康复目标', items: [{ label: '短期(1-2 周)' }, { label: '长期(3-6 月)' }, { label: '生活质量期望' }] },
+    { label: '训练计划', items: [{ label: '肌力训练' }, { label: '关节活动度' }, { label: '平衡协调' }] },
+    { label: '疼痛管理', items: [{ label: '痛点定位' }, { label: '缓解方法' }, { label: '用药协调' }] },
+    { label: '姿势矫正', items: [{ label: '站姿评估' }, { label: '坐姿习惯' }, { label: '行走步态' }] },
+    { label: '日常活动', items: [{ label: '起居穿衣' }, { label: '上下楼梯' }, { label: '提物姿势' }] },
+    { label: '物理因子', items: [{ label: '冷热敷' }, { label: '电刺激' }, { label: '牵引/推拿' }] },
+    { label: '居家训练', items: [{ label: '训练频次' }, { label: '自我监控' }, { label: '红旗征识别' }] },
+    { label: '阶段复评', items: [{ label: '复测对比' }, { label: '方案调整' }, { label: '信心建设' }] },
+    { label: '长期维护', items: [{ label: '复发预防' }, { label: '体能保持' }, { label: '心态调整' }] },
+  ]
+  const DEFAULT_TODO_PAYLOAD = _IS_WELL2GO ? DEFAULT_TODO_PAYLOAD_WELL2GO : DEFAULT_TODO_PAYLOAD_SPEAK2GO
+  const DEFAULT_TEMPLATE_NAME = _IS_WELL2GO ? '康复治疗 — 核心计划' : 'English Speaking - Core'
   let currentTemplate = null  // {id, name, payload} — plan attached to the current room (Learner also holds a copy; only Coach can edit)
   let todoPopupOpen = false
   let _todoPopupTemplates = []  // Template list cached by showTodoPopup so deleteTemplate can look up names
@@ -3373,7 +3387,7 @@
     if (existing?.length) return existing[0].id
     const { data: created, error: insErr } = await sb
       .from('expert_todo_templates')
-      .insert({ owner_id: ownerId, name: 'English Speaking - Core', product: DEMO_PRODUCT, payload: DEFAULT_TODO_PAYLOAD })
+      .insert({ owner_id: ownerId, name: DEFAULT_TEMPLATE_NAME, product: DEMO_PRODUCT, payload: DEFAULT_TODO_PAYLOAD })
       .select('id')
       .single()
     if (insErr) { console.warn('[seed templates insert]', insErr); return null }
