@@ -844,7 +844,8 @@ footer {
 
 <script src="romanizer-dict.js"></script>
 <script>
-const DATA = [
+// 2026-05-28:DATA 改 let,初始化后会从 localStorage 加载动态 lesson cats(每个录音 = 一个 tab)
+let DATA = [
   {
     id: 'vibe-coding', title: 'Vibe Coding', terms: [
       ['Framework', '框架', '提供完整结构和约定的库,如 React/Vue/Angular'],
@@ -925,10 +926,22 @@ const DATA = [
   },
   {
     id: 'nyc-global-center', title: 'NYC Global Center', terms: [
-      // 你在英文课里常用的单词加到这里 — 也可以直接在页面上点 "+ 加词" 按钮加,会存在浏览器本地
+      // 老历史词 + 没带 date 的导入会落在这里;每节录音课会创建独立动态 tab(见下方 loadDynamicLessonCats)
     ]
   },
 ];
+
+// 从 localStorage 加载动态 lesson cats(每个录音 = 一个独立 top-level tab)
+(function loadDynamicLessonCats() {
+  try {
+    const arr = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]');
+    arr.forEach(cat => {
+      if (cat && cat.id && !DATA.find(d => d.id === cat.id)) {
+        DATA.push({ id: cat.id, title: cat.title || cat.id, terms: [], dynamic: true });
+      }
+    });
+  } catch (e) { console.warn('[glossary] dynamic cats load failed:', e); }
+})();
 
 const main = document.getElementById('main');
 const catsNav = document.getElementById('catsNav');
@@ -1264,11 +1277,12 @@ function renderCardContent(card) {
   card.classList.toggle('is-edited', d.edited);
   card.classList.toggle('is-user', isUserTerm(catId, en));
   const isFav = state.favorites.has(id);
-  // ✓ 通关按钮(只在 NYC Global Center 显示)
-  const isNyc = catId === 'nyc-global-center';
-  const userTerm = isNyc ? (state.userTerms[catId] || []).find(t => (t.en || '').toLowerCase() === en.toLowerCase()) : null;
+  // ✓ 通关按钮(NYC Global Center + 所有动态 lesson cat 都显示)
+  const cat = DATA.find(c => c.id === catId);
+  const showDoneBtn = catId === 'nyc-global-center' || (cat && cat.dynamic);
+  const userTerm = showDoneBtn ? (state.userTerms[catId] || []).find(t => (t.en || '').toLowerCase() === en.toLowerCase()) : null;
   const isCompleted = userTerm && userTerm.completed;
-  const completedBtn = isNyc
+  const completedBtn = showDoneBtn
     ? '<button class="done' + (isCompleted ? ' is-on' : '') + '" data-action="done" title="' + (isCompleted ? '取消通关' : '我会了 ✓') + '" aria-label="通关">' + (isCompleted ? '✓' : '○') + '</button>'
     : '';
   card.innerHTML =
@@ -1373,11 +1387,7 @@ function renderCategorySection(cat) {
   const section = document.createElement('section');
   section.id = 'cat-' + cat.id;
   section.dataset.cat = cat.id;
-  // NYC Global Center 走胶囊视图(按 lesson_date 分组,每组带完成度进度)
-  if (cat.id === 'nyc-global-center') {
-    renderLessonCapsules(cat, section);
-    return section;
-  }
+  // 2026-05-28:每个录音 = 独立 top-level tab,内部走 flat grid(不再 NYC 内嵌胶囊)
   const merged = getMergedTerms(cat);
   const grid = document.createElement('div');
   grid.className = 'terms';
@@ -2366,26 +2376,23 @@ search.addEventListener('input', e => {
 
 rebuildFavorites();
 
-// 给老数据补 default lesson_date(2026-05-27 引入字段前的存量)
-(function backfillLessonDate() {
-  const catId = 'nyc-global-center';
-  const terms = state.userTerms[catId] || [];
-  let changed = false;
-  terms.forEach(t => {
-    if (typeof t.lesson_date === 'undefined') { t.lesson_date = '📦 历史'; changed = true; }
-    if (typeof t.completed === 'undefined') { t.completed = false; changed = true; }
+// 给老数据补 default completed=false(老 NYC Global Center 词)
+(function backfillCompleted() {
+  Object.keys(state.userTerms).forEach(catId => {
+    (state.userTerms[catId] || []).forEach(t => {
+      if (typeof t.completed === 'undefined') t.completed = false;
+    });
   });
-  if (changed) save();
+  save();
 })();
 
-// URL ?import=<base64-utf8-json-array>&date=YYYY-MM-DD 一键导入 — speak2go-worker push 进来
-// 2026-05-27 静默化 + 按日期分组:不弹 alert + 不切 tab + 只让 NYC Global Center (N) + 红 +N badge
-// ⚠️ atob() 返回 byte-string(Latin-1),JSON 是 UTF-8,必须用 TextDecoder 转码;否则中文 / IPA 音标乱码
+// URL ?import=<base64>&date=<lesson_label> 一键导入 — speak2go-worker push 进来
+// 2026-05-28:每节录音课 = 一个独立 top-level tab(跟 Vibe Coding / Claude Code 并列)
 (function autoImportFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const raw = params.get('import');
   if (!raw) return;
-  const lessonDate = params.get('date') || '📦 历史';  // 没传 date 当历史导入
+  const lessonLabel = (params.get('date') || '').trim();  // 'NYC Global Center 13 2 · 2026-05-28 10:14'
   try {
     const binary = atob(decodeURIComponent(raw));
     const bytes = new Uint8Array(binary.length);
@@ -2393,9 +2400,46 @@ rebuildFavorites();
     const jsonStr = new TextDecoder('utf-8').decode(bytes);
     const arr = JSON.parse(jsonStr);
     if (!Array.isArray(arr) || arr.length === 0) return;
-    const catId = 'nyc-global-center';
+
+    // 决定写入的 cat:有 lessonLabel → 新建/复用动态 cat;无 → fallback 到 nyc-global-center
+    let catId;
+    if (lessonLabel) {
+      // 用 lesson label 生成 stable slug 作 cat id(便于 dedup + 持久化)
+      catId = 'lesson-' + lessonLabel.toLowerCase()
+        .replace(/[^a-z0-9一-鿿]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 60);
+      // 检查 cat 是否已存在,不存在则创建(push 到 DATA + 持久化 + 渲染 nav tab + section)
+      let cat = DATA.find(c => c.id === catId);
+      if (!cat) {
+        cat = { id: catId, title: lessonLabel, terms: [], dynamic: true };
+        DATA.push(cat);
+        // persist 到 localStorage
+        try {
+          const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]');
+          dyn.push({ id: catId, title: lessonLabel });
+          localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn));
+        } catch (e) { console.warn('[glossary] dynamic cats persist failed', e); }
+        // 渲染 nav tab
+        const a = document.createElement('a');
+        a.href = '#';
+        a.className = 'group-link inactive';
+        a.textContent = lessonLabel + ' (0)';
+        a.dataset.cat = catId;
+        a.onclick = (e) => { e.preventDefault(); setActiveCat(catId); };
+        catsNav.appendChild(a);
+        // 渲染 section
+        const newSection = renderCategorySection(cat);
+        if (typeof noResults !== 'undefined' && noResults && main) {
+          main.insertBefore(newSection, noResults);
+        }
+      }
+    } else {
+      catId = 'nyc-global-center';
+    }
     if (!state.userTerms[catId]) state.userTerms[catId] = [];
-    // 检测现有词条是否含 mojibake(UTF-8 被错解成 Latin-1 的特征字符)— 若有则全清,避免之前 bug 留下的脏数据
+
+    // 检测现有词条是否含 mojibake(UTF-8 被错解成 Latin-1 的特征字符)— 若有则全清
     const HAS_MOJIBAKE = /Â|ä¾|å|°ç|é¨|É|Ê|Ë|Ï|Ð/;
     const existing = state.userTerms[catId];
     const dirty = existing.some(t => HAS_MOJIBAKE.test((t.zh || '') + (t.hint || '')));
@@ -2412,7 +2456,6 @@ rebuildFavorites();
         en,
         zh: t.zh || (Array.isArray(t) ? t[1] : '') || '',
         hint: t.hint || (Array.isArray(t) ? t[2] : '') || '',
-        lesson_date: lessonDate,
         completed: false,
       });
       seen.add(en.toLowerCase());

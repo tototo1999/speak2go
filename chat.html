@@ -3346,63 +3346,65 @@
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
   }
 
-  function _loadNycTerms() {
+  function _loadCatTerms(catId) {
     try {
       const all = JSON.parse(localStorage.getItem('glossary-user-terms') || '{}')
-      return all['nyc-global-center'] || []
+      return all[catId] || []
     } catch (e) { return [] }
   }
 
-  function _saveNycTerms(arr) {
+  function _saveCatTerms(catId, arr) {
     try {
       const all = JSON.parse(localStorage.getItem('glossary-user-terms') || '{}')
-      all['nyc-global-center'] = arr
+      all[catId] = arr
       localStorage.setItem('glossary-user-terms', JSON.stringify(all))
     } catch (e) { console.warn('[sidebar] save failed', e) }
+  }
+
+  function _loadAllLessonCats() {
+    // 返回所有要在 sidebar 显示的 cat:动态 lesson cats + 老 nyc-global-center
+    const all = []
+    try {
+      const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]')
+      dyn.forEach(c => { if (c && c.id) all.push({ id: c.id, title: c.title || c.id }) })
+    } catch (e) {}
+    all.push({ id: 'nyc-global-center', title: '📦 NYC Global Center 历史' })
+    return all
   }
 
   function renderSidebarLessons() {
     const body = document.getElementById('todoBody')
     if (!body) return
-    const terms = _loadNycTerms()
-    // 按 lesson_date 分组
-    const grouped = {}
-    terms.forEach(t => {
-      const key = t.lesson_date || '📦 历史'
-      ;(grouped[key] = grouped[key] || []).push(t)
-    })
-    // 排序:日期 desc, '📦 历史' 置底
-    const keys = Object.keys(grouped).sort((a, b) => {
-      if (a === '📦 历史') return 1
-      if (b === '📦 历史') return -1
-      return b.localeCompare(a)
-    })
-    // 保留之前展开的 capsule(避免 toggle 时全收起)
+    // 每个 cat = 一个胶囊(没词的 cat 不显示)
+    const cats = _loadAllLessonCats()
+      .map(c => ({ ...c, terms: _loadCatTerms(c.id) }))
+      .filter(c => c.terms.length > 0)
+    // 保留之前展开的 capsule
     const prevExpanded = new Set()
     body.querySelectorAll('.sb-lesson.expanded').forEach(el => prevExpanded.add(el.dataset.key))
     body.innerHTML = ''
-    if (keys.length === 0) {
+    if (cats.length === 0) {
       body.innerHTML = '<div style="padding:20px 14px;text-align:center;color:var(--text3,#999);font-size:12px;line-height:1.6;">🎙️ 上传英语录音<br>AI 自动提炼 20 词<br>这里就会出现胶囊</div>'
       return
     }
-    keys.forEach((key, idx) => {
-      const words = grouped[key]
+    cats.forEach((cat, idx) => {
+      const words = cat.terms
       const total = words.length
       const done = words.filter(w => w.completed).length
       const isDone = done === total && total > 0
-      const expanded = prevExpanded.has(key) || (prevExpanded.size === 0 && idx === 0)
-      const cap = document.createElement('div')
-      cap.className = 'sb-lesson' + (expanded ? ' expanded' : '') + (isDone ? ' completed' : '')
-      cap.dataset.key = key
-      cap.innerHTML =
+      const expanded = prevExpanded.has(cat.id) || (prevExpanded.size === 0 && idx === 0)
+      const capsule = document.createElement('div')
+      capsule.className = 'sb-lesson' + (expanded ? ' expanded' : '') + (isDone ? ' completed' : '')
+      capsule.dataset.key = cat.id
+      capsule.innerHTML =
         '<div class="sb-head">' +
-          '<span class="sb-date">' + (isDone ? '✓ ' : '📅 ') + _escHtmlS(key) + '</span>' +
+          '<span class="sb-date">' + (isDone ? '✓ ' : '📅 ') + _escHtmlS(cat.title) + '</span>' +
           '<span class="sb-progress">' + total + '-' + done + '</span>' +
           '<span class="sb-toggle">▾</span>' +
         '</div>' +
         '<div class="sb-list"></div>'
-      cap.querySelector('.sb-head').addEventListener('click', () => cap.classList.toggle('expanded'))
-      const list = cap.querySelector('.sb-list')
+      capsule.querySelector('.sb-head').addEventListener('click', () => capsule.classList.toggle('expanded'))
+      const list = capsule.querySelector('.sb-list')
       words.forEach(w => {
         const item = document.createElement('div')
         item.className = 'sb-word' + (w.completed ? ' completed' : '')
@@ -3410,26 +3412,27 @@
           '<span class="sb-check">' + (w.completed ? '☑' : '☐') + '</span>' +
           '<span class="sb-en">' + _escHtmlS(w.en) + '</span>' +
           '<span class="sb-zh">' + _escHtmlS(w.zh || '') + '</span>'
-        item.addEventListener('click', () => toggleSidebarWord(w.en))
+        item.addEventListener('click', () => toggleSidebarWord(cat.id, w.en))
         list.appendChild(item)
       })
-      body.appendChild(cap)
+      body.appendChild(capsule)
     })
   }
 
-  function toggleSidebarWord(en) {
-    const terms = _loadNycTerms()
+  function toggleSidebarWord(catId, en) {
+    const terms = _loadCatTerms(catId)
     const t = terms.find(x => (x.en || '').toLowerCase() === en.toLowerCase())
     if (!t) return
     t.completed = !t.completed
-    _saveNycTerms(terms)
+    _saveCatTerms(catId, terms)
     renderSidebarLessons()  // 同 tab 内重渲
-    // localStorage.setItem 自动给跨 tab 触发 storage event,glossary 那边自动跟上
+    // localStorage.setItem 自动给跨 tab 触发 storage event
   }
 
-  // 跨 tab 同步:glossary tab 改了词,这边自动 reload sidebar
+  // 跨 tab 同步:glossary tab 改了词 / 加了新 lesson cat,这边自动 reload sidebar
   window.addEventListener('storage', (e) => {
-    if (e.key === 'glossary-user-terms' && location.hostname.includes('speak2go')) {
+    if ((e.key === 'glossary-user-terms' || e.key === 'glossary-dynamic-cats') &&
+        location.hostname.includes('speak2go')) {
       renderSidebarLessons()
     }
   })
