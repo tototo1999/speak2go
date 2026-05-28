@@ -925,8 +925,30 @@ footer {
 .quiz-slot.space { min-width: 14px; border: none; }
 .quiz-slot-count { text-align: center; color: var(--text-dim); font-size: 12px; margin-top: 8px; }
 /* 拼读复用 .practice-* 样式;quiz 容器套一层 */
-.quiz-phonics { margin-top: 8px; }
-.quiz-phonics .practice-step { font-size: 13px; color: var(--text-dim); margin: 10px 0 6px; }
+.quiz-phonics { margin-top: 4px; }
+.quiz-phonics .practice-step { font-size: 12px; color: var(--text-dim); margin: 6px 0 3px; }
+/* ===== 测验竖向压缩 ~30%,尽量一页放下 ===== */
+.quiz-body { padding: 14px 20px 28px; }
+.quiz-q-zh { font-size: 22px; margin: 4px 0 4px; }
+.quiz-q-meta { font-size: 14px; margin-bottom: 12px; }
+.quiz-play-ex { padding: 7px 16px; font-size: 14px; }
+.quiz-input { font-size: 18px; padding: 11px; }
+.quiz-actions { margin-top: 12px; }
+.quiz-actions button { padding: 9px 18px; font-size: 14px; }
+.quiz-fb { margin-top: 12px; font-size: 15px; }
+.quiz-fb .fb-answer { font-size: 18px; margin-top: 6px; }
+.quiz-slots { margin-top: 10px; }
+.quiz-slot { height: 28px; font-size: 18px; }
+.quiz-slot-count { margin-top: 6px; }
+.quiz-tip { margin-top: 10px; }
+/* 拼读卡片只在测验里收紧,不动单卡片 🎮 */
+.quiz-phonics .practice-letters { padding: 7px; margin-bottom: 7px; }
+.quiz-phonics .practice-letters .p-letter { font-size: 18px; padding: 3px 4px; }
+.quiz-phonics .practice-letters .p-gap { font-size: 14px; padding: 4px 3px; }
+.quiz-phonics .practice-preview { padding: 7px; min-height: 0; margin-bottom: 8px; gap: 6px; }
+.quiz-phonics .practice-preview .p-slot { min-width: 56px; gap: 3px; }
+.quiz-phonics .practice-preview .p-syl { padding: 7px 8px; font-size: 16px; }
+.quiz-phonics .practice-preview .p-romaji { font-size: 11px; padding: 4px; }
 /* 结果页 */
 .quiz-result { text-align: center; padding-top: 10px; }
 .quiz-result .qr-rank { font-size: 64px; font-weight: 800; line-height: 1; }
@@ -2112,8 +2134,8 @@ function submitQuizDictation() {
 function renderQuizPhonics() {
   const w = quizState.words[quizState.idx];
   quizBody.innerHTML =
-    '<div class="quiz-q-zh" style="font-size:24px;"><code>' + escapeHtml(w.en) + '</code></div>' +
-    '<div class="quiz-q-meta">' + escapeHtml(w.zh) + '</div>' +
+    '<div class="quiz-q-zh" style="font-size:19px;margin:2px 0;"><code>' + escapeHtml(w.en) + '</code></div>' +
+    '<div class="quiz-q-meta" style="margin-bottom:6px;">' + escapeHtml(w.zh) + '</div>' +
     '<div class="quiz-phonics" data-role="phonics">' +
       '<div class="practice-step">① 点字母之间的 · 切音节<span style="opacity:.6;margin-left:6px;">(单音节点最后那个 ·)</span></div>' +
       '<div class="practice-letters" data-role="letters"></div>' +
