@@ -900,6 +900,8 @@ footer {
   background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
 }
 .quiz-actions button.ghost { background: transparent; color: var(--accent); }
+.quiz-actions button.quiz-del-btn { border-color: #ef4444; color: #ef4444; }
+.quiz-actions button.quiz-del-btn:hover { background: #ef4444; color: #fff; }
 .quiz-fb { margin-top: 22px; text-align: center; font-size: 16px; min-height: 24px; }
 .quiz-fb .fb-ok { color: var(--accent); font-weight: 700; }
 .quiz-fb .fb-bad { color: #ef4444; font-weight: 700; }
@@ -2018,7 +2020,7 @@ function renderQuizDictation() {
     '<input type="text" class="quiz-input" id="quizDictInput" placeholder="拼出英文…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">' +
     '<div class="quiz-slots" id="quizDictSlots"></div>' +
     '<div class="quiz-slot-count">' + quizLetterCount(w.en) + ' 个字母</div>' +
-    '<div class="quiz-actions" data-role="quiz-act"><button data-action="quiz-submit-dict">提交</button><button class="ghost" data-action="quiz-clear-dict">⌫ 清空</button></div>' +
+    '<div class="quiz-actions" data-role="quiz-act"><button data-action="quiz-submit-dict">提交</button><button class="ghost" data-action="quiz-clear-dict">⌫ 清空</button><button class="ghost quiz-del-btn" data-action="quiz-del-word">🗑 删除此词</button></div>' +
     '<div class="quiz-fb" data-role="quiz-fb"></div>' +
     '<div class="quiz-tip">回车提交 · 下方格子按字母数提示</div>';
   const inp = document.getElementById('quizDictInput');
@@ -2034,6 +2036,33 @@ function quizLetterCount(en) { return String(en || '').replace(/[^a-zA-Z0-9]/g, 
 
 // 例句(只用来朗读,不显示):优先词自带,否则用短句框架带上目标词
 const QUIZ_EX_FRAMES = ['This is {en}.', 'I like {en}.', 'Do you know {en}?', "Let's use {en}.", 'I learned {en} today.', 'We need {en} here.', 'Tell me about {en}.'];
+// 从单词表永久删除当前词(跟卡片 ✕ 删除一致:state.deleted + 过滤),并从本组移除
+function quizDeleteWord() {
+  const qs = quizState;
+  const w = qs && qs.words[qs.idx];
+  if (!w) return;
+  if (!confirm('从单词表删除 “' + w.en + '”?(这一组也会跳过)')) return;
+  const delKey = w.catId + '::' + w.en;
+  state.deleted.add(delKey);
+  state.favorites.delete(delKey);
+  save();
+  // 同步单词表 DOM(移除卡片副本)+ 收藏 + nav 计数
+  document.querySelectorAll('.term[data-id="' + CSS.escape(delKey) + '"]').forEach(t => t.remove());
+  if (typeof rebuildFavorites === 'function') rebuildFavorites();
+  if (typeof updateCatNavCount === 'function') updateCatNavCount(w.catId);
+  if (typeof applySearch === 'function') applySearch();
+  // 从本组移除 + 对齐已记录的分数(按 idx 同步 splice 保持 words/scores 对齐)
+  qs.scores.dictation.splice(qs.idx, 1);
+  qs.scores.phonics.splice(qs.idx, 1);
+  qs.scores.sentence.splice(qs.idx, 1);
+  qs.words.splice(qs.idx, 1);
+  qs.n = qs.words.length;
+  qs.awaitingNext = false;
+  if (qs.n === 0) { finishQuiz(); return; }
+  if (qs.idx >= qs.n) { qs.phase++; qs.idx = 0; if (qs.phase > 3) { finishQuiz(); return; } }
+  renderQuizPhase();
+}
+
 function quizExampleSentence(w) {
   if (w.example) return w.example;
   let h = 0; const s = (w.en || '').toLowerCase();
@@ -2199,6 +2228,7 @@ if (quizOverlay) {
     else if (a === 'quiz-submit-sentence') { submitQuizSentence(); }
     else if (a === 'quiz-clear-dict') { const i = document.getElementById('quizDictInput'); if (i && !i.disabled) { i.value = ''; renderDictSlots(quizState.words[quizState.idx].en, ''); i.focus(); } }
     else if (a === 'quiz-play-ex') { const w = quizState.words[quizState.idx]; if (w) speakTerm(quizExampleSentence(w), btn); }
+    else if (a === 'quiz-del-word') { quizDeleteWord(); }
     else if (a === 'quiz-next') { quizAdvance(); }
     else if (a === 'quiz-restart') { startQuiz(); }
     else if (a === 'quiz-close') { closeQuiz(true); }
