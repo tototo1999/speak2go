@@ -817,6 +817,23 @@ section#favorites h2 { color: #d97706; border-bottom-color: #f59e0b66; }
   display: none;
 }
 .no-results.show { display: block; }
+.web-lookup-btn {
+  margin-top: 16px; padding: 10px 18px; border-radius: 999px;
+  border: 1px solid var(--accent); background: var(--accent); color: #fff;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: opacity .15s, transform .1s;
+}
+.web-lookup-btn:hover { opacity: .88; }
+.web-lookup-btn:active { transform: scale(.97); }
+.web-lookup-btn:disabled { opacity: .55; cursor: default; }
+.web-lookup-status { margin-top: 12px; font-size: 13px; min-height: 18px; }
+.web-lookup-status .ok { color: var(--accent); }
+.web-lookup-status .err { color: #ef4444; }
+.term.just-added { animation: justAdded 2s ease; }
+@keyframes justAdded {
+  0%, 30% { box-shadow: 0 0 0 2px var(--accent); background: rgba(99,102,241,.12); }
+  100% { box-shadow: none; background: transparent; }
+}
 footer {
   text-align: center; padding: 24px 16px;
   color: var(--text-dim); font-size: 12px;
@@ -851,7 +868,11 @@ footer {
     <h2><span>⭐ 我的收藏</span><span class="count" id="favCount">0 个</span></h2>
     <div class="terms" id="favoritesGrid"></div>
   </section>
-  <div class="no-results" id="noResults">没有匹配的术语</div>
+  <div class="no-results" id="noResults">
+    <div id="noResultsText">没有匹配的术语</div>
+    <button type="button" class="web-lookup-btn" id="webLookupBtn"></button>
+    <div class="web-lookup-status" id="webLookupStatus"></div>
+  </div>
 </main>
 
 <footer>
@@ -1673,8 +1694,116 @@ function applySearch() {
     if (!any && q) favSection.style.display = 'none';
     else favSection.style.display = '';
   }
-  noResults.classList.toggle('show', visible === 0 && q.length > 0);
+  const showNo = visible === 0 && q.length > 0;
+  noResults.classList.toggle('show', showNo);
+  if (showNo) updateWebLookupBtn();
 }
+
+/* ============================================================
+   搜不到 → 在网络上查词并加入当前分类(Gemini Flash 双语词卡)
+   ============================================================ */
+const webLookupBtn = document.getElementById('webLookupBtn');
+const webLookupStatus = document.getElementById('webLookupStatus');
+
+function activeCatInfo() {
+  const id = document.body.dataset.activeCat || 'vibe-coding';
+  const cat = DATA.find(c => c.id === id);
+  return { id, title: cat ? cat.title : id };
+}
+
+function updateWebLookupBtn() {
+  if (!webLookupBtn) return;
+  const raw = search.value.trim();
+  const { title } = activeCatInfo();
+  if (!raw) { webLookupBtn.style.display = 'none'; return; }
+  webLookupBtn.style.display = '';
+  webLookupBtn.disabled = false;
+  webLookupBtn.textContent = '🌐 在网络上查 “' + raw + '” 并加入「' + title + '」';
+  if (webLookupStatus) webLookupStatus.innerHTML = '';
+}
+
+async function webLookupAndAdd() {
+  const raw = search.value.trim();
+  if (!raw) return;
+  const { id: catId, title } = activeCatInfo();
+  const SUPABASE_URL = 'https://qjnagbzqhoansixqharb.supabase.co';
+  const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqbmFnYnpxaG9hbnNpeHFoYXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDIxODIsImV4cCI6MjA5MzkxODE4Mn0.GpMUVTk6JvqeciXagXQiJunc8TLFMHg3_b9reIjJ2Y8';
+
+  webLookupBtn.disabled = true;
+  const orig = webLookupBtn.textContent;
+  webLookupBtn.textContent = '🔍 查词中…';
+  if (webLookupStatus) webLookupStatus.innerHTML = '<span style="color:var(--text-dim);">🤖 正在联网查 “' + escapeHtml(raw) + '”…</span>';
+
+  try {
+    const r = await fetch(SUPABASE_URL + '/functions/v1/glossary-lookup', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + ANON_KEY, 'apikey': ANON_KEY },
+      body: JSON.stringify({ query: raw }),
+    });
+    const data = await r.json();
+    webLookupBtn.disabled = false;
+    webLookupBtn.textContent = orig;
+    if (!data || data.error || !data.en) {
+      if (webLookupStatus) webLookupStatus.innerHTML = '<span class="err">没查到结果' + (data && data.error ? '(' + escapeHtml(data.error) + ')' : '') + ',换个词试试</span>';
+      return;
+    }
+
+    const cat = DATA.find(c => c.id === catId);
+    if (!cat) { if (webLookupStatus) webLookupStatus.innerHTML = '<span class="err">当前分类不存在</span>'; return; }
+
+    const dup = getMergedTerms(cat).find(t => t[0].toLowerCase() === data.en.toLowerCase());
+    if (dup) {
+      if (webLookupStatus) webLookupStatus.innerHTML = '<span class="ok">“' + escapeHtml(dup[0]) + '” 已在「' + escapeHtml(title) + '」里了,帮你跳过去 →</span>';
+      search.value = ''; state.query = '';
+      setActiveCat(catId); applySearch();
+      scrollToTerm(catId, dup[0]);
+      return;
+    }
+
+    const hint = (data.pos ? '[' + data.pos + '] ' : '') + (data.hint || '');
+    if (!state.userTerms[catId]) state.userTerms[catId] = [];
+    const term = { en: data.en, zh: data.zh || '', hint };
+    if (catId === 'nyc-global-center' || (cat && cat.dynamic)) {
+      term.completed = false;
+      term.review_stage = 0;
+      term.next_due_at = Date.now() + 5 * 60 * 1000;
+    }
+    state.userTerms[catId].push(term);
+    const editKey = catId + '::' + data.en;
+    const edit = Object.assign({}, state.edits[editKey] || {});
+    if (data.phonetic) edit.phonetic = data.phonetic;
+    if (data.example) edit.note = '例: ' + data.example;
+    if (Object.keys(edit).length) state.edits[editKey] = edit;
+    save();
+
+    const newSection = renderCategorySection(cat);
+    if (noResults && main) main.insertBefore(newSection, noResults);
+    if (document.body.dataset.activeCat === catId) newSection.classList.add('active-cat');
+    updateCatNavCount(catId);
+
+    if (webLookupStatus) webLookupStatus.innerHTML = '<span class="ok">✅ 已把 “' + escapeHtml(data.en) + '” 加入「' + escapeHtml(title) + '」</span>';
+    search.value = ''; state.query = '';
+    setActiveCat(catId); applySearch();
+    scrollToTerm(catId, data.en);
+  } catch (e) {
+    webLookupBtn.disabled = false;
+    webLookupBtn.textContent = orig;
+    if (webLookupStatus) webLookupStatus.innerHTML = '<span class="err">查词失败: ' + escapeHtml(String(e.message || e)) + '</span>';
+  }
+}
+
+function scrollToTerm(catId, en) {
+  setTimeout(() => {
+    const el = document.querySelector('.term[data-id="' + CSS.escape(catId + '::' + en) + '"]');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('just-added');
+      setTimeout(() => el.classList.remove('just-added'), 2000);
+    }
+  }, 60);
+}
+
+if (webLookupBtn) webLookupBtn.addEventListener('click', webLookupAndAdd);
 
 function updateDelToggle() { /* 回收站 UI 已移除 — 删除即硬删除,此函数保留为空 stub 防外部调用 */ }
 
