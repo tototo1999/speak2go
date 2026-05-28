@@ -91,6 +91,26 @@ nav.cats a.group-link {
   cursor: pointer;
 }
 nav.cats a.group-link:hover { opacity: 0.85; }
+.cat-new-badge {
+  display: inline-block;
+  background: #ff3b30;
+  color: white;
+  font-size: 10px; font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+  margin-left: 6px;
+  vertical-align: middle;
+  line-height: 1.4;
+  box-shadow: 0 2px 6px rgba(255, 59, 48, 0.5);
+  animation: cat-badge-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 0.6s ease-out;
+}
+.cat-new-badge.fade-out { opacity: 0; }
+@keyframes cat-badge-pop {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
 nav.cats a.group-link.inactive {
   background: transparent;
   color: var(--accent);
@@ -2216,18 +2236,39 @@ rebuildFavorites();
     save();
     // 清 URL 防止刷新重复导入
     history.replaceState({}, '', location.pathname);
-    // 静默更新 UI:重建 NYC Global Center section 让新词进 DOM + 更新 nav tab (N) 计数
-    // ❌ 不切 tab,❌ 不弹 alert — 保持用户当前 active tab 不动,只让 NYC Global Center 数字增加
+    // 静默更新 UI:重建 NYC Global Center section 让新词进 DOM + 更新 nav tab (N) 计数 + 红标 +N 徽章
+    // ❌ 不切 tab,❌ 不弹 alert — 保持用户当前 active tab 不动
     try {
-      const oldSection = document.getElementById('cat-' + catId);
-      if (oldSection) {
-        const cat = DATA.find(c => c.id === catId);
-        if (cat && typeof renderCategorySection === 'function') {
-          const newSection = renderCategorySection(cat);
-          oldSection.replaceWith(newSection);
+      const cat = DATA.find(c => c.id === catId);
+      if (cat && typeof renderCategorySection === 'function') {
+        // ⚠️ renderCategorySection 内部已经 remove existing,直接 insertBefore noResults(跟初始渲染 L1340 一致)
+        const newSection = renderCategorySection(cat);
+        if (typeof noResults !== 'undefined' && noResults && main) {
+          main.insertBefore(newSection, noResults);
+        }
+        // 恢复 active-cat class(如果 user 当前正在 NYC Global Center tab 时)
+        if (document.body.dataset.activeCat === catId) {
+          newSection.classList.add('active-cat');
         }
       }
-      if (typeof updateCatNavCount === 'function') updateCatNavCount(catId);
+      // 更新 nav tab (N) 计数 + 加红标 +N 徽章
+      const topLink = catsNav.querySelector('a[data-cat="' + catId + '"]');
+      if (topLink) {
+        // 移除老 badge(如果有)
+        topLink.querySelectorAll('.cat-new-badge').forEach(el => el.remove());
+        // 重写 textContent(包含新计数)
+        const baseText = cat.title + ' (' + getMergedTerms(cat).length + ')';
+        topLink.textContent = baseText;
+        // 加红标 +N(5 秒后淡出消失,user 看到 = 提示)
+        if (addedCount > 0) {
+          const badge = document.createElement('span');
+          badge.className = 'cat-new-badge';
+          badge.textContent = '+' + addedCount;
+          topLink.appendChild(badge);
+          setTimeout(() => badge.classList.add('fade-out'), 5000);
+          setTimeout(() => { if (badge.parentNode) badge.remove(); }, 5800);
+        }
+      }
     } catch (uiErr) {
       console.warn('[glossary import] UI rebuild failed, data already saved:', uiErr);
     }
