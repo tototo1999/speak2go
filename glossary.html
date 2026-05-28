@@ -999,6 +999,43 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// IPA → 罗马注音 渲染层转换(老 vocab hint 落库时是 IPA,前端展示时换成罗马注音)
+// 约定见 docs/romanizer-dict.js:小写 ASCII + 重读全大写 + 单音节词整词大写
+const _IPA_MAP = [
+  ['eɪ','ei'],['aɪ','ai'],['aʊ','au'],['oʊ','o'],['əʊ','o'],['ɔɪ','oi'],
+  ['iː','i'],['uː','oo'],['ɔː','o'],['ɑː','a'],['ɜː','er'],['ɝ','er'],['ɚ','er'],
+  ['tʃ','ch'],['dʒ','j'],
+  ['ə','e'],['ɪ','i'],['ʌ','u'],['æ','a'],['ɒ','o'],['ʊ','u'],['ɛ','e'],['ɔ','o'],['ɑ','a'],['ɜ','er'],
+  ['ð','th'],['θ','th'],['ŋ','ng'],['ʃ','sh'],['ʒ','zh'],
+  ['ː',''],['ˌ',''],
+];
+function _romanizeIpaInner(ipa) {
+  let r = ipa;
+  for (const [from, to] of _IPA_MAP) r = r.split(from).join(to);
+  // 按空格分词,每个词独立处理重音
+  return r.split(/(\s+)/).map(part => {
+    if (/^\s+$/.test(part) || !part) return part;
+    const stressIdx = part.search(/[ˈ'ʼ`]/);
+    let w = part.replace(/[ˈ'ʼ`]/g, '');
+    if (stressIdx >= 0) {
+      const before = w.slice(0, stressIdx);
+      const after = w.slice(stressIdx);
+      const m = after.match(/^([^aeiou]*[aeiou]+)/i);
+      if (m) w = before + m[1].toUpperCase() + after.slice(m[1].length);
+    } else {
+      w = w.replace(/^([^aeiou]*[aeiou]+)/i, m => m.toUpperCase());
+    }
+    const vClusters = (w.match(/[aeiou]+/gi) || []).length;
+    if (vClusters <= 1) w = w.toUpperCase();
+    return w;
+  }).join('');
+}
+function ipaToRoman(s) {
+  if (!s) return s;
+  // 替换 /.../ 包起来的 IPA 段;不动其它文本(例:I will... · 出现 ×18)
+  return String(s).replace(/\/([^\/\s][^\/]*?)\//g, (_, ipa) => _romanizeIpaInner(ipa));
+}
+
 function getTermData(catId, en) {
   const cat = DATA.find(c => c.id === catId);
   if (!cat) return null;
@@ -1310,7 +1347,7 @@ function renderCardContent(card) {
   card.innerHTML =
     '<div class="head">' +
       '<code class="en">' + escapeHtml(d.en) + '</code>' +
-      (d.phonetic ? '<span class="phonetic">' + escapeHtml(d.phonetic) + '</span>' : '') +
+      (d.phonetic ? '<span class="phonetic">' + escapeHtml(ipaToRoman(d.phonetic)) + '</span>' : '') +
       '<span class="zh">' + escapeHtml(d.zh) + '</span>' +
       stageBadge +
       '<div class="actions">' +
@@ -1322,7 +1359,7 @@ function renderCardContent(card) {
         '<button class="del" data-action="del" title="删除" aria-label="删除">✕</button>' +
       '</div>' +
     '</div>' +
-    (d.hint ? '<div class="hint">' + escapeHtml(d.hint) + '</div>' : '') +
+    (d.hint ? '<div class="hint">' + escapeHtml(ipaToRoman(d.hint)) + '</div>' : '') +
     (d.note ? '<div class="note">' + escapeHtml(d.note) + '</div>' : '');
 }
 
