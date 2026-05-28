@@ -91,6 +91,22 @@ nav.cats a.group-link {
   cursor: pointer;
 }
 nav.cats a.group-link:hover { opacity: 0.85; }
+/* ── Review stage badge (艾宾浩斯复习阶段)──────────────────────────────── */
+.stage-badge {
+  display: inline-block;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  margin-left: 6px;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
+.stage-badge.stage-0 { background: #f3f4f6; color: #6b7280; }                /* 新词 灰 */
+.stage-badge.stage-1, .stage-badge.stage-2 { background: #fef3c7; color: #92400e; }  /* 5分/1时 浅黄 */
+.stage-badge.stage-3, .stage-badge.stage-4 { background: #fed7aa; color: #9a3412; }  /* 1日/3日 橙 */
+.stage-badge.stage-5 { background: #bbf7d0; color: #166534; }                /* 7日 浅绿 */
+.stage-badge.stage-6 { background: linear-gradient(135deg, #facc15, #16a34a); color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }  /* 14日 金绿 */
+
 /* ── Lesson capsules (NYC Global Center 按日期分组) ────────────────────── */
 .lessons-wrap { display: flex; flex-direction: column; gap: 12px; padding: 10px 0; }
 .lessons-empty {
@@ -1285,11 +1301,18 @@ function renderCardContent(card) {
   const completedBtn = showDoneBtn
     ? '<button class="done' + (isCompleted ? ' is-on' : '') + '" data-action="done" title="' + (isCompleted ? '取消通关' : '我会了 ✓') + '" aria-label="通关">' + (isCompleted ? '✓' : '○') + '</button>'
     : '';
+  // 艾宾浩斯 review stage 徽章(0-6)
+  const stage = userTerm && typeof userTerm.review_stage === 'number' ? userTerm.review_stage : -1;
+  const STAGE_LABELS = ['新词', '5分', '1时', '1日', '3日', '7日', '14日', '掌握'];
+  const stageBadge = showDoneBtn && stage >= 0
+    ? '<span class="stage-badge stage-' + stage + '" title="艾宾浩斯阶段 ' + stage + '/6">' + (stage === 6 ? '✓ 掌握' : STAGE_LABELS[stage] || '?') + '</span>'
+    : '';
   card.innerHTML =
     '<div class="head">' +
       '<code class="en">' + escapeHtml(d.en) + '</code>' +
       (d.phonetic ? '<span class="phonetic">' + escapeHtml(d.phonetic) + '</span>' : '') +
       '<span class="zh">' + escapeHtml(d.zh) + '</span>' +
+      stageBadge +
       '<div class="actions">' +
         completedBtn +
         '<button class="speak" data-action="speak" title="朗读" aria-label="朗读">🔊</button>' +
@@ -2457,6 +2480,8 @@ rebuildFavorites();
         zh: t.zh || (Array.isArray(t) ? t[1] : '') || '',
         hint: t.hint || (Array.isArray(t) ? t[2] : '') || '',
         completed: false,
+        review_stage: 0,                              // 艾宾浩斯阶段 0-6
+        next_due_at: Date.now() + 5 * 60 * 1000,      // 5 分钟后 due(测试期);正式 1h
       });
       seen.add(en.toLowerCase());
       addedCount++;
