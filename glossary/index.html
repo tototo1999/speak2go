@@ -906,6 +906,12 @@ footer {
 .quiz-fb .fb-answer { display: block; margin-top: 8px; font-family: ui-monospace, monospace; font-size: 20px; letter-spacing: 1px; }
 .quiz-fb .fb-answer .miss { color: #ef4444; text-decoration: underline; }
 .quiz-tip { text-align: center; color: var(--text-dim); font-size: 12px; margin-top: 14px; }
+.quiz-play-ex {
+  padding: 9px 18px; border-radius: 999px; border: 1px solid var(--accent);
+  background: var(--accent-soft); color: var(--accent); font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.quiz-play-ex:hover { background: var(--accent); color: #fff; }
+.quiz-play-ex.is-playing { background: var(--accent); color: #fff; }
 .quiz-slots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 16px; }
 .quiz-slot {
   min-width: 24px; height: 34px; border-bottom: 2px solid var(--border);
@@ -1912,7 +1918,11 @@ function buildQuizPool() {
       seen.add(key);
       const d = getTermData(cat.id, en);
       if (!d || !d.zh) return;          // 没中文出不了默写题
-      pool.push({ catId: cat.id, en: d.en, zh: d.zh, phonetic: d.phonetic || '', hint: d.hint || '' });
+      // 例句:词自带的(web 查词 / 课上存的 note「例: …」)优先
+      let example = '';
+      const noteEx = /例[:：]\s*(.+)/.exec(d.note || '');
+      if (noteEx) example = noteEx[1].trim();
+      pool.push({ catId: cat.id, en: d.en, zh: d.zh, phonetic: d.phonetic || '', hint: d.hint || '', example });
     });
   });
   return pool;
@@ -2004,6 +2014,7 @@ function renderQuizDictation() {
       (w.phonetic ? '<span class="qm-ph">' + escapeHtml(w.phonetic) + '</span>' : '') +
       (pos ? '<span class="qm-pos">' + escapeHtml(pos) + '</span>' : '') +
     '</div>' +
+    '<div style="text-align:center;margin-bottom:18px;"><button type="button" class="quiz-play-ex" data-action="quiz-play-ex" title="听例句">🔊 听例句</button></div>' +
     '<input type="text" class="quiz-input" id="quizDictInput" placeholder="拼出英文…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">' +
     '<div class="quiz-slots" id="quizDictSlots"></div>' +
     '<div class="quiz-slot-count">' + quizLetterCount(w.en) + ' 个字母</div>' +
@@ -2020,6 +2031,15 @@ function renderQuizDictation() {
 
 // 字母数(只数字母数字,符号/空格不算)
 function quizLetterCount(en) { return String(en || '').replace(/[^a-zA-Z0-9]/g, '').length; }
+
+// 例句(只用来朗读,不显示):优先词自带,否则用短句框架带上目标词
+const QUIZ_EX_FRAMES = ['This is {en}.', 'I like {en}.', 'Do you know {en}?', "Let's use {en}.", 'I learned {en} today.', 'We need {en} here.', 'Tell me about {en}.'];
+function quizExampleSentence(w) {
+  if (w.example) return w.example;
+  let h = 0; const s = (w.en || '').toLowerCase();
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return QUIZ_EX_FRAMES[h % QUIZ_EX_FRAMES.length].replace(/\{en\}/g, w.en);
+}
 
 // 渲染字母格子:每个字符一格,字母→下划线槽(输入后填字),符号原样显示,空格留空隙
 function renderDictSlots(en, typed) {
@@ -2177,7 +2197,8 @@ if (quizOverlay) {
     const a = btn.dataset.action;
     if (a === 'quiz-submit-dict') { submitQuizDictation(); }
     else if (a === 'quiz-submit-sentence') { submitQuizSentence(); }
-    else if (a === 'quiz-clear-dict') { const i = document.getElementById('quizDictInput'); if (i && !i.disabled) { i.value = ''; i.focus(); } }
+    else if (a === 'quiz-clear-dict') { const i = document.getElementById('quizDictInput'); if (i && !i.disabled) { i.value = ''; renderDictSlots(quizState.words[quizState.idx].en, ''); i.focus(); } }
+    else if (a === 'quiz-play-ex') { const w = quizState.words[quizState.idx]; if (w) speakTerm(quizExampleSentence(w), btn); }
     else if (a === 'quiz-next') { quizAdvance(); }
     else if (a === 'quiz-restart') { startQuiz(); }
     else if (a === 'quiz-close') { closeQuiz(true); }
