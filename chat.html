@@ -6139,7 +6139,7 @@
     slot.style.display = 'block'
     btn?.classList.add('loading')
     try {
-      const { error } = await sb.from('messages').insert({
+      const { data: inserted, error } = await sb.from('messages').insert({
         room_id: currentRoom.id,
         user_id: currentUser.id,
         role: 'user',
@@ -6147,11 +6147,28 @@
         content: '__SYS_TRANSLATE__',
         message_type: 'translate',
         attachments: [{ source_message_id: msgId }],
-      })
-      if (error) {
+      }).select('id').single()
+      if (error || !inserted) {
         slot.classList.remove('loading'); btn?.classList.remove('loading')
-        slot.textContent = 'translation trigger failed: ' + error.message
+        slot.textContent = 'translation trigger failed: ' + (error?.message || 'no row')
+        return
       }
+      // 5-26 cutover 后 translate 没有 worker 处理 → 直接调 chat-translate Edge Function
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/chat-translate`, {
+        method: 'POST',
+        headers: {
+          'authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'apikey': SUPABASE_ANON_KEY,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ message_id: inserted.id, room_id: currentRoom.id }),
+      })
+      if (!resp.ok) {
+        const errBody = await resp.json().catch(() => ({}))
+        slot.classList.remove('loading'); btn?.classList.remove('loading')
+        slot.textContent = 'translate failed: ' + (errBody.error || resp.status)
+      }
+      // 成功的话 EF 已 INSERT translation_result,Realtime onInsert 会自动把翻译填到 slot
     } catch (e) {
       slot.classList.remove('loading'); btn?.classList.remove('loading')
       slot.textContent = 'error: ' + (e.message || e)
