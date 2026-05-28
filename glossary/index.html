@@ -2023,6 +2023,7 @@ function renderPracticePreview() {
     input.autocomplete = 'off';
     input.spellcheck = false;
     input.oninput = e => { practiceState.playerRomaji[i] = e.target.value; };
+    input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); submitPractice(); } };
     slot.appendChild(sylBtn);
     slot.appendChild(input);
     preview.appendChild(slot);
