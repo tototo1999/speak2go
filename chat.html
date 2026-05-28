@@ -3426,14 +3426,10 @@
 
   // Glossary tab — inline view (third tab next to main / DM pills)
   function showGlossaryTab() {
-    const iframe = document.getElementById('glossaryIframe')
-    if (!iframe.src || iframe.src === 'about:blank' || !iframe.src.includes('/glossary/')) {
-      iframe.src = '/glossary/'
-    }
-    document.body.classList.add('glossary-tab')
-    // Mark "词" pill active, deactivate other presence-tabs
-    document.querySelectorAll('.presence-tab').forEach(el => el.classList.remove('active'))
-    document.getElementById('glossaryBtn').classList.add('active')
+    // 2026-05-27:从嵌入模式改成新 tab 打开
+    // 用 named target 让同一 button 反复点击 focus 同一 tab(浏览器允许的话)
+    // 这样 user 在 chat 这边接着对话,glossary tab 后台静默接收新词
+    window.open('/glossary/', 'speak2goGlossary')
   }
   function hideGlossaryTab() {
     document.body.classList.remove('glossary-tab')
