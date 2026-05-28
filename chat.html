@@ -5193,7 +5193,69 @@
           showToast('AI trigger failed: ' + (err?.message ?? err).toString().slice(0, 80))
         })
       }
+
+      // 2026-05-27: speak2go.ai 上传音频 → 额外触发 speak2go-glass-worker 提取 20 词 + 句式
+      // 跟 chat2go-ingest 平行(不阻塞 AI 文字对话),fire-and-forget,worker 3 min 内 UPDATE 卡片
+      if (location.hostname.includes('speak2go')) {
+        const audioAtt = attachments.find(isAudioAttachment)
+        if (audioAtt) {
+          const photoAtts = attachments.filter(isImageAttachment)
+          triggerSpeak2goVocab(currentRoom.id, currentUser.id, audioAtt, photoAtts).catch(err => {
+            console.warn('[speak2go-vocab] trigger failed:', err)
+          })
+        }
+      }
     }
+  }
+
+  // ── speak2go.ai 音频 → 20 词 + 句式 提取链路 ──────────────────────────────────
+  const SPEAK2GO_WORKER_URL = 'https://tototo1999--speak2go-glass-worker-ingest.modal.run'
+
+  function isAudioAttachment(a) {
+    const name = (a?.name || '').toLowerCase()
+    const mime = (a?.mime_type || '').toLowerCase()
+    return /\.(m4a|mp3|wav|aac|ogg|webm|flac)$/.test(name) || mime.startsWith('audio/')
+  }
+
+  function isImageAttachment(a) {
+    const mime = (a?.mime_type || '').toLowerCase()
+    return mime.startsWith('image/')
+  }
+
+  async function triggerSpeak2goVocab(roomId, expertUserId, audio, photos) {
+    // Step 1: INSERT placeholder message — worker 跑完会 UPDATE 它
+    const { data: pl, error: e1 } = await sb.from('messages').insert({
+      room_id: roomId,
+      user_id: expertUserId,
+      role: 'ai',
+      type: 'markdown',
+      content: `🎙 正在转写 + 提取 20 词 / 句式...\n📁 \`${audio.name}\`\n_预计 ~3 min(Scribe v2 + Gemini Flash)_`,
+      channel: 'main',
+      source: 'ai-generated',
+      message_type: 'multimodal_summary',
+    }).select().single()
+    if (e1) throw new Error('placeholder insert failed: ' + (e1.message || JSON.stringify(e1)))
+
+    // Step 2: fire-and-forget POST 到 Modal worker
+    // ⚠️ 不要 await 这个 fetch(worker 跑 ~3 min,UI 不能阻塞)— 用 .then/.catch 后台监听
+    fetch(SPEAK2GO_WORKER_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        placeholder_id: pl.id,
+        room_id: roomId,
+        expert_user_id: expertUserId,
+        audio_path: audio.storage_path,
+        audio_name: audio.name,
+        photo_paths: photos.map(p => p.storage_path),
+      }),
+      keepalive: true,  // tab 切走也能完成(浏览器允许 64KB body 内的 keepalive 请求)
+    }).catch(err => {
+      console.warn('[speak2go-vocab] worker POST background failed:', err)
+    })
+
+    console.log('[speak2go-vocab] dispatched placeholder=' + pl.id + ' audio=' + audio.name)
+    return pl.id
   }
 
   async function triggerChat2goIngest(roomId, messageId, channel) {
