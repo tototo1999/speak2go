@@ -841,11 +841,88 @@ footer {
 }
 @media print {
   header { position: static; }
-  .search, nav.cats, .theme-toggle, .term .actions { display: none; }
+  .search, nav.cats, .theme-toggle, .quiz-btn, .term .actions { display: none; }
   .term { break-inside: avoid; box-shadow: none; }
   .term.is-deleted { display: none !important; }
   section { break-inside: avoid-page; }
 }
+
+/* ===== 测验做题模式 ===== */
+.quiz-btn {
+  padding: 6px 12px; border-radius: 8px; border: 1px solid var(--accent);
+  background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.quiz-btn:hover { opacity: .9; }
+.quiz-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--bg); display: none; flex-direction: column;
+  padding: 0; overflow-y: auto;
+}
+.quiz-overlay.show { display: flex; }
+.quiz-bar {
+  position: sticky; top: 0; background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 14px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.quiz-bar .qb-phase { font-weight: 700; font-size: 15px; color: var(--accent); }
+.quiz-bar .qb-prog { font-size: 13px; color: var(--text-dim); }
+.quiz-bar .qb-score { margin-left: auto; font-size: 14px; font-weight: 600; }
+.quiz-bar .qb-close { border: none; background: none; font-size: 22px; cursor: pointer; color: var(--text-dim); padding: 0 4px; }
+.quiz-progress-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.quiz-progress-fill { height: 100%; background: var(--accent); transition: width .25s; }
+.quiz-body {
+  flex: 1; max-width: 640px; width: 100%; margin: 0 auto; padding: 28px 20px 60px;
+  display: flex; flex-direction: column;
+}
+.quiz-q-zh { font-size: 30px; font-weight: 700; text-align: center; margin: 10px 0 6px; line-height: 1.3; }
+.quiz-q-meta { text-align: center; color: var(--text-dim); font-size: 15px; margin-bottom: 24px; }
+.quiz-q-meta .qm-ph { font-family: ui-monospace, monospace; }
+.quiz-q-meta .qm-pos { margin-left: 8px; opacity: .8; }
+.quiz-input {
+  width: 100%; box-sizing: border-box; font-size: 22px; text-align: center;
+  padding: 14px; border: 2px solid var(--border); border-radius: 12px;
+  background: var(--surface); color: var(--text); font-family: ui-monospace, monospace;
+}
+.quiz-input:focus { outline: none; border-color: var(--accent); }
+.quiz-input:disabled { opacity: .7; }
+.quiz-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: center; }
+.quiz-actions button {
+  padding: 11px 22px; border-radius: 999px; border: 1px solid var(--accent);
+  background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.quiz-actions button.ghost { background: transparent; color: var(--accent); }
+.quiz-fb { margin-top: 22px; text-align: center; font-size: 16px; min-height: 24px; }
+.quiz-fb .fb-ok { color: var(--accent); font-weight: 700; }
+.quiz-fb .fb-bad { color: #ef4444; font-weight: 700; }
+.quiz-fb .fb-answer { display: block; margin-top: 8px; font-family: ui-monospace, monospace; font-size: 20px; letter-spacing: 1px; }
+.quiz-fb .fb-answer .miss { color: #ef4444; text-decoration: underline; }
+.quiz-tip { text-align: center; color: var(--text-dim); font-size: 12px; margin-top: 14px; }
+.quiz-slots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 16px; }
+.quiz-slot {
+  min-width: 24px; height: 34px; border-bottom: 2px solid var(--border);
+  display: flex; align-items: flex-end; justify-content: center; padding-bottom: 2px;
+  font-family: ui-monospace, monospace; font-size: 20px; font-weight: 700; color: var(--text);
+}
+.quiz-slot.filled { border-bottom-color: var(--accent); }
+.quiz-slot.sym { border-bottom: none; color: var(--text-dim); align-items: center; }
+.quiz-slot.space { min-width: 14px; border: none; }
+.quiz-slot-count { text-align: center; color: var(--text-dim); font-size: 12px; margin-top: 8px; }
+.quiz-phonics { margin-top: 8px; }
+.quiz-phonics .practice-step { font-size: 13px; color: var(--text-dim); margin: 10px 0 6px; }
+.quiz-result { text-align: center; padding-top: 10px; }
+.quiz-result .qr-rank { font-size: 64px; font-weight: 800; line-height: 1; }
+.quiz-result .qr-rank.s { color: #f59e0b; } .quiz-result .qr-rank.a { color: var(--accent); }
+.quiz-result .qr-rank.b { color: #3b82f6; } .quiz-result .qr-rank.c { color: #f97316; } .quiz-result .qr-rank.d { color: #ef4444; }
+.quiz-result .qr-total { font-size: 22px; font-weight: 700; margin: 8px 0 4px; }
+.quiz-result .qr-sub { color: var(--text-dim); font-size: 13px; margin-bottom: 22px; }
+.qr-bars { max-width: 420px; margin: 0 auto 24px; text-align: left; }
+.qr-bar-row { margin: 12px 0; }
+.qr-bar-row .qr-bl { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; }
+.qr-bar-track { height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
+.qr-bar-fill { height: 100%; background: var(--accent); border-radius: 5px; }
+.qr-wrong { max-width: 460px; margin: 0 auto 22px; text-align: left; }
+.qr-wrong h4 { font-size: 14px; margin: 0 0 8px; color: var(--text-dim); }
+.qr-wrong .qr-w-item { padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; font-size: 14px; }
+.qr-wrong .qr-w-item code { font-family: ui-monospace, monospace; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -855,6 +932,7 @@ footer {
     <div class="title-row">
       <h1>Vibe Coding <span class="accent">名词表</span> · 中英对照</h1>
       <div style="display:flex;gap:6px;">
+        <button class="quiz-btn" id="quizBtn">📝 测验</button>
         <button class="theme-toggle" id="themeBtn">🌙 暗色</button>
       </div>
     </div>
@@ -872,6 +950,18 @@ footer {
     <div id="noResultsText">没有匹配的术语</div>
     <button type="button" class="web-lookup-btn" id="webLookupBtn"></button>
     <div class="web-lookup-status" id="webLookupStatus"></div>
+  </div>
+
+  <!-- 测验做题模式 overlay(放在 main 内,复用 main 的 practice-* 委托点击) -->
+  <div class="quiz-overlay" id="quizOverlay" aria-hidden="true">
+    <div class="quiz-bar">
+      <span class="qb-phase" id="qbPhase">默写</span>
+      <span class="qb-prog" id="qbProg">第 1/10</span>
+      <span class="qb-score" id="qbScore"></span>
+      <button class="qb-close" id="quizCloseBtn" title="退出测验" aria-label="退出">×</button>
+    </div>
+    <div class="quiz-progress-track"><div class="quiz-progress-fill" id="qbFill" style="width:0%"></div></div>
+    <div class="quiz-body" id="quizBody"></div>
   </div>
 </main>
 
@@ -1805,6 +1895,328 @@ function scrollToTerm(catId, en) {
 
 if (webLookupBtn) webLookupBtn.addEventListener('click', webLookupAndAdd);
 
+/* ============================================================
+   测验做题模式 — 整库抽 10 词,依次过 ① 默写 ② 自然拼读 ③ 造句,出总分
+   ============================================================ */
+const QUIZ_GROUP_SIZE = 10;
+const quizBtn = document.getElementById('quizBtn');
+const quizOverlay = document.getElementById('quizOverlay');
+const quizBody = document.getElementById('quizBody');
+const qbPhase = document.getElementById('qbPhase');
+const qbProg = document.getElementById('qbProg');
+const qbScore = document.getElementById('qbScore');
+const qbFill = document.getElementById('qbFill');
+const quizCloseBtn = document.getElementById('quizCloseBtn');
+const QUIZ_PHASE_NAMES = { 1: '① 默写', 2: '② 自然拼读', 3: '③ 造句' };
+
+let quizState = null;
+
+function quizNorm(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ''); }
+function quizPosOf(hint) { const m = /^\s*\[([^\]]+)\]/.exec(hint || ''); return m ? m[1] : ''; }
+function quizAvg(arr) { return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0; }
+function quizRank(score) {
+  return score >= 90 ? 'S' : score >= 75 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+}
+
+// 整库聚合(所有分类去重),取有中文的词
+function buildQuizPool() {
+  const seen = new Set();
+  const pool = [];
+  DATA.forEach(cat => {
+    getMergedTerms(cat).forEach(t => {
+      const en = (t[0] || '').trim();
+      if (!en) return;
+      const key = en.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      const d = getTermData(cat.id, en);
+      if (!d || !d.zh) return;          // 没中文出不了默写题
+      pool.push({ catId: cat.id, en: d.en, zh: d.zh, phonetic: d.phonetic || '', hint: d.hint || '' });
+    });
+  });
+  return pool;
+}
+
+function quizShuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  const pool = buildQuizPool();
+  if (pool.length < 3) { alert('题库里可用的词太少(需要至少 3 个带中文的词)'); return; }
+  const words = quizShuffle(pool).slice(0, Math.min(QUIZ_GROUP_SIZE, pool.length));
+  quizState = {
+    words, n: words.length, phase: 1, idx: 0, awaitingNext: false,
+    scores: { dictation: [], phonics: [], sentence: [] },
+  };
+  quizOverlay.classList.add('show');
+  quizOverlay.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  renderQuizPhase();
+}
+
+function closeQuiz(silent) {
+  if (quizState && !silent && !quizState.finished) {
+    if (!confirm('退出测验?当前进度会丢失。')) return;
+  }
+  if (typeof closePractice === 'function' && practiceState && practiceState.quizMode) {
+    practiceState = null;   // 不调 closePractice 以免动 DOM(quizBody 会被清)
+  }
+  quizOverlay.classList.remove('show');
+  quizOverlay.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  quizState = null;
+}
+
+function quizSetBar() {
+  const qs = quizState;
+  qbPhase.textContent = QUIZ_PHASE_NAMES[qs.phase];
+  qbProg.textContent = '第 ' + (qs.idx + 1) + '/' + qs.n;
+  const done = (qs.phase - 1) * qs.n + qs.idx;
+  qbFill.style.width = Math.round((done / (qs.n * 3)) * 100) + '%';
+  const cur = qs.phase === 1 ? qs.scores.dictation : qs.phase === 2 ? qs.scores.phonics : qs.scores.sentence;
+  const ok = cur.filter(s => s >= 60).length;
+  qbScore.textContent = '本部分 ✅ ' + ok + '/' + cur.length;
+}
+
+function renderQuizPhase() {
+  quizState.awaitingNext = false;
+  quizSetBar();
+  if (quizState.phase === 1) renderQuizDictation();
+  else if (quizState.phase === 2) renderQuizPhonics();
+  else renderQuizSentence();
+}
+
+function quizAdvance() {
+  const qs = quizState;
+  qs.idx++;
+  if (qs.idx >= qs.n) { qs.phase++; qs.idx = 0; }
+  if (qs.phase > 3) { finishQuiz(); return; }
+  renderQuizPhase();
+}
+
+// 提交后通用:显示反馈 + 下一题按钮(聚焦,回车即进)
+function quizShowNext(fbHtml) {
+  quizState.awaitingNext = true;
+  const last = (quizState.phase === 3 && quizState.idx === quizState.n - 1);
+  const fb = quizBody.querySelector('[data-role="quiz-fb"]');
+  if (fb) fb.innerHTML = fbHtml;
+  const act = quizBody.querySelector('[data-role="quiz-act"]');
+  if (act) {
+    act.innerHTML = '<button data-action="quiz-next">' + (last ? '看总分 →' : '下一题 →') + '</button>';
+    // 不自动聚焦按钮:避免「同一次回车提交后又被按钮原生激活」级联跳题
+  }
+}
+
+/* ---------- ① 默写:看中文拼英文 ---------- */
+function renderQuizDictation() {
+  const w = quizState.words[quizState.idx];
+  const pos = quizPosOf(w.hint);
+  quizBody.innerHTML =
+    '<div class="quiz-q-zh">' + escapeHtml(w.zh) + '</div>' +
+    '<div class="quiz-q-meta">' +
+      (w.phonetic ? '<span class="qm-ph">' + escapeHtml(w.phonetic) + '</span>' : '') +
+      (pos ? '<span class="qm-pos">' + escapeHtml(pos) + '</span>' : '') +
+    '</div>' +
+    '<input type="text" class="quiz-input" id="quizDictInput" placeholder="拼出英文…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">' +
+    '<div class="quiz-slots" id="quizDictSlots"></div>' +
+    '<div class="quiz-slot-count">' + quizLetterCount(w.en) + ' 个字母</div>' +
+    '<div class="quiz-actions" data-role="quiz-act"><button data-action="quiz-submit-dict">提交</button><button class="ghost" data-action="quiz-clear-dict">⌫ 清空</button></div>' +
+    '<div class="quiz-fb" data-role="quiz-fb"></div>' +
+    '<div class="quiz-tip">回车提交 · 下方格子按字母数提示</div>';
+  const inp = document.getElementById('quizDictInput');
+  renderDictSlots(w.en, '');
+  if (inp) {
+    inp.oninput = () => renderDictSlots(w.en, inp.value);
+    inp.focus();
+  }
+}
+
+// 字母数(只数字母数字,符号/空格不算)
+function quizLetterCount(en) { return String(en || '').replace(/[^a-zA-Z0-9]/g, '').length; }
+
+// 渲染字母格子:每个字符一格,字母→下划线槽(输入后填字),符号原样显示,空格留空隙
+function renderDictSlots(en, typed) {
+  const box = document.getElementById('quizDictSlots');
+  if (!box) return;
+  const chars = String(en || '').split('');
+  const t = String(typed || '');
+  box.innerHTML = chars.map((ch, i) => {
+    if (ch === ' ') return '<span class="quiz-slot space"></span>';
+    if (!/[a-zA-Z0-9]/.test(ch)) return '<span class="quiz-slot sym">' + escapeHtml(ch) + '</span>';
+    const filled = t[i] && t[i] !== ' ';
+    return '<span class="quiz-slot' + (filled ? ' filled' : '') + '">' + (filled ? escapeHtml(t[i]) : '') + '</span>';
+  }).join('');
+}
+
+function quizDiffSpell(correct, attempt) {
+  const c = String(correct || ''), a = String(attempt || '');
+  let html = '';
+  for (let i = 0; i < c.length; i++) {
+    const ok = a[i] && a[i].toLowerCase() === c[i].toLowerCase();
+    html += ok ? escapeHtml(c[i]) : '<span class="miss">' + escapeHtml(c[i]) + '</span>';
+  }
+  return html;
+}
+
+function submitQuizDictation() {
+  if (quizState.awaitingNext) return;
+  const w = quizState.words[quizState.idx];
+  const inp = document.getElementById('quizDictInput');
+  const val = inp ? inp.value.trim() : '';
+  const correct = quizNorm(val) === quizNorm(w.en) && val !== '';
+  quizState.scores.dictation.push(correct ? 100 : 0);
+  if (inp) inp.disabled = true;
+  const fb = correct
+    ? '<span class="fb-ok">✓ 正确</span>'
+    : '<span class="fb-bad">✗ 再记一下</span><span class="fb-answer">' + quizDiffSpell(w.en, val) + '</span>';
+  quizShowNext(fb);
+}
+
+/* ---------- ② 自然拼读:复用 🎮 切词+重音+罗马音 ---------- */
+function renderQuizPhonics() {
+  const w = quizState.words[quizState.idx];
+  quizBody.innerHTML =
+    '<div class="quiz-q-zh" style="font-size:24px;"><code>' + escapeHtml(w.en) + '</code></div>' +
+    '<div class="quiz-q-meta">' + escapeHtml(w.zh) + '</div>' +
+    '<div class="quiz-phonics" data-role="phonics">' +
+      '<div class="practice-step">① 点字母之间的 · 切音节<span style="opacity:.6;margin-left:6px;">(单音节点最后那个 ·)</span></div>' +
+      '<div class="practice-letters" data-role="letters"></div>' +
+      '<div class="practice-step">② 点音节卡标重音 (金色) · ③ 填罗马音</div>' +
+      '<div class="practice-preview" data-role="preview"></div>' +
+      '<div class="quiz-actions" data-role="quiz-act">' +
+        '<button data-action="practice-submit">提交</button>' +
+        '<button class="ghost" data-action="practice-reset">↻ 重切</button>' +
+      '</div>' +
+      '<div class="quiz-fb" data-role="quiz-fb"></div>' +
+      '<div class="quiz-tip">切完填好罗马音后回车 / 点提交</div>' +
+    '</div>';
+  const container = quizBody.querySelector('[data-role="phonics"]');
+  const d = { phonetic: w.phonetic };
+  const ans = buildPracticeAnswer(w.en, d);
+  practiceState = {
+    card: null, id: w.catId + '::' + w.en, catId: w.catId, en: w.en,
+    letters: w.en.split(''),
+    answerSyls: ans.answerSyls, answerRomaji: ans.answerRomaji,
+    answerStressIdx: ans.answerStressIdx, answerSource: ans.answerSource,
+    answerBounds: syllablesToBounds(ans.answerSyls),
+    playerBounds: new Set(), playerStressIdx: -1, playerRomaji: [],
+    submitted: false,
+    drawer: container, quizMode: true,
+    onScored: function (sc) {
+      quizState.scores.phonics.push(Math.round(sc.ratio * 100));
+      const answer = practiceState.answerRomaji.join('·');
+      const fb = '<span class="' + (sc.ratio >= 0.6 ? 'fb-ok' : 'fb-bad') + '">' +
+        sc.rank + ' · ' + sc.total + ' 分</span>' +
+        '<span class="fb-answer">参考切分: ' + escapeHtml(answer) + '</span>';
+      quizShowNext(fb);
+    },
+  };
+  renderPracticeLetters();
+  renderPracticePreview();
+}
+
+/* ---------- ③ 造句:中译英(本地评分,离线快) ---------- */
+function renderQuizSentence() {
+  const w = quizState.words[quizState.idx];
+  const tplIdx = Math.floor(Math.random() * SENTENCE_BANK.length);
+  quizBody.innerHTML =
+    '<div class="quiz-q-meta" style="margin-bottom:8px;">用 <code style="font-family:ui-monospace,monospace;font-weight:700;">' + escapeHtml(w.en) + '</code> (' + escapeHtml(w.zh) + ') 造句 — 把下面中文译成英文</div>' +
+    '<div class="quiz-q-zh sentence-prompt" data-tpl="' + tplIdx + '" style="font-size:20px;">' + buildSentencePrompt(tplIdx, w.en, w.zh) + '</div>' +
+    '<input type="text" class="quiz-input" id="quizSentInput" placeholder="写一句英文…" autocomplete="off" spellcheck="false">' +
+    '<div class="quiz-actions" data-role="quiz-act"><button data-action="quiz-submit-sentence">提交</button></div>' +
+    '<div class="quiz-fb" data-role="quiz-fb"></div>' +
+    '<div class="quiz-tip">回车提交 · 本地即时评分(离线可用)</div>';
+  const inp = document.getElementById('quizSentInput');
+  if (inp) inp.focus();
+}
+
+function submitQuizSentence() {
+  if (quizState.awaitingNext) return;
+  const w = quizState.words[quizState.idx];
+  const inp = document.getElementById('quizSentInput');
+  const val = inp ? inp.value.trim() : '';
+  const g = gradeTranslation(val, w.en) || { score: 0, rank: 'D', reasons: [['✗ 没写', 'neg']] };
+  quizState.scores.sentence.push(g.score);
+  if (inp) inp.disabled = true;
+  const reasons = (g.reasons || []).slice(0, 4).map(r =>
+    '<div style="font-size:12px;color:var(--text-dim);">' + escapeHtml(r[0]) + '</div>').join('');
+  const fb = '<span class="' + (g.score >= 60 ? 'fb-ok' : 'fb-bad') + '">' + g.rank + ' · ' + g.score + ' 分</span>' + reasons;
+  quizShowNext(fb);
+}
+
+/* ---------- 结果页 ---------- */
+function finishQuiz() {
+  const qs = quizState;
+  qs.finished = true;
+  practiceState = null;
+  const dAvg = quizAvg(qs.scores.dictation);
+  const pAvg = quizAvg(qs.scores.phonics);
+  const sAvg = quizAvg(qs.scores.sentence);
+  const total = Math.round((dAvg + pAvg + sAvg) / 3);
+  const rank = quizRank(total);
+  qbPhase.textContent = '完成';
+  qbProg.textContent = '';
+  qbScore.textContent = '';
+  qbFill.style.width = '100%';
+  const wrong = qs.words.filter((w, i) => (qs.scores.dictation[i] || 0) < 100);
+  const bar = (label, v) =>
+    '<div class="qr-bar-row"><div class="qr-bl"><span>' + label + '</span><span>' + Math.round(v) + '</span></div>' +
+    '<div class="qr-bar-track"><div class="qr-bar-fill" style="width:' + Math.round(v) + '%"></div></div></div>';
+  quizBody.innerHTML =
+    '<div class="quiz-result">' +
+      '<div class="qr-rank ' + rank.toLowerCase() + '">' + rank + '</div>' +
+      '<div class="qr-total">总分 ' + total + ' / 100</div>' +
+      '<div class="qr-sub">' + qs.n + ' 个词 · 默写 + 自然拼读 + 造句 三项平均</div>' +
+      '<div class="qr-bars">' +
+        bar('① 默写', dAvg) + bar('② 自然拼读', pAvg) + bar('③ 造句', sAvg) +
+      '</div>' +
+      (wrong.length
+        ? '<div class="qr-wrong"><h4>默写没写对的词 (' + wrong.length + ')</h4>' +
+            wrong.map(w => '<div class="qr-w-item"><code>' + escapeHtml(w.en) + '</code> — ' + escapeHtml(w.zh) + '</div>').join('') +
+          '</div>'
+        : '<div class="qr-sub">默写全对 💯</div>') +
+      '<div class="quiz-actions">' +
+        '<button data-action="quiz-restart">🔄 再来一组</button>' +
+        '<button class="ghost" data-action="quiz-close">关闭</button>' +
+      '</div>' +
+    '</div>';
+}
+
+// quiz 专属动作(overlay 内委托;practice-* 仍由 main 委托处理)
+if (quizOverlay) {
+  quizOverlay.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const a = btn.dataset.action;
+    if (a === 'quiz-submit-dict') { submitQuizDictation(); }
+    else if (a === 'quiz-submit-sentence') { submitQuizSentence(); }
+    else if (a === 'quiz-clear-dict') { const i = document.getElementById('quizDictInput'); if (i && !i.disabled) { i.value = ''; i.focus(); } }
+    else if (a === 'quiz-next') { quizAdvance(); }
+    else if (a === 'quiz-restart') { startQuiz(); }
+    else if (a === 'quiz-close') { closeQuiz(true); }
+  });
+}
+if (quizBtn) quizBtn.addEventListener('click', startQuiz);
+if (quizCloseBtn) quizCloseBtn.addEventListener('click', () => closeQuiz(false));
+// 单一 document 回车/Esc 处理器:每次按键只做「提交」或「进下一题」之一,
+// e.repeat 守卫杀掉「按住回车自动重复」导致的级联跳题(修 答错就直接结束)
+document.addEventListener('keydown', e => {
+  if (!quizState) return;
+  if (e.key === 'Escape') { closeQuiz(false); return; }
+  if (e.key !== 'Enter' || e.repeat) return;
+  e.preventDefault();
+  if (quizState.awaitingNext) { quizAdvance(); return; }
+  if (quizState.phase === 1) submitQuizDictation();
+  else if (quizState.phase === 2) submitPractice();
+  else if (quizState.phase === 3) submitQuizSentence();
+});
+
 function updateDelToggle() { /* 回收站 UI 已移除 — 删除即硬删除,此函数保留为空 stub 防外部调用 */ }
 
 /* ============================================================
@@ -1917,12 +2329,8 @@ function closePractice() {
   practiceState = null;
 }
 
-function openPractice(card) {
-  closePractice();
-  const id = card.dataset.id;
-  const [catId, en] = id.split('::');
-  const d = getTermData(catId, en);
-  if (!d) return;
+// 从 en + 词数据算出参考音节切分 / 重音 / 罗马音(openPractice + 测验共用)
+function buildPracticeAnswer(en, d) {
   const dictEntry = lookupDict(en);
   let answerSyls, answerRomaji, answerStressIdx, answerSource;
   if (dictEntry) {
@@ -1933,8 +2341,9 @@ function openPractice(card) {
     answerSource = 'dict';
   } else {
     answerSyls = syllabify(en);
-    const romajiIdx = parseStressFromRomaji(d.phonetic, answerSyls.length - 1);
-    const ipaIdx = parseStressFromIPA(d.phonetic, answerSyls.length - 1);
+    const ph = (d && d.phonetic) || '';
+    const romajiIdx = parseStressFromRomaji(ph, answerSyls.length - 1);
+    const ipaIdx = parseStressFromIPA(ph, answerSyls.length - 1);
     answerStressIdx = (romajiIdx !== null) ? romajiIdx
                     : (ipaIdx !== null) ? ipaIdx
                     : pickStress(answerSyls, en);
@@ -1943,6 +2352,16 @@ function openPractice(card) {
                  : (ipaIdx !== null) ? 'ipa'
                  : 'heuristic';
   }
+  return { answerSyls, answerRomaji, answerStressIdx, answerSource };
+}
+
+function openPractice(card) {
+  closePractice();
+  const id = card.dataset.id;
+  const [catId, en] = id.split('::');
+  const d = getTermData(catId, en);
+  if (!d) return;
+  const { answerSyls, answerRomaji, answerStressIdx, answerSource } = buildPracticeAnswer(en, d);
   practiceState = {
     card, id, catId, en,
     letters: en.split(''),
@@ -2044,17 +2463,15 @@ function renderPracticePreview() {
     input.autocomplete = 'off';
     input.spellcheck = false;
     input.oninput = e => { practiceState.playerRomaji[i] = e.target.value; };
-    input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); submitPractice(); } };
+    input.onkeydown = e => { if (e.key === 'Enter' && !(practiceState && practiceState.quizMode)) { e.preventDefault(); submitPractice(); } };
     slot.appendChild(sylBtn);
     slot.appendChild(input);
     preview.appendChild(slot);
   });
 }
 
-function submitPractice() {
-  if (!practiceState || practiceState.submitted) return;
-  practiceState.submitted = true;
-  const ps = practiceState;
+// 纯算分:从 practiceState 算出拼读得分(测验 + 单卡片共用)
+function computePracticeScore(ps) {
   const playerSyls = getPracticePlayerSyls();
   const playerBounds = syllablesToBounds(playerSyls);
   const aSet = new Set(ps.answerBounds);
@@ -2079,6 +2496,25 @@ function submitPractice() {
   else if (ratio >= 0.80) rank = 'A';
   else if (ratio >= 0.60) rank = 'B';
   else if (ratio >= 0.40) rank = 'C';
+  return { playerSyls, correctBounds, extraBounds, missedBounds, boundPoints, extraPenalty,
+           missedPenalty, stressOK, stressPoints, perfectBonus, romajiFilled, romajiPoints, total, maxPossible, ratio, rank };
+}
+
+function submitPractice() {
+  if (!practiceState || practiceState.submitted) return;
+  practiceState.submitted = true;
+  const ps = practiceState;
+  const sc = computePracticeScore(ps);
+  const { playerSyls, correctBounds, extraBounds, missedBounds, boundPoints, extraPenalty,
+          missedPenalty, stressOK, stressPoints, perfectBonus, romajiFilled, romajiPoints, total, ratio, rank } = sc;
+
+  // 测验模式:算完分交给回调推进,不渲染单卡片结果
+  if (ps.quizMode && typeof ps.onScored === 'function') {
+    renderPracticeLetters();
+    renderPracticePreview();
+    ps.onScored(sc);
+    return;
+  }
 
   renderPracticeLetters();
   renderPracticePreview();
