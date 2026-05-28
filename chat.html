@@ -8,20 +8,26 @@
   <meta http-equiv="Expires" content="0">
   <title>Speak2GO.ai · English lesson assistant</title>
   <script>
-    // 双域名共用代码 — well2go.ai 检测 + 静态 UI 中文化(P1 完整可见 UI)
+    // 双域名共用代码 — well2go.ai 自动中化 + speak2go.ai 按用户偏好中化
     (function() {
       const host = location.hostname.toLowerCase();
       const isW2g = host.includes('well2go');
-      if (!isW2g) return;
-      window.IS_WELL2GO = true;
+      const userWantZh = host.includes('speak2go') && (function() {
+        try { return localStorage.getItem('speak2go-lang') === 'zh'; } catch (e) { return false; }
+      })();
+      if (!isW2g && !userWantZh) return;
+      if (isW2g) window.IS_WELL2GO = true;
+      window.LANG_ZH = true;
 
-      // brand 替换:Speak2GO → Well2GO
-      const BRAND_SWAP = s => s
-        .replace(/Speak2GO\.ai/g, 'Well2GO.ai')
-        .replace(/Speak2(<span)/g, 'Well2$1')
-        .replace(/Speak2GO/g, 'Well2GO')
-        .replace(/English lesson assistant/g, '健康健身助理')
-        .replace(/Spoken English AI Lab/g, '健康健身 AI 工作室');
+      // brand 替换:仅 well2go 把 Speak2GO 改 Well2GO;speak2go-zh 保留品牌
+      const BRAND_SWAP = isW2g
+        ? (s => s
+            .replace(/Speak2GO\.ai/g, 'Well2GO.ai')
+            .replace(/Speak2(<span)/g, 'Well2$1')
+            .replace(/Speak2GO/g, 'Well2GO')
+            .replace(/English lesson assistant/g, '健康健身助理')
+            .replace(/Spoken English AI Lab/g, '健康健身 AI 工作室'))
+        : (s => s);
 
       // 静态 UI 文本字典 (English → 中文)
       const TEXT_MAP = {
@@ -294,6 +300,18 @@
       font-family: inherit;
       padding: 0;
     }
+    .lang-toggle {
+      background: var(--bg);
+      border: 0.5px solid var(--border2);
+      color: var(--text2);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .lang-toggle:hover { background: var(--teal-50); color: var(--teal-600); border-color: var(--teal-600); }
     .icon-btn:hover { background: var(--bg2); color: var(--text); }
     .icon-btn i { font-size: 16px; }
 
@@ -2198,6 +2216,7 @@
     <a href="/" class="logo">Speak2<span>GO</span><span class="logo-tld">.ai</span></a>
   </div>
   <div class="nav-right">
+    <button class="lang-toggle" id="langToggle" onclick="toggleLang()" title="切换中英 / Toggle EN/中">中文</button>
     <button class="icon-btn" id="settingsBtn" onclick="openSettings()" title="Settings" style="display:none;">
       <i class="ti ti-settings"></i>
     </button>
@@ -5811,6 +5830,21 @@
     await sb.auth.signOut()
     window.location.href = '/login.html'
   }
+
+  // 中/EN 一键切换 — speak2go.ai 用户偏好(well2go.ai 强制中文,不受此影响)
+  function toggleLang() {
+    const cur = (localStorage.getItem('speak2go-lang') || 'en')
+    const next = cur === 'zh' ? 'en' : 'zh'
+    try { localStorage.setItem('speak2go-lang', next) } catch (e) {}
+    location.reload()
+  }
+  // 启动时把按钮文字对齐当前状态
+  (function() {
+    const tog = document.getElementById('langToggle')
+    if (!tog) return
+    const isZh = (localStorage.getItem('speak2go-lang') === 'zh')
+    tog.textContent = isZh ? 'EN' : '中文'
+  })()
 
   function handleKey(e) {
     // IME composition: Enter confirms candidate; don't trigger send
