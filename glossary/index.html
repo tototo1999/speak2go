@@ -2063,15 +2063,30 @@ function quizDeleteWord() {
   const qs = quizState;
   const w = qs && qs.words[qs.idx];
   if (!w) return;
-  if (!confirm('从单词表删除 “' + w.en + '”?(这一组也会跳过)')) return;
-  const delKey = w.catId + '::' + w.en;
-  state.deleted.add(delKey);
-  state.favorites.delete(delKey);
+  if (!confirm('从单词表删除 “' + w.en + '”?(所有分类的副本都会删,这一组也跳过)')) return;
+  // 跨所有分类删除该词的全部副本(en 大小写不敏感)
+  const enLower = w.en.toLowerCase();
+  const cats = new Set();
+  DATA.forEach(cat => {
+    const builtin = cat.terms.some(t => (t[0] || '').toLowerCase() === enLower);
+    const user = (state.userTerms[cat.id] || []).some(t => (t.en || '').toLowerCase() === enLower);
+    if (!builtin && !user) return;
+    cats.add(cat.id);
+    // 找到该分类里实际的 en 大小写(builtin 优先)
+    const bt = cat.terms.find(t => (t[0] || '').toLowerCase() === enLower);
+    const ens = new Set();
+    if (bt) ens.add(bt[0]);
+    (state.userTerms[cat.id] || []).forEach(t => { if ((t.en || '').toLowerCase() === enLower) ens.add(t.en); });
+    ens.forEach(en => {
+      const k = cat.id + '::' + en;
+      state.deleted.add(k);
+      state.favorites.delete(k);
+      document.querySelectorAll('.term[data-id="' + CSS.escape(k) + '"]').forEach(t => t.remove());
+    });
+  });
   save();
-  // 同步单词表 DOM(移除卡片副本)+ 收藏 + nav 计数
-  document.querySelectorAll('.term[data-id="' + CSS.escape(delKey) + '"]').forEach(t => t.remove());
   if (typeof rebuildFavorites === 'function') rebuildFavorites();
-  if (typeof updateCatNavCount === 'function') updateCatNavCount(w.catId);
+  if (typeof updateCatNavCount === 'function') cats.forEach(cid => updateCatNavCount(cid));
   if (typeof applySearch === 'function') applySearch();
   // 从本组移除 + 对齐已记录的分数(按 idx 同步 splice 保持 words/scores 对齐)
   qs.scores.dictation.splice(qs.idx, 1);
@@ -2525,6 +2540,8 @@ function renderPracticePreview() {
 }
 
 // 纯算分:从 practiceState 算出拼读得分(测验 + 单卡片共用)
+// 拼读算分(满分 100):切分 50 + 罗马音 30(逐音节大小写不敏感)+ 重音 20
+// 切对 + 罗马音对(没标重音)= 80(A);再标对重音 = 100(S)
 function computePracticeScore(ps) {
   const playerSyls = getPracticePlayerSyls();
   const playerBounds = syllablesToBounds(playerSyls);
@@ -2533,25 +2550,33 @@ function computePracticeScore(ps) {
   const correctBounds = [...pSet].filter(b => aSet.has(b));
   const extraBounds = [...pSet].filter(b => !aSet.has(b));
   const missedBounds = [...aSet].filter(b => !pSet.has(b));
-  const boundPoints = correctBounds.length * 30;
-  const extraPenalty = extraBounds.length * 15;
-  const missedPenalty = missedBounds.length * 10;
+  // ① 切分(满分 50):全对 50;按 (正确边界 - 0.5×多切) / 应有边界 给;单音节不切=对
+  let splitRatio;
+  if (ps.answerBounds.length === 0) splitRatio = (playerBounds.length === 0) ? 1 : 0;
+  else splitRatio = (correctBounds.length - extraBounds.length * 0.5) / ps.answerBounds.length;
+  splitRatio = Math.max(0, Math.min(1, splitRatio));
+  const splitPoints = Math.round(splitRatio * 50);
+  // ② 罗马音(满分 30):逐音节大小写不敏感比对(切分音节按位对齐)
+  let romajiCorrect = 0;
+  const romajiTotal = ps.answerSyls.length || 1;
+  for (let i = 0; i < ps.answerSyls.length; i++) {
+    const typed = (ps.playerRomaji[i] || '').trim().toLowerCase();
+    const ref = (ps.answerRomaji[i] || '').trim().toLowerCase();
+    if (typed && ref && typed === ref) romajiCorrect++;
+  }
+  const romajiPoints = Math.round((romajiCorrect / romajiTotal) * 30);
+  // ③ 重音(满分 20)
   const stressOK = (playerSyls.length === ps.answerSyls.length) && (ps.playerStressIdx === ps.answerStressIdx);
-  const stressPoints = stressOK ? 60 : 0;
-  const perfect = (correctBounds.length === ps.answerBounds.length && extraBounds.length === 0 && stressOK);
-  const perfectBonus = perfect ? 40 : 0;
-  const romajiFilled = ps.playerRomaji.slice(0, playerSyls.length).filter(r => r && r.trim()).length;
-  const romajiPoints = romajiFilled * 10;
-  const total = Math.max(0, boundPoints - extraPenalty - missedPenalty + stressPoints + perfectBonus + romajiPoints);
-  const maxPossible = ps.answerBounds.length * 30 + 60 + 40 + ps.answerSyls.length * 10;
-  const ratio = maxPossible > 0 ? total / maxPossible : 0;
+  const stressPoints = stressOK ? 20 : 0;
+  const total = Math.max(0, Math.min(100, splitPoints + romajiPoints + stressPoints));
+  const ratio = total / 100;
   let rank = 'D';
   if (ratio >= 0.95) rank = 'S';
   else if (ratio >= 0.80) rank = 'A';
   else if (ratio >= 0.60) rank = 'B';
   else if (ratio >= 0.40) rank = 'C';
-  return { playerSyls, correctBounds, extraBounds, missedBounds, boundPoints, extraPenalty,
-           missedPenalty, stressOK, stressPoints, perfectBonus, romajiFilled, romajiPoints, total, maxPossible, ratio, rank };
+  return { playerSyls, correctBounds, extraBounds, missedBounds, splitPoints,
+           stressOK, stressPoints, romajiCorrect, romajiTotal, romajiPoints, total, maxPossible: 100, ratio, rank };
 }
 
 function submitPractice() {
@@ -2559,8 +2584,8 @@ function submitPractice() {
   practiceState.submitted = true;
   const ps = practiceState;
   const sc = computePracticeScore(ps);
-  const { playerSyls, correctBounds, extraBounds, missedBounds, boundPoints, extraPenalty,
-          missedPenalty, stressOK, stressPoints, perfectBonus, romajiFilled, romajiPoints, total, ratio, rank } = sc;
+  const { playerSyls, correctBounds, extraBounds, missedBounds, splitPoints,
+          stressOK, stressPoints, romajiCorrect, romajiTotal, romajiPoints, total, ratio, rank } = sc;
 
   // 测验模式:算完分交给回调推进,不渲染单卡片结果
   if (ps.quizMode && typeof ps.onScored === 'function') {
@@ -2596,12 +2621,9 @@ function submitPractice() {
                       ps.answerSource === 'ipa'    ? '依据你填的 IPA' :
                                                      '启发式估算';
   const rows = [];
-  rows.push('<div class="p-rb-row"><span>切分正确 ' + correctBounds.length + '/' + ps.answerBounds.length + '</span><span class="pos">+' + boundPoints + '</span></div>');
-  if (extraPenalty) rows.push('<div class="p-rb-row"><span>多切 ×' + extraBounds.length + '</span><span class="neg">-' + extraPenalty + '</span></div>');
-  if (missedPenalty) rows.push('<div class="p-rb-row"><span>漏切 ×' + missedBounds.length + '</span><span class="neg">-' + missedPenalty + '</span></div>');
-  rows.push('<div class="p-rb-row"><span>重音 ' + (stressOK ? '✓' : '✗') + '</span><span class="' + (stressOK ? 'pos' : '') + '">' + (stressOK ? '+' : '') + stressPoints + '</span></div>');
-  if (romajiPoints) rows.push('<div class="p-rb-row"><span>罗马音 ×' + romajiFilled + '</span><span class="pos">+' + romajiPoints + '</span></div>');
-  if (perfectBonus) rows.push('<div class="p-rb-row"><span>完美 bonus</span><span class="pos">+' + perfectBonus + '</span></div>');
+  rows.push('<div class="p-rb-row"><span>切分 ' + correctBounds.length + '/' + ps.answerBounds.length + (extraBounds.length ? ' · 多切 ×' + extraBounds.length : '') + '</span><span class="pos">+' + splitPoints + '/50</span></div>');
+  rows.push('<div class="p-rb-row"><span>罗马音 ' + romajiCorrect + '/' + romajiTotal + ' (不分大小写)</span><span class="pos">+' + romajiPoints + '/30</span></div>');
+  rows.push('<div class="p-rb-row"><span>重音 ' + (stressOK ? '✓' : '✗') + '</span><span class="' + (stressOK ? 'pos' : '') + '">+' + stressPoints + '/20</span></div>');
   rows.push('<div class="p-rb-row total"><span>TOTAL</span><span>' + total + '</span></div>');
 
   result.innerHTML =
