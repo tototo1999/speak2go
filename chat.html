@@ -621,6 +621,48 @@
     .todo-section.editing .todo-add-sub,
     .todo-section.editing .todo-add-group { display: block; }
     .todo-add-sub:hover, .todo-add-group:hover { background: var(--teal-50); }
+    /* speak2go.ai sidebar 词表胶囊(按 lesson_date 分组)*/
+    .sb-lesson {
+      margin: 8px 6px 0; border: 1px solid var(--border, #e5e5e5); border-radius: 12px;
+      background: white; overflow: hidden; transition: border-color 0.15s;
+    }
+    .sb-lesson:hover { border-color: var(--teal, #1D9E75); }
+    .sb-lesson.completed {
+      border-color: var(--teal, #1D9E75);
+      background: linear-gradient(135deg, white 0%, rgba(29, 158, 117, 0.05) 100%);
+    }
+    .sb-head {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; cursor: pointer; user-select: none;
+      font-size: 12px;
+    }
+    .sb-head:hover { background: rgba(29, 158, 117, 0.04); }
+    .sb-date { flex: 1; font-weight: 700; color: var(--text, #222); }
+    .sb-lesson.completed .sb-date { color: var(--teal, #1D9E75); }
+    .sb-progress {
+      font-weight: 700; font-size: 11px; color: var(--text-soft, #666);
+      background: var(--bg, #f5f5f5); padding: 2px 8px; border-radius: 999px;
+      font-family: "SF Mono", Menlo, monospace;
+    }
+    .sb-lesson.completed .sb-progress { color: white; background: var(--teal, #1D9E75); }
+    .sb-toggle { color: var(--text-dim, #999); transition: transform 0.2s; font-size: 10px; }
+    .sb-lesson.expanded .sb-toggle { transform: rotate(180deg); }
+    .sb-list { display: none; padding: 2px 0 6px; }
+    .sb-lesson.expanded .sb-list { display: block; }
+    .sb-word {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px; cursor: pointer;
+      font-size: 12px; line-height: 1.4;
+      transition: background 0.1s;
+    }
+    .sb-word:hover { background: rgba(29, 158, 117, 0.06); }
+    .sb-word.completed { opacity: 0.65; }
+    .sb-word.completed .sb-en { text-decoration: line-through; color: var(--text-soft, #666); }
+    .sb-check { font-size: 14px; color: var(--text-dim, #999); flex-shrink: 0; }
+    .sb-word.completed .sb-check { color: var(--teal, #1D9E75); }
+    .sb-en { font-weight: 600; color: var(--text, #222); font-family: "SF Mono", Menlo, monospace; }
+    .sb-zh { color: var(--text-soft, #666); font-size: 11px; margin-left: auto; }
+
     .todo-group { margin-top: 5px; padding-left: 12px; }
     .todo-pill {
       padding: 5px 10px;
@@ -3299,9 +3341,108 @@
   let todoPopupOpen = false
   let _todoPopupTemplates = []  // Template list cached by showTodoPopup so deleteTemplate can look up names
 
+  // ── speak2go.ai sidebar:NYC Global Center 词表按 lesson_date 分组胶囊 ─────
+  function _escHtmlS(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+  }
+
+  function _loadNycTerms() {
+    try {
+      const all = JSON.parse(localStorage.getItem('glossary-user-terms') || '{}')
+      return all['nyc-global-center'] || []
+    } catch (e) { return [] }
+  }
+
+  function _saveNycTerms(arr) {
+    try {
+      const all = JSON.parse(localStorage.getItem('glossary-user-terms') || '{}')
+      all['nyc-global-center'] = arr
+      localStorage.setItem('glossary-user-terms', JSON.stringify(all))
+    } catch (e) { console.warn('[sidebar] save failed', e) }
+  }
+
+  function renderSidebarLessons() {
+    const body = document.getElementById('todoBody')
+    if (!body) return
+    const terms = _loadNycTerms()
+    // 按 lesson_date 分组
+    const grouped = {}
+    terms.forEach(t => {
+      const key = t.lesson_date || '📦 历史'
+      ;(grouped[key] = grouped[key] || []).push(t)
+    })
+    // 排序:日期 desc, '📦 历史' 置底
+    const keys = Object.keys(grouped).sort((a, b) => {
+      if (a === '📦 历史') return 1
+      if (b === '📦 历史') return -1
+      return b.localeCompare(a)
+    })
+    // 保留之前展开的 capsule(避免 toggle 时全收起)
+    const prevExpanded = new Set()
+    body.querySelectorAll('.sb-lesson.expanded').forEach(el => prevExpanded.add(el.dataset.key))
+    body.innerHTML = ''
+    if (keys.length === 0) {
+      body.innerHTML = '<div style="padding:20px 14px;text-align:center;color:var(--text3,#999);font-size:12px;line-height:1.6;">🎙️ 上传英语录音<br>AI 自动提炼 20 词<br>这里就会出现胶囊</div>'
+      return
+    }
+    keys.forEach((key, idx) => {
+      const words = grouped[key]
+      const total = words.length
+      const done = words.filter(w => w.completed).length
+      const isDone = done === total && total > 0
+      const expanded = prevExpanded.has(key) || (prevExpanded.size === 0 && idx === 0)
+      const cap = document.createElement('div')
+      cap.className = 'sb-lesson' + (expanded ? ' expanded' : '') + (isDone ? ' completed' : '')
+      cap.dataset.key = key
+      cap.innerHTML =
+        '<div class="sb-head">' +
+          '<span class="sb-date">' + (isDone ? '✓ ' : '📅 ') + _escHtmlS(key) + '</span>' +
+          '<span class="sb-progress">' + total + '-' + done + '</span>' +
+          '<span class="sb-toggle">▾</span>' +
+        '</div>' +
+        '<div class="sb-list"></div>'
+      cap.querySelector('.sb-head').addEventListener('click', () => cap.classList.toggle('expanded'))
+      const list = cap.querySelector('.sb-list')
+      words.forEach(w => {
+        const item = document.createElement('div')
+        item.className = 'sb-word' + (w.completed ? ' completed' : '')
+        item.innerHTML =
+          '<span class="sb-check">' + (w.completed ? '☑' : '☐') + '</span>' +
+          '<span class="sb-en">' + _escHtmlS(w.en) + '</span>' +
+          '<span class="sb-zh">' + _escHtmlS(w.zh || '') + '</span>'
+        item.addEventListener('click', () => toggleSidebarWord(w.en))
+        list.appendChild(item)
+      })
+      body.appendChild(cap)
+    })
+  }
+
+  function toggleSidebarWord(en) {
+    const terms = _loadNycTerms()
+    const t = terms.find(x => (x.en || '').toLowerCase() === en.toLowerCase())
+    if (!t) return
+    t.completed = !t.completed
+    _saveNycTerms(terms)
+    renderSidebarLessons()  // 同 tab 内重渲
+    // localStorage.setItem 自动给跨 tab 触发 storage event,glossary 那边自动跟上
+  }
+
+  // 跨 tab 同步:glossary tab 改了词,这边自动 reload sidebar
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'glossary-user-terms' && location.hostname.includes('speak2go')) {
+      renderSidebarLessons()
+    }
+  })
+
   function renderTodos(payload) {
     const body = document.getElementById('todoBody')
     if (!body) return
+    // 2026-05-27: speak2go.ai sidebar 切到「按 lesson_date 分组的 NYC Global Center 词表」视图
+    // 数据源 localStorage `glossary-user-terms`(跟 glossary.html 共享同 origin)
+    if (location.hostname.includes('speak2go')) {
+      renderSidebarLessons()
+      return
+    }
     // Re-render preserves each group's expanded state (addTodoSub etc. trigger rerender —
     // otherwise adding a sub-item to a non-first group would collapse it via the default-fold logic)
     const prevExpanded = new Set()

@@ -91,6 +91,68 @@ nav.cats a.group-link {
   cursor: pointer;
 }
 nav.cats a.group-link:hover { opacity: 0.85; }
+/* ── Lesson capsules (NYC Global Center 按日期分组) ────────────────────── */
+.lessons-wrap { display: flex; flex-direction: column; gap: 12px; padding: 10px 0; }
+.lessons-empty {
+  padding: 24px; text-align: center; color: var(--text-dim);
+  background: var(--surface); border: 1px dashed var(--border); border-radius: 12px;
+  font-size: 13px; line-height: 1.6;
+}
+.lesson-capsule {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  transition: border-color 0.2s;
+}
+.lesson-capsule:hover { border-color: var(--accent-soft); }
+.lesson-capsule.completed {
+  border-color: var(--accent); background: linear-gradient(135deg, var(--surface) 0%, rgba(29, 158, 117, 0.06) 100%);
+}
+.lesson-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+}
+.lesson-head:hover { background: rgba(29, 158, 117, 0.04); }
+.lesson-date { flex: 1; font-weight: 700; color: var(--text); }
+.lesson-capsule.completed .lesson-date { color: var(--accent); }
+.lesson-progress {
+  font-weight: 700; font-size: 13px;
+  color: var(--text-dim);
+  background: var(--bg);
+  padding: 3px 10px; border-radius: 999px;
+  font-family: "SF Mono", Menlo, monospace;
+  letter-spacing: 0.02em;
+}
+.lesson-capsule.completed .lesson-progress {
+  color: white; background: var(--accent);
+}
+.lesson-toggle {
+  color: var(--text-dim);
+  transition: transform 0.2s;
+  font-size: 12px;
+}
+.lesson-capsule.expanded .lesson-toggle { transform: rotate(180deg); }
+.lesson-grid { display: none; padding: 4px 14px 14px; }
+.lesson-capsule.expanded .lesson-grid { display: grid; }
+
+/* 词卡完成态 */
+.term.is-completed {
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(29, 158, 117, 0.08) 100%);
+  border-color: var(--accent);
+}
+.term.is-completed .en { color: var(--accent); }
+
+/* ✓ 通关按钮 */
+.term .actions .done {
+  font-weight: 800; font-size: 14px;
+  color: var(--text-dim);
+}
+.term .actions .done.is-on {
+  color: var(--accent); font-size: 16px;
+  text-shadow: 0 0 8px rgba(29, 158, 117, 0.4);
+}
+
 .cat-new-badge {
   display: inline-block;
   background: #ff3b30;
@@ -1195,12 +1257,20 @@ function renderCardContent(card) {
   card.classList.toggle('is-edited', d.edited);
   card.classList.toggle('is-user', isUserTerm(catId, en));
   const isFav = state.favorites.has(id);
+  // ✓ 通关按钮(只在 NYC Global Center 显示)
+  const isNyc = catId === 'nyc-global-center';
+  const userTerm = isNyc ? (state.userTerms[catId] || []).find(t => (t.en || '').toLowerCase() === en.toLowerCase()) : null;
+  const isCompleted = userTerm && userTerm.completed;
+  const completedBtn = isNyc
+    ? '<button class="done' + (isCompleted ? ' is-on' : '') + '" data-action="done" title="' + (isCompleted ? '取消通关' : '我会了 ✓') + '" aria-label="通关">' + (isCompleted ? '✓' : '○') + '</button>'
+    : '';
   card.innerHTML =
     '<div class="head">' +
       '<code class="en">' + escapeHtml(d.en) + '</code>' +
       (d.phonetic ? '<span class="phonetic">' + escapeHtml(d.phonetic) + '</span>' : '') +
       '<span class="zh">' + escapeHtml(d.zh) + '</span>' +
       '<div class="actions">' +
+        completedBtn +
         '<button class="speak" data-action="speak" title="朗读" aria-label="朗读">🔊</button>' +
         '<button class="play" data-action="play" title="练:拆音节+标重音+填罗马音" aria-label="练">🎮</button>' +
         '<button class="fav' + (isFav ? ' is-on' : '') + '" data-action="fav" title="' + (isFav ? '取消收藏' : '收藏置顶') + '" aria-label="收藏">★</button>' +
@@ -1293,10 +1363,15 @@ totalCountEl.textContent = total;
 function renderCategorySection(cat) {
   const existing = document.getElementById('cat-' + cat.id);
   if (existing) existing.remove();
-  const merged = getMergedTerms(cat);
   const section = document.createElement('section');
   section.id = 'cat-' + cat.id;
   section.dataset.cat = cat.id;
+  // NYC Global Center 走胶囊视图(按 lesson_date 分组,每组带完成度进度)
+  if (cat.id === 'nyc-global-center') {
+    renderLessonCapsules(cat, section);
+    return section;
+  }
+  const merged = getMergedTerms(cat);
   const grid = document.createElement('div');
   grid.className = 'terms';
   merged.forEach(([en, zh, hint]) => {
@@ -1333,6 +1408,88 @@ function renderCategorySection(cat) {
   }
   section.appendChild(grid);
   return section;
+}
+
+// ── NYC Global Center 胶囊视图 ────────────────────────────────────────────
+// 按 lesson_date 分组 → 每组一个胶囊,胶囊显示「日期 (总-完成)」
+// 胶囊默认展开最新一组,旧组折叠;点击折叠/展开
+function renderLessonCapsules(cat, section) {
+  const userTerms = (state.userTerms[cat.id] || []).slice();
+  // 按 lesson_date 分组
+  const grouped = {};
+  userTerms.forEach(t => {
+    const key = t.lesson_date || '📦 历史';
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(t);
+  });
+  // 排序:日期 desc(最新在前),'📦 历史' 放最后
+  const keys = Object.keys(grouped).sort((a, b) => {
+    if (a === '📦 历史') return 1;
+    if (b === '📦 历史') return -1;
+    return b.localeCompare(a);
+  });
+  const wrap = document.createElement('div');
+  wrap.className = 'lessons-wrap';
+  if (keys.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'lessons-empty';
+    empty.innerHTML = '🎙️ 还没导入任何课次。在 <strong>speak2go.ai/chat.html</strong> 上传录音 → AI 自动提炼 20 词 → 点深链导入到这里。';
+    wrap.appendChild(empty);
+    section.appendChild(wrap);
+    return;
+  }
+  keys.forEach((key, idx) => {
+    const words = grouped[key];
+    const total = words.length;
+    const done = words.filter(w => w.completed).length;
+    const isDone = done === total && total > 0;
+    const cap = document.createElement('div');
+    cap.className = 'lesson-capsule' + (idx === 0 ? ' expanded' : '') + (isDone ? ' completed' : '');
+    cap.dataset.lessonDate = key;
+    // 胶囊头(可点击折叠/展开)
+    const head = document.createElement('div');
+    head.className = 'lesson-head';
+    head.innerHTML =
+      '<span class="lesson-date">' + (isDone ? '✓ ' : '📅 ') + escapeHtml(key) + '</span>' +
+      '<span class="lesson-progress">' + total + '-' + done + '</span>' +
+      '<span class="lesson-toggle" aria-hidden="true">▾</span>';
+    head.onclick = (e) => {
+      if (e.target.closest('button')) return;  // 别响应按钮点击冒泡
+      cap.classList.toggle('expanded');
+    };
+    cap.appendChild(head);
+    // 词卡 grid(折叠时 display:none)
+    const grid = document.createElement('div');
+    grid.className = 'terms lesson-grid';
+    words.forEach(w => {
+      const card = makeCard(w.en, w.zh, w.hint || '', cat.id);
+      // 完成态视觉
+      if (w.completed) card.classList.add('is-completed');
+      grid.appendChild(card);
+    });
+    cap.appendChild(grid);
+    wrap.appendChild(cap);
+  });
+  section.appendChild(wrap);
+}
+
+// 切换某词的 completed 状态(NYC Global Center 内)+ 持久化 + 重渲胶囊
+function toggleTermCompleted(catId, en) {
+  const terms = state.userTerms[catId] || [];
+  const t = terms.find(x => (x.en || '').toLowerCase() === en.toLowerCase());
+  if (!t) return false;
+  t.completed = !t.completed;
+  save();
+  // 重渲该 cat section + 更新 nav 计数 + storage event(自动跨 tab,storage write 触发)
+  const cat = DATA.find(c => c.id === catId);
+  if (cat) {
+    const newSection = renderCategorySection(cat);
+    if (typeof noResults !== 'undefined' && noResults && main) {
+      main.insertBefore(newSection, noResults);
+    }
+    if (document.body.dataset.activeCat === catId) newSection.classList.add('active-cat');
+  }
+  return t.completed;
 }
 
 // Top nav: each DATA entry = a top-level tab. Click → switch active cat.
@@ -1596,7 +1753,7 @@ function openPractice(card) {
       '<span class="practice-title">🎮 练:<strong>' + escapeHtml(en) + '</strong></span>' +
       '<button class="practice-close" data-action="practice-close" aria-label="关闭">×</button>' +
     '</div>' +
-    '<div class="practice-step">① 点字母之间的 · 切音节</div>' +
+    '<div class="practice-step">① 点字母之间的 · 切音节<span style="opacity:0.6;font-weight:400;margin-left:8px;">(单音节词点最后那个 · = 整段 1 音节)</span></div>' +
     '<div class="practice-letters" data-role="letters"></div>' +
     '<div class="practice-step">② 点音节卡标重音 (金色) · ③ 填罗马音</div>' +
     '<div class="practice-preview" data-role="preview"></div>' +
@@ -1623,17 +1780,17 @@ function renderPracticeLetters() {
     letterEl.className = 'p-letter';
     letterEl.textContent = ch;
     row.appendChild(letterEl);
-    if (i < practiceState.letters.length - 1) {
-      const gap = document.createElement('button');
-      const active = practiceState.playerBounds.has(i);
-      gap.className = 'p-gap' + (active ? ' active' : '');
-      gap.textContent = active ? '|' : '·';
-      gap.dataset.action = 'practice-split';
-      gap.dataset.i = i;
-      gap.disabled = practiceState.submitted;
-      gap.tabIndex = -1;  // Tab 跳过,只在罗马音输入框间循环
-      row.appendChild(gap);
-    }
+    // 每个字母后都加 · gap(包括最后字母),让单音节词(如 said)能点最后 · 标记 1 段
+    // getPracticePlayerSyls L1647 已用 `i < length - 1` 过滤最后 gap,不会切出空段
+    const gap = document.createElement('button');
+    const active = practiceState.playerBounds.has(i);
+    gap.className = 'p-gap' + (active ? ' active' : '');
+    gap.textContent = active ? '|' : '·';
+    gap.dataset.action = 'practice-split';
+    gap.dataset.i = i;
+    gap.disabled = practiceState.submitted;
+    gap.tabIndex = -1;  // Tab 跳过,只在罗马音输入框间循环
+    row.appendChild(gap);
   });
 }
 
@@ -2177,6 +2334,12 @@ main.addEventListener('click', e => {
     syncCardsById(id);
     rebuildFavorites();
     applySearch();
+  } else if (action === 'done') {
+    // NYC Global Center 通关 toggle:翻转 word.completed,保存,重渲胶囊
+    const [cId, en] = id.split('::');
+    toggleTermCompleted(cId, en);
+    updateCatNavCount(cId);
+    return;
   } else if (action === 'del') {
     // 硬删除:从 state 持久化 + 立即从 DOM 移除所有副本(主分类 + 收藏区)
     state.deleted.add(id);
@@ -2196,13 +2359,26 @@ search.addEventListener('input', e => {
 
 rebuildFavorites();
 
-// URL ?import=<base64-utf8-json-array> 一键导入 — speak2go-worker push 进来,**静默**写到 NYC Global Center
-// 2026-05-27 静默化:不弹 alert + 不切 tab + 只让 NYC Global Center (N) 数字增加
+// 给老数据补 default lesson_date(2026-05-27 引入字段前的存量)
+(function backfillLessonDate() {
+  const catId = 'nyc-global-center';
+  const terms = state.userTerms[catId] || [];
+  let changed = false;
+  terms.forEach(t => {
+    if (typeof t.lesson_date === 'undefined') { t.lesson_date = '📦 历史'; changed = true; }
+    if (typeof t.completed === 'undefined') { t.completed = false; changed = true; }
+  });
+  if (changed) save();
+})();
+
+// URL ?import=<base64-utf8-json-array>&date=YYYY-MM-DD 一键导入 — speak2go-worker push 进来
+// 2026-05-27 静默化 + 按日期分组:不弹 alert + 不切 tab + 只让 NYC Global Center (N) + 红 +N badge
 // ⚠️ atob() 返回 byte-string(Latin-1),JSON 是 UTF-8,必须用 TextDecoder 转码;否则中文 / IPA 音标乱码
 (function autoImportFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const raw = params.get('import');
   if (!raw) return;
+  const lessonDate = params.get('date') || '📦 历史';  // 没传 date 当历史导入
   try {
     const binary = atob(decodeURIComponent(raw));
     const bytes = new Uint8Array(binary.length);
@@ -2229,6 +2405,8 @@ rebuildFavorites();
         en,
         zh: t.zh || (Array.isArray(t) ? t[1] : '') || '',
         hint: t.hint || (Array.isArray(t) ? t[2] : '') || '',
+        lesson_date: lessonDate,
+        completed: false,
       });
       seen.add(en.toLowerCase());
       addedCount++;
