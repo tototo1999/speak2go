@@ -580,6 +580,15 @@ section h2 .count {
 .import-modal .im-foot button { flex:1; padding:11px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text); }
 .import-modal .im-foot .im-go { background:var(--accent); color:#fff; border-color:var(--accent); }
 .import-modal .im-foot .im-go:disabled { opacity:.5; cursor:default; }
+/* 跟读弹窗 */
+.shadow-modal .sh-body { padding:18px; }
+.shadow-modal .sh-target { font-size:19px; line-height:1.7; text-align:center; margin-bottom:12px; }
+.shadow-modal .sh-target .sh-hit { color:var(--accent); }
+.shadow-modal .sh-target .sh-miss { color:#ef4444; text-decoration:underline; }
+.shadow-modal .sh-you { font-size:13px; color:var(--text-dim); text-align:center; min-height:18px; }
+.shadow-modal .sh-score { font-size:14px; text-align:center; margin-top:10px; min-height:20px; }
+.term .actions .shadow { opacity:.85; }
+.term .actions .shadow:hover { opacity:1; }
 .recover-btn {
   background: rgba(245,158,11,0.06);
   border: 1px dashed #f59e0b;
@@ -1569,6 +1578,7 @@ function renderCardContent(card) {
       '<div class="actions">' +
         completedBtn +
         ((d.audioUrl && d.audioStart != null) ? '<button class="play-audio" data-action="play-audio" title="听当时上课这句录音" aria-label="听课堂录音">▶️</button>' : '') +
+        ((d.audioUrl && d.audioStart != null) ? '<button class="shadow" data-action="shadow" title="跟读:听原句→你复述→比对" aria-label="跟读">🎙</button>' : '') +
         '<button class="speak" data-action="speak" title="朗读" aria-label="朗读">🔊</button>' +
         '<button class="play" data-action="play" title="练:拆音节+标重音+填罗马音" aria-label="练">🎮</button>' +
         '<button class="fav' + (isFav ? ' is-on' : '') + '" data-action="fav" title="' + (isFav ? '取消收藏' : '收藏置顶') + '" aria-label="收藏">★</button>' +
@@ -1710,6 +1720,90 @@ function playTermAudio(catId, en, btn) {
     _lessonAudio.addEventListener('loadedmetadata', seekAndPlay, { once: true });
     _lessonAudio.load();
   }
+}
+
+/* ============================================================
+   🎙 跟读:听该词那句真人原声短片段 → 你复述 → Web Speech 转写 → 比对例句标命中/漏读
+   ============================================================ */
+const SHADOW_CLIP_SECONDS = 7;     // 跟读片段:从起播点放 ~7 秒(≈ 一句),不放整段
+let _shadowAudio = null, _shadowRec = null;
+
+function _shadowSentence(d) {
+  const m = /例[:：]\s*([^·]+)/.exec((d.note || '') + ' · ' + (d.hint || ''));
+  return m ? m[1].trim() : (d.en || '');
+}
+function _shadowNorm(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9'\s]/g, ' ').split(/\s+/).filter(Boolean);
+}
+function _shadowPlayClip(d) {
+  try { if (_shadowAudio) { _shadowAudio.pause(); } } catch (e) {}
+  _shadowAudio = new Audio(); _shadowAudio.preload = 'none'; _shadowAudio.src = d.audioUrl;
+  const start = Math.max(0, d.audioStart - 0.5);
+  let stopT = null;
+  const go = () => { try { _shadowAudio.currentTime = start; } catch (e) {} _shadowAudio.play().then(() => {
+    stopT = setTimeout(() => { try { _shadowAudio.pause(); } catch (e) {} }, SHADOW_CLIP_SECONDS * 1000);
+  }).catch(() => {}); };
+  _shadowAudio.addEventListener('loadedmetadata', go, { once: true });
+  _shadowAudio.load();
+}
+
+function startShadow(catId, en) {
+  const d = getTermData(catId, en);
+  if (!d) return;
+  const target = _shadowSentence(d);
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const bg = document.createElement('div');
+  bg.className = 'import-modal-bg';
+  bg.innerHTML =
+    '<div class="import-modal shadow-modal">' +
+      '<div class="im-head"><h3>🎙 跟读 · <code>' + escapeHtml(en) + '</code></h3>' +
+        '<div class="im-sub">听这句课堂原声 → 点「开始说」复述 → 比对</div></div>' +
+      '<div class="sh-body">' +
+        '<div class="sh-target" data-role="target">' + escapeHtml(target) + '</div>' +
+        '<div class="sh-you" data-role="you"></div>' +
+        '<div class="sh-score" data-role="score"></div>' +
+      '</div>' +
+      '<div class="im-foot">' +
+        '<button data-act="replay">🔊 再听原句</button>' +
+        '<button class="im-go" data-act="rec">🎙 开始说</button>' +
+        '<button data-act="close">关闭</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(bg);
+  const $ = s => bg.querySelector(s);
+  if (!SR) { $('[data-role=score]').innerHTML = '<span style="color:#ef4444">这个浏览器不支持语音识别,用 Chrome / Edge / Safari</span>'; $('[data-act=rec]').disabled = true; }
+  _shadowPlayClip(d);   // 进来自动听一遍原句
+
+  function stopRec() { try { if (_shadowRec) _shadowRec.stop(); } catch (e) {} _shadowRec = null; }
+  function compareAndShow(said) {
+    const tWords = _shadowNorm(target);
+    const saidSet = new Set(_shadowNorm(said));
+    let hit = 0;
+    const html = tWords.map(w => { const ok = saidSet.has(w); if (ok) hit++; return '<span class="' + (ok ? 'sh-hit' : 'sh-miss') + '">' + escapeHtml(w) + '</span>'; }).join(' ');
+    $('[data-role=target]').innerHTML = html;
+    $('[data-role=you]').innerHTML = '你说的:' + escapeHtml(said || '(没听清)');
+    const pct = tWords.length ? Math.round(hit / tWords.length * 100) : 0;
+    $('[data-role=score]').innerHTML = '<strong>命中 ' + hit + '/' + tWords.length + ' 词 · ' + pct + '%</strong>' + (hit < tWords.length ? ' — 红色是漏读/读错的' : ' 💯');
+  }
+
+  bg.addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]'); if (!b) return;
+    const act = b.dataset.act;
+    if (act === 'close') { stopRec(); try { if (_shadowAudio) _shadowAudio.pause(); } catch (e) {} bg.remove(); }
+    else if (act === 'replay') { _shadowPlayClip(d); }
+    else if (act === 'rec') {
+      if (!SR) return;
+      stopRec();
+      const rec = new SR(); _shadowRec = rec;
+      rec.lang = 'en-US'; rec.interimResults = false; rec.maxAlternatives = 1;
+      b.textContent = '🔴 在听…'; b.disabled = true;
+      $('[data-role=score]').textContent = '';
+      rec.onresult = ev => { compareAndShow(ev.results[0][0].transcript); };
+      rec.onerror = ev => { $('[data-role=score]').innerHTML = '<span style="color:#ef4444">没听到声音(' + escapeHtml(ev.error || '') + '),再试一次</span>'; };
+      rec.onend = () => { b.textContent = '🎙 再说一遍'; b.disabled = false; _shadowRec = null; };
+      try { rec.start(); } catch (e) { b.textContent = '🎙 开始说'; b.disabled = false; }
+    }
+  });
 }
 
 let total = 0;
@@ -3202,6 +3296,11 @@ main.addEventListener('click', e => {
 
   if (action === 'play-audio') {
     playTermAudio(catId, en, btn);
+    return;
+  }
+
+  if (action === 'shadow') {
+    startShadow(catId, en);
     return;
   }
 
