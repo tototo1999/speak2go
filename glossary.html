@@ -1921,8 +1921,12 @@ function updateWebLookupBtn() {
   if (!raw) { webLookupBtn.style.display = 'none'; return; }
   webLookupBtn.style.display = '';
   webLookupBtn.disabled = false;
-  webLookupBtn.textContent = '🌐 在网络上查 “' + raw + '” 并加入「' + title + '」';
-  if (webLookupStatus) webLookupStatus.innerHTML = '';
+  // 中文查询 → 明说是去找「对应英文词」,避免误以为加的是中文
+  const isCJK = /[一-鿿]/.test(raw);
+  webLookupBtn.textContent = isCJK
+    ? '🌐 查 “' + raw + '” 的英文词并加入「' + title + '」 ⏎'
+    : '🌐 在网络上查 “' + raw + '” 并加入「' + title + '」 ⏎';
+  if (webLookupStatus) webLookupStatus.innerHTML = '<span style="color:var(--text-dim);font-size:12px;">按回车也能直接查 →</span>';
 }
 
 async function webLookupAndAdd() {
@@ -3175,6 +3179,17 @@ main.addEventListener('click', e => {
 search.addEventListener('input', e => {
   state.query = e.target.value.trim().toLowerCase();
   applySearch();
+});
+
+// 回车:本地搜不到时,自动联网查对应英文词并加入当前胶囊(不用再点蓝按钮)
+search.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.repeat) return;
+  if (!search.value.trim()) return;
+  // noResults 处于 show 态 = 本地无匹配
+  if (noResults.classList.contains('show') && webLookupBtn && !webLookupBtn.disabled) {
+    e.preventDefault();
+    webLookupAndAdd();
+  }
 });
 
 rebuildFavorites();
