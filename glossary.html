@@ -1112,6 +1112,17 @@ let DATA = [
   } catch (e) { console.warn('[glossary] dynamic cats load failed:', e); }
 })();
 
+// 过滤掉用户整体删除过的胶囊(内置 + 动态都记在 glossary-deleted-cats,刷新后仍生效)
+(function removeDeletedCats() {
+  try {
+    const dead = new Set(JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]'));
+    if (!dead.size) return;
+    for (let i = DATA.length - 1; i >= 0; i--) {
+      if (dead.has(DATA[i].id)) DATA.splice(i, 1);
+    }
+  } catch (e) { console.warn('[glossary] deleted cats filter failed:', e); }
+})();
+
 const main = document.getElementById('main');
 const catsNav = document.getElementById('catsNav');
 const search = document.getElementById('search');
@@ -1746,15 +1757,14 @@ function makeCatTab(cat) {
   label.className = 'cat-label';
   label.textContent = cat.title + ' (' + getMergedTerms(cat).length + ')';
   a.appendChild(label);
-  if (cat.dynamic) {
-    const del = document.createElement('span');
-    del.className = 'cat-del';
-    del.textContent = '✕';
-    del.title = '删除整个胶囊';
-    del.setAttribute('aria-label', '删除整个胶囊');
-    del.onclick = (e) => { e.preventDefault(); e.stopPropagation(); deleteCat(cat.id); };
-    a.appendChild(del);
-  }
+  // 所有胶囊都带 ✕ 整体删除按钮(内置胶囊删除也会持久化,见 deleteCat)
+  const del = document.createElement('span');
+  del.className = 'cat-del';
+  del.textContent = '✕';
+  del.title = '删除整个胶囊';
+  del.setAttribute('aria-label', '删除整个胶囊');
+  del.onclick = (e) => { e.preventDefault(); e.stopPropagation(); deleteCat(cat.id); };
+  a.appendChild(del);
   a.onclick = (e) => { e.preventDefault(); setActiveCat(cat.id); };
   return a;
 }
@@ -1768,12 +1778,18 @@ function deleteCat(catId) {
   // 1. 从 DATA 移除
   const idx = DATA.findIndex(c => c.id === catId);
   if (idx >= 0) DATA.splice(idx, 1);
-  // 2. 从动态 cats 持久化列表移除
+  // 2. 从动态 cats 持久化列表移除(动态胶囊)
   try {
     const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]')
       .filter(c => c && c.id !== catId);
     localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn));
   } catch (e) { console.warn('[glossary] dynamic cats prune failed', e); }
+  // 2b. 记入已删胶囊名单 — 内置胶囊写死在源码里,靠这个名单刷新后仍保持删除
+  try {
+    const dead = JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]');
+    if (!dead.includes(catId)) dead.push(catId);
+    localStorage.setItem('glossary-deleted-cats', JSON.stringify(dead));
+  } catch (e) { console.warn('[glossary] deleted cats record failed', e); }
   // 3. 清该 cat 的词 + 收藏 / 软删 / 编辑(都以 catId:: 前缀存)
   delete state.userTerms[catId];
   const prefix = catId + '::';
@@ -3219,6 +3235,22 @@ rebuildFavorites();
       }
     } else {
       catId = 'nyc-global-center';
+    }
+    // 若该胶囊之前被整体删除,导入即视为「恢复」:移出已删名单 + 确保它在 DATA 里(渲染 tab + section)
+    try {
+      const dead = JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]');
+      if (dead.includes(catId)) {
+        localStorage.setItem('glossary-deleted-cats', JSON.stringify(dead.filter(x => x !== catId)));
+      }
+    } catch (e) {}
+    if (!DATA.find(c => c.id === catId)) {
+      const title = (catId === 'nyc-global-center') ? 'NYC Global Center' : (lessonLabel || catId);
+      const reCat = { id: catId, title, terms: [] };
+      if (catId !== 'nyc-global-center') reCat.dynamic = true;
+      DATA.push(reCat);
+      const reA = makeCatTab(reCat); reA.classList.add('inactive'); catsNav.appendChild(reA);
+      const reSec = renderCategorySection(reCat);
+      if (typeof noResults !== 'undefined' && noResults && main) main.insertBefore(reSec, noResults);
     }
     if (!state.userTerms[catId]) state.userTerms[catId] = [];
 
