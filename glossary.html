@@ -562,6 +562,27 @@ section h2 .count {
   cursor: pointer;
 }
 .recover-btn:hover { background: rgba(245,158,11,0.14); }
+/* 每个表格(胶囊)顶部的管理工具条:改名 / 删除 / 新建 */
+.cat-toolbar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 12px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--border, rgba(0,0,0,0.08));
+}
+.cat-toolbar .cat-toolbar-title {
+  font-weight: 700; font-size: 14px; color: var(--text, inherit);
+  margin-right: auto;
+}
+.cat-tool-btn {
+  background: rgba(29,158,117,0.06);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: inherit; font-size: 12px; font-weight: 600;
+  padding: 5px 11px; border-radius: 999px; cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.cat-tool-btn:hover { background: rgba(29,158,117,0.14); }
+.cat-tool-btn.danger { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.05); }
+.cat-tool-btn.danger:hover { background: rgba(239,68,68,0.12); }
 .term.is-user::before {
   content: '✚'; position: absolute; top: -6px; right: -6px;
   background: var(--accent); color: #fff;
@@ -1123,6 +1144,14 @@ let DATA = [
   } catch (e) { console.warn('[glossary] deleted cats filter failed:', e); }
 })();
 
+// 应用用户改过的表名(内置 + 动态都记在 glossary-cat-titles,刷新后仍生效)
+(function applyCatTitleOverrides() {
+  try {
+    const map = JSON.parse(localStorage.getItem('glossary-cat-titles') || '{}');
+    DATA.forEach(cat => { if (map[cat.id]) cat.title = map[cat.id]; });
+  } catch (e) { console.warn('[glossary] cat title overrides failed:', e); }
+})();
+
 const main = document.getElementById('main');
 const catsNav = document.getElementById('catsNav');
 const search = document.getElementById('search');
@@ -1611,6 +1640,23 @@ function renderCategorySection(cat) {
   const section = document.createElement('section');
   section.id = 'cat-' + cat.id;
   section.dataset.cat = cat.id;
+  // 表格顶部管理工具条:改名 / 删除此表 / 新建表
+  const toolbar = document.createElement('div');
+  toolbar.className = 'cat-toolbar';
+  const tTitle = document.createElement('span');
+  tTitle.className = 'cat-toolbar-title';
+  tTitle.textContent = '📋 ' + cat.title;
+  const tRename = document.createElement('button');
+  tRename.className = 'cat-tool-btn'; tRename.textContent = '✏️ 改名';
+  tRename.onclick = () => renameCat(cat.id);
+  const tNew = document.createElement('button');
+  tNew.className = 'cat-tool-btn'; tNew.textContent = '➕ 新建表';
+  tNew.onclick = () => createNewCat();
+  const tDel = document.createElement('button');
+  tDel.className = 'cat-tool-btn danger'; tDel.textContent = '🗑 删除此表';
+  tDel.onclick = () => deleteCat(cat.id);
+  toolbar.append(tTitle, tRename, tNew, tDel);
+  section.appendChild(toolbar);
   // 2026-05-28:每个录音 = 独立 top-level tab,内部走 flat grid(不再 NYC 内嵌胶囊)
   const merged = getMergedTerms(cat);
   const grid = document.createElement('div');
@@ -1807,6 +1853,59 @@ function deleteCat(catId) {
     setActiveCat((DATA[0] && DATA[0].id) || 'vibe-coding');
   }
   rebuildFavorites();
+  applySearch();
+}
+
+// 改名:更新 DATA + 持久化(内置靠 glossary-cat-titles,动态同时更新 glossary-dynamic-cats)+ 刷新 tab/section 标题
+function renameCat(catId) {
+  const cat = DATA.find(c => c.id === catId);
+  if (!cat) return;
+  const next = (prompt('给这个表格改名:', cat.title) || '').trim();
+  if (!next || next === cat.title) return;
+  cat.title = next;
+  // 持久化表名覆盖(内置 + 动态通用)
+  try {
+    const map = JSON.parse(localStorage.getItem('glossary-cat-titles') || '{}');
+    map[catId] = next;
+    localStorage.setItem('glossary-cat-titles', JSON.stringify(map));
+  } catch (e) { console.warn('[glossary] cat title save failed', e); }
+  // 动态胶囊:同步更新 glossary-dynamic-cats 里的 title
+  if (cat.dynamic) {
+    try {
+      const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]');
+      const hit = dyn.find(c => c && c.id === catId);
+      if (hit) { hit.title = next; localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn)); }
+    } catch (e) {}
+  }
+  // 刷新 nav tab 标题 + section 顶部工具条标题
+  updateCatNavCount(catId);
+  const section = document.getElementById('cat-' + catId);
+  const tt = section && section.querySelector('.cat-toolbar-title');
+  if (tt) tt.textContent = '📋 ' + next;
+}
+
+// 新建表:建一个空的动态胶囊,渲染 tab + section 并切过去
+function createNewCat() {
+  const name = (prompt('新建表格 — 起个名字:', '') || '').trim();
+  if (!name) return;
+  let base = 'cat-' + name.toLowerCase().replace(/[^a-z0-9一-鿿]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+  if (!base || base === 'cat-') base = 'cat';
+  let id = base, n = 2;
+  while (DATA.find(c => c.id === id)) { id = base + '-' + n++; }
+  const cat = { id, title: name, terms: [], dynamic: true };
+  DATA.push(cat);
+  // 持久化为动态 cat + 从已删名单移除(以防同 id 曾被删)
+  try {
+    const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]');
+    dyn.push({ id, title: name });
+    localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn));
+    const dead = JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]').filter(x => x !== id);
+    localStorage.setItem('glossary-deleted-cats', JSON.stringify(dead));
+  } catch (e) { console.warn('[glossary] new cat persist failed', e); }
+  catsNav.appendChild(makeCatTab(cat));
+  const section = renderCategorySection(cat);
+  if (noResults && main) main.insertBefore(section, noResults);
+  setActiveCat(id);
   applySearch();
 }
 
