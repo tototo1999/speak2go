@@ -3827,7 +3827,8 @@
     // 2026-05-27:从嵌入模式改成新 tab 打开
     // 用 named target 让同一 button 反复点击 focus 同一 tab(浏览器允许的话)
     // 这样 user 在 chat 这边接着对话,glossary tab 后台静默接收新词
-    window.open('/glossary/', 'speak2goGlossary')
+    // 2026-05-29:统一指向线上单词表(本地副本暂不启用),本地打开 chat 也跳线上
+    window.open('https://speak2go.ai/glossary/', 'speak2goGlossary')
   }
   function hideGlossaryTab() {
     document.body.classList.remove('glossary-tab')
