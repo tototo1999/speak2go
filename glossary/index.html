@@ -510,6 +510,11 @@ section h2 .count {
   cursor: pointer; letter-spacing: 1px;
 }
 .sentence-sample:hover { background: var(--accent-soft); }
+.vocab-grab { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.vocab-grab .vg-lbl { font-size: 12px; color: var(--text-dim); }
+.vg-chip { font-family: inherit; font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--accent); background: var(--accent-soft); color: var(--accent); cursor: pointer; }
+.vg-chip:hover { background: var(--accent); color: #fff; }
+.vg-chip.done { border-color: var(--accent); background: var(--accent); color: #fff; cursor: default; opacity: .8; }
 .ai-comment {
   background: linear-gradient(135deg, rgba(168,85,247,0.08) 0%, rgba(99,102,241,0.08) 100%);
   border-left: 3px solid #a855f7;
@@ -1181,6 +1186,28 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// 做题历史的时间 mark:M-D HH:mm
+function _fmtQuizTime(ms) {
+  const dt = new Date(ms);
+  const pad = n => (n < 10 ? '0' + n : '' + n);
+  return (dt.getMonth() + 1) + '-' + dt.getDate() + ' ' + pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+}
+// 单词卡里的「做题记录」区块(最近的在上)
+function quizLogHtml(log) {
+  if (!Array.isArray(log) || !log.length) return '';
+  const cell = (label, v) => {
+    if (v == null) return '';
+    const cls = v >= 60 ? 'ql-ok' : 'ql-bad';
+    const txt = (label === '默') ? (v >= 100 ? '✓' : '✗') : v;
+    return '<span class="ql-c ' + cls + '">' + label + ' ' + txt + '</span>';
+  };
+  const rows = log.slice().reverse().map(e =>
+    '<div class="ql-row"><span class="ql-t">' + _fmtQuizTime(e.at) + '</span>' +
+    cell('默', e.d) + cell('拼', e.p) + cell('造', e.s) + '</div>'
+  ).join('');
+  return '<div class="quiz-log"><div class="ql-title">📊 做题记录 (' + log.length + ')</div>' + rows + '</div>';
+}
+
 function getTermData(catId, en) {
   const cat = DATA.find(c => c.id === catId);
   if (!cat) return null;
@@ -1206,7 +1233,9 @@ function getTermData(catId, en) {
     dictRomaji,
     // 录音回放:该词当时在课堂录音里的起播秒数 + 录音 URL(只有带 ▶️ 的课堂导入词有)
     audioUrl: (u && u.audio_url) || '',
-    audioStart: (u && typeof u.start === 'number') ? u.start : null
+    audioStart: (u && typeof u.start === 'number') ? u.start : null,
+    // 做题历史(每次测验一条,带时间戳)
+    quizLog: Array.isArray(edit.quizLog) ? edit.quizLog : []
   };
 }
 
@@ -1928,9 +1957,10 @@ function updateWebLookupBtn() {
 const _GLOSSARY_SB_URL = 'https://qjnagbzqhoansixqharb.supabase.co';
 const _GLOSSARY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqbmFnYnpxaG9hbnNpeHFoYXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDIxODIsImV4cCI6MjA5MzkxODE4Mn0.GpMUVTk6JvqeciXagXQiJunc8TLFMHg3_b9reIjJ2Y8';
 
-async function autoLookupAddTerm(catId, query, setStatus) {
+async function autoLookupAddTerm(catId, query, setStatus, opts) {
   query = (query || '').trim();
   setStatus = setStatus || function(){};
+  opts = opts || {};   // opts.silent:只加数据,不重渲/不跳转(错题卡里抓生词用)
   if (!query) return false;
   const cat = DATA.find(c => c.id === catId);
   if (!cat) { setStatus('<span class="err">分类不存在</span>'); return false; }
@@ -1949,8 +1979,8 @@ async function autoLookupAddTerm(catId, query, setStatus) {
     // 去重(内置 + 用户词,大小写不敏感)
     const dup = getMergedTerms(cat).find(t => t[0].toLowerCase() === data.en.toLowerCase());
     if (dup) {
-      setStatus('<span class="ok">“' + escapeHtml(dup[0]) + '” 已在「' + escapeHtml(cat.title) + '」,帮你跳过去 →</span>');
-      search.value = ''; state.query = ''; setActiveCat(catId); applySearch(); scrollToTerm(catId, dup[0]);
+      setStatus('<span class="ok">“' + escapeHtml(dup[0]) + '” 已在「' + escapeHtml(cat.title) + '」' + (opts.silent ? '' : ',帮你跳过去 →') + '</span>');
+      if (!opts.silent) { search.value = ''; state.query = ''; setActiveCat(catId); applySearch(); scrollToTerm(catId, dup[0]); }
       return true;
     }
     // 自动写满词卡字段(跟单词卡一模一样):en / 中文 / 词性+释义 / 音标 / 例句
@@ -1965,17 +1995,39 @@ async function autoLookupAddTerm(catId, query, setStatus) {
     if (data.example) edit.note = '例: ' + data.example;     // 例句
     if (Object.keys(edit).length) state.edits[editKey] = edit;
     save();
-    const newSection = renderCategorySection(cat);
-    if (noResults && main) main.insertBefore(newSection, noResults);
-    if (document.body.dataset.activeCat === catId) newSection.classList.add('active-cat');
-    updateCatNavCount(catId);
     setStatus('<span class="ok">✅ 已自动生成并加入 “' + escapeHtml(data.en) + '”</span>');
-    search.value = ''; state.query = ''; setActiveCat(catId); applySearch(); scrollToTerm(catId, data.en);
+    if (opts.silent) {
+      // 不重渲当前视图(留在错题卡),只更新计数;新词下次进该分类时出现
+      updateCatNavCount(catId);
+    } else {
+      const newSection = renderCategorySection(cat);
+      if (noResults && main) main.insertBefore(newSection, noResults);
+      if (document.body.dataset.activeCat === catId) newSection.classList.add('active-cat');
+      updateCatNavCount(catId);
+      search.value = ''; state.query = ''; setActiveCat(catId); applySearch(); scrollToTerm(catId, data.en);
+    }
     return true;
   } catch (e) {
     setStatus('<span class="err">查词失败: ' + escapeHtml(String(e.message || e)) + '</span>');
     return false;
   }
+}
+
+// 从 AI 评分反馈里抽出可学的英文词,生成"一键加入单词表" chips
+const _VG_STOP = new Set('the a an to of in on at for and or but is are was were be been being am do does did have has had will would can could should may might must not no yes i you he she it we they me him her us them my your his its our their this that these those there here as so if then than with from into over under about you have your really very more most much many some any all when what which who how why where because also just only one two too she\'s he\'s'.split(/\s+/));
+function grabVocabChips(data, sentence, reference, catId) {
+  const src = [(data && data.corrected) || '', ((data && data.grammar_notes) || []).join(' '), reference || ''].join(' ');
+  const seen = new Set(), words = [];
+  (src.match(/[A-Za-z][A-Za-z'-]{1,}/g) || []).forEach(w => {
+    const lw = w.toLowerCase().replace(/^'+|'+$/g, '').replace(/'s$/, '');
+    if (lw.length < 3 || _VG_STOP.has(lw) || seen.has(lw)) return;
+    seen.add(lw); words.push(lw);
+  });
+  if (!words.length) return '';
+  const chips = words.slice(0, 8).map(w =>
+    '<button class="vg-chip" data-action="grab-word" data-w="' + escapeHtml(w) + '" data-cat="' + escapeHtml(catId) + '">＋ ' + escapeHtml(w) + '</button>'
+  ).join('');
+  return '<div class="vocab-grab"><span class="vg-lbl">📥 把生词加进单词表:</span>' + chips + '</div>';
 }
 
 async function webLookupAndAdd() {
@@ -2315,9 +2367,34 @@ function submitQuizSentence() {
 }
 
 /* ---------- 结果页 ---------- */
+// 把本次测验成绩按词写进各自单词卡的历史(带时间戳),后续卡片里能看到"做题记录"
+function recordQuizHistory(qs) {
+  const at = Date.now();
+  qs.words.forEach((w, i) => {
+    const key = w.catId + '::' + w.en;
+    const edit = Object.assign({}, state.edits[key] || {});
+    const log = Array.isArray(edit.quizLog) ? edit.quizLog.slice() : [];
+    log.push({
+      at,
+      d: qs.scores.dictation[i] != null ? qs.scores.dictation[i] : null,
+      p: qs.scores.phonics[i] != null ? qs.scores.phonics[i] : null,
+      s: qs.scores.sentence[i] != null ? qs.scores.sentence[i] : null,
+    });
+    if (log.length > 20) log.splice(0, log.length - 20);   // 只留最近 20 次
+    edit.quizLog = log;
+    state.edits[key] = edit;
+  });
+  save();
+  // 重渲当前可见的相关卡片,让"做题记录"立刻出现(不在编辑态的才动)
+  document.querySelectorAll('.term:not(.is-editing)').forEach(card => {
+    if (card.dataset.id) renderCardContent(card);
+  });
+}
+
 function finishQuiz() {
   const qs = quizState;
   qs.finished = true;
+  recordQuizHistory(qs);
   practiceState = null;
   const dAvg = quizAvg(qs.scores.dictation);
   const pAvg = quizAvg(qs.scores.phonics);
@@ -2829,6 +2906,20 @@ main.addEventListener('click', e => {
     });
     return;
   }
+  // 错题卡里的生词 → 一键联网生成词卡加入(silent:不打断当前做题视图)
+  if (action === 'grab-word') {
+    const w = btn.dataset.w;
+    const cid = btn.dataset.cat;
+    if (!w || !cid || btn.disabled) return;
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = '…';
+    autoLookupAddTerm(cid, w, function(){}, { silent: true }).then(ok => {
+      if (ok) { btn.textContent = '✓ ' + w; btn.classList.add('done'); }
+      else { btn.textContent = orig; btn.disabled = false; }
+    });
+    return;
+  }
   // 整组胶囊:重命名
   if (action === 'cat-rename') {
     const catId = btn.dataset.cat;
@@ -3059,7 +3150,8 @@ main.addEventListener('click', e => {
             '<div class="ab-row"><span class="ab-label">你的</span><span class="ab-text">' + escapeHtml(sentence) + '</span></div>' +
             (data.corrected ? '<div class="ab-row"><span class="ab-label ai">AI 修正</span><span class="ab-text ai-ref">' + escapeHtml(data.corrected) + '</span><button class="speak-sentence ab-speak" data-action="speak-ref" title="朗读修正版">🔊</button></div>' : '') +
             (reference ? '<div class="ab-row"><span class="ab-label ref">模板答案</span><span class="ab-text ref">' + escapeHtml(reference) + '</span><button class="speak-sentence ab-speak" data-action="speak-ref" title="朗读模板答案">🔊</button></div>' : '') +
-          '</div>';
+          '</div>' +
+          grabVocabChips(data, sentence, reference, catId);
       }
     })
     .catch(e => {
