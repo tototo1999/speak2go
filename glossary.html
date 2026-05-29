@@ -89,8 +89,20 @@ nav.cats a.group-link {
   background: var(--accent); color: var(--surface);
   border-color: var(--accent);
   cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
 }
 nav.cats a.group-link:hover { opacity: 0.85; }
+/* 整个胶囊删除按钮(只在动态录音课胶囊上出现)*/
+.cat-del {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px;
+  border-radius: 999px;
+  font-size: 11px; font-weight: 800; line-height: 1;
+  background: rgba(0,0,0,0.14); color: inherit;
+  opacity: 0.7; cursor: pointer;
+  transition: background 0.15s, opacity 0.15s, transform 0.15s;
+}
+.cat-del:hover { background: #ff3b30; color: #fff; opacity: 1; transform: scale(1.15); }
 /* ── Review stage badge (艾宾浩斯复习阶段)──────────────────────────────── */
 .stage-badge {
   display: inline-block;
@@ -1724,14 +1736,66 @@ function setActiveCat(catId) {
   if (typeof rebuildFavorites === 'function') rebuildFavorites();
 }
 
-DATA.forEach(cat => {
+// 构造一个顶层胶囊 tab(<a>),动态录音课胶囊(dynamic:true)带 ✕ 整体删除按钮
+function makeCatTab(cat) {
   const a = document.createElement('a');
   a.href = '#';
   a.className = 'group-link';
-  a.textContent = cat.title + ' (' + getMergedTerms(cat).length + ')';
   a.dataset.cat = cat.id;
+  const label = document.createElement('span');
+  label.className = 'cat-label';
+  label.textContent = cat.title + ' (' + getMergedTerms(cat).length + ')';
+  a.appendChild(label);
+  if (cat.dynamic) {
+    const del = document.createElement('span');
+    del.className = 'cat-del';
+    del.textContent = '✕';
+    del.title = '删除整个胶囊';
+    del.setAttribute('aria-label', '删除整个胶囊');
+    del.onclick = (e) => { e.preventDefault(); e.stopPropagation(); deleteCat(cat.id); };
+    a.appendChild(del);
+  }
   a.onclick = (e) => { e.preventDefault(); setActiveCat(cat.id); };
-  catsNav.appendChild(a);
+  return a;
+}
+
+// 整个胶囊删除:移除 nav tab + section + 该 cat 下的所有词 / 收藏 / 编辑 / 软删记录 + 持久化
+function deleteCat(catId) {
+  const cat = DATA.find(c => c.id === catId);
+  if (!cat) return;
+  const count = getMergedTerms(cat).length;
+  if (!confirm('删除整个胶囊 "' + cat.title + '"?\n这会永久移除其中的 ' + count + ' 个词(不可恢复)。')) return;
+  // 1. 从 DATA 移除
+  const idx = DATA.findIndex(c => c.id === catId);
+  if (idx >= 0) DATA.splice(idx, 1);
+  // 2. 从动态 cats 持久化列表移除
+  try {
+    const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]')
+      .filter(c => c && c.id !== catId);
+    localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn));
+  } catch (e) { console.warn('[glossary] dynamic cats prune failed', e); }
+  // 3. 清该 cat 的词 + 收藏 / 软删 / 编辑(都以 catId:: 前缀存)
+  delete state.userTerms[catId];
+  const prefix = catId + '::';
+  [...state.favorites].forEach(id => { if (id.startsWith(prefix)) state.favorites.delete(id); });
+  [...state.deleted].forEach(id => { if (id.startsWith(prefix)) state.deleted.delete(id); });
+  Object.keys(state.edits).forEach(id => { if (id.startsWith(prefix)) delete state.edits[id]; });
+  save();
+  // 4. 移除 DOM:nav tab + section
+  const tab = catsNav.querySelector('a[data-cat="' + catId + '"]');
+  if (tab) tab.remove();
+  const section = document.getElementById('cat-' + catId);
+  if (section) section.remove();
+  // 5. 若删的是当前 active tab,切回第一个 cat
+  if (document.body.dataset.activeCat === catId) {
+    setActiveCat((DATA[0] && DATA[0].id) || 'vibe-coding');
+  }
+  rebuildFavorites();
+  applySearch();
+}
+
+DATA.forEach(cat => {
+  catsNav.appendChild(makeCatTab(cat));
   main.insertBefore(renderCategorySection(cat), noResults);
 });
 
@@ -1739,7 +1803,10 @@ function updateCatNavCount(catId) {
   const cat = DATA.find(c => c.id === catId);
   if (!cat) return;
   const topLink = catsNav.querySelector('a[data-cat="' + catId + '"]');
-  if (topLink) topLink.textContent = cat.title + ' (' + getMergedTerms(cat).length + ')';
+  if (!topLink) return;
+  const label = topLink.querySelector('.cat-label');
+  if (label) label.textContent = cat.title + ' (' + getMergedTerms(cat).length + ')';
+  else topLink.textContent = cat.title + ' (' + getMergedTerms(cat).length + ')';
 }
 
 function openAddTermForm(catId, btn) {
@@ -3140,13 +3207,9 @@ rebuildFavorites();
           dyn.push({ id: catId, title: lessonLabel });
           localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn));
         } catch (e) { console.warn('[glossary] dynamic cats persist failed', e); }
-        // 渲染 nav tab
-        const a = document.createElement('a');
-        a.href = '#';
-        a.className = 'group-link inactive';
-        a.textContent = lessonLabel + ' (0)';
-        a.dataset.cat = catId;
-        a.onclick = (e) => { e.preventDefault(); setActiveCat(catId); };
+        // 渲染 nav tab(带 ✕ 整体删除按钮)
+        const a = makeCatTab(cat);
+        a.classList.add('inactive');
         catsNav.appendChild(a);
         // 渲染 section
         const newSection = renderCategorySection(cat);
@@ -3206,15 +3269,17 @@ rebuildFavorites();
       if (topLink) {
         // 移除老 badge(如果有)
         topLink.querySelectorAll('.cat-new-badge').forEach(el => el.remove());
-        // 重写 textContent(包含新计数)
+        // 重写计数(只动 label span,保留 ✕ 删除按钮)
         const baseText = cat.title + ' (' + getMergedTerms(cat).length + ')';
-        topLink.textContent = baseText;
+        const labelEl = topLink.querySelector('.cat-label');
+        if (labelEl) labelEl.textContent = baseText;
+        else topLink.textContent = baseText;
         // 加红标 +N(5 秒后淡出消失,user 看到 = 提示)
         if (addedCount > 0) {
           const badge = document.createElement('span');
           badge.className = 'cat-new-badge';
           badge.textContent = '+' + addedCount;
-          topLink.appendChild(badge);
+          (labelEl || topLink).appendChild(badge);
           setTimeout(() => badge.classList.add('fade-out'), 5000);
           setTimeout(() => { if (badge.parentNode) badge.remove(); }, 5800);
         }
