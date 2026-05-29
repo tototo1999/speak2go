@@ -580,6 +580,9 @@ section h2 .count {
 .import-modal .im-foot button { flex:1; padding:11px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text); }
 .import-modal .im-foot .im-go { background:var(--accent); color:#fff; border-color:var(--accent); }
 .import-modal .im-foot .im-go:disabled { opacity:.5; cursor:default; }
+.import-modal .im-foot .im-go.listening { background:#ef4444; border-color:#ef4444; animation:shPulse 1s ease-in-out infinite; }
+@keyframes shPulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+.shadow-modal .sh-foot { flex-wrap:wrap; }
 /* 跟读弹窗 */
 .shadow-modal .sh-body { padding:18px; }
 .shadow-modal .sh-target { font-size:19px; line-height:1.7; text-align:center; margin-bottom:12px; }
@@ -1757,15 +1760,16 @@ function startShadow(catId, en) {
   bg.innerHTML =
     '<div class="import-modal shadow-modal">' +
       '<div class="im-head"><h3>🎙 跟读 · <code>' + escapeHtml(en) + '</code></h3>' +
-        '<div class="im-sub">听这句课堂原声 → 点「开始说」复述 → 比对</div></div>' +
+        '<div class="im-sub">听原声 → 点「开始说」复述(说完点「⏹ 说完了」)→ 比对</div></div>' +
       '<div class="sh-body">' +
         '<div class="sh-target" data-role="target">' + escapeHtml(target) + '</div>' +
         '<div class="sh-you" data-role="you"></div>' +
         '<div class="sh-score" data-role="score"></div>' +
       '</div>' +
-      '<div class="im-foot">' +
-        '<button data-act="replay">🔊 再听原句</button>' +
+      '<div class="im-foot sh-foot">' +
+        '<button data-act="replay">🔊 原句</button>' +
         '<button class="im-go" data-act="rec">🎙 开始说</button>' +
+        '<button data-act="replay-me" disabled>🔊 我说的</button>' +
         '<button data-act="close">关闭</button>' +
       '</div>' +
     '</div>';
@@ -1774,8 +1778,15 @@ function startShadow(catId, en) {
   if (!SR) { $('[data-role=score]').innerHTML = '<span style="color:#ef4444">这个浏览器不支持语音识别,用 Chrome / Edge / Safari</span>'; $('[data-act=rec]').disabled = true; }
   _shadowPlayClip(d);   // 进来自动听一遍原句
 
-  function stopRec() { try { if (_shadowRec) _shadowRec.stop(); } catch (e) {} _shadowRec = null; }
+  let listening = false, recorder = null, micStream = null, myUrl = null;
+  function cleanupMic() {
+    try { if (recorder && recorder.state !== 'inactive') recorder.stop(); } catch (e) {}
+    try { if (micStream) micStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    micStream = null;
+  }
+  function stopRec() { try { if (_shadowRec) _shadowRec.stop(); } catch (e) {} }
   function compareAndShow(said) {
+    if (!bg.isConnected) return;
     const tWords = _shadowNorm(target);
     const saidSet = new Set(_shadowNorm(said));
     let hit = 0;
@@ -1789,19 +1800,56 @@ function startShadow(catId, en) {
   bg.addEventListener('click', e => {
     const b = e.target.closest('button[data-act]'); if (!b) return;
     const act = b.dataset.act;
-    if (act === 'close') { stopRec(); try { if (_shadowAudio) _shadowAudio.pause(); } catch (e) {} bg.remove(); }
+    const recBtn = $('[data-act=rec]');
+    if (act === 'close') { stopRec(); cleanupMic(); try { if (_shadowAudio) _shadowAudio.pause(); } catch (e) {} if (myUrl) { try { URL.revokeObjectURL(myUrl); } catch (e) {} } bg.remove(); }
     else if (act === 'replay') { _shadowPlayClip(d); }
+    else if (act === 'replay-me') { if (myUrl) { try { if (_shadowAudio) _shadowAudio.pause(); } catch (e) {} const a = new Audio(myUrl); a.play().catch(() => {}); } }
     else if (act === 'rec') {
       if (!SR) return;
-      stopRec();
-      const rec = new SR(); _shadowRec = rec;
-      rec.lang = 'en-US'; rec.interimResults = false; rec.maxAlternatives = 1;
-      b.textContent = '🔴 在听…'; b.disabled = true;
-      $('[data-role=score]').textContent = '';
-      rec.onresult = ev => { compareAndShow(ev.results[0][0].transcript); };
-      rec.onerror = ev => { $('[data-role=score]').innerHTML = '<span style="color:#ef4444">没听到声音(' + escapeHtml(ev.error || '') + '),再试一次</span>'; };
-      rec.onend = () => { b.textContent = '🎙 再说一遍'; b.disabled = false; _shadowRec = null; };
-      try { rec.start(); } catch (e) { b.textContent = '🎙 开始说'; b.disabled = false; }
+      if (listening) { stopRec(); cleanupMic(); return; }   // ⏹ 再点一次 = 说完了 → 比对
+      // 同时跑:SpeechRecognition 出文字比对 + MediaRecorder 录下你的声音(为了"听我说的")
+      const startRecognition = () => {
+        const rec = new SR(); _shadowRec = rec;
+        rec.lang = 'en-US'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
+        let finalTxt = '';
+        listening = true;
+        recBtn.textContent = '⏹ 说完了'; recBtn.classList.add('listening');
+        $('[data-role=score]').innerHTML = '<span style="color:#ef4444">🔴 在听…说完点「⏹ 说完了」</span>';
+        $('[data-role=you]').textContent = '';
+        rec.onresult = ev => {
+          let interim = '';
+          for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) finalTxt += r[0].transcript + ' '; else interim += r[0].transcript; }
+          $('[data-role=you]').textContent = '你说的:' + (finalTxt + interim).trim();
+        };
+        rec.onerror = ev => { if (ev.error && ev.error !== 'no-speech' && ev.error !== 'aborted') $('[data-role=score]').innerHTML = '<span style="color:#ef4444">识别出错(' + escapeHtml(ev.error) + '),再试一次</span>'; };
+        rec.onend = () => {
+          listening = false; recBtn.textContent = '🎙 再说一遍'; recBtn.classList.remove('listening'); _shadowRec = null;
+          cleanupMic();
+          const said = finalTxt.trim();
+          if (said) compareAndShow(said);
+        };
+        try { rec.start(); } catch (e) { listening = false; recBtn.textContent = '🎙 开始说'; recBtn.classList.remove('listening'); }
+      };
+      // 先要麦克风录音(给"听我说的"用),拿不到也不挡转写
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+          micStream = stream;
+          try {
+            const chunks = [];
+            recorder = new MediaRecorder(stream);
+            recorder.ondataavailable = ev => { if (ev.data && ev.data.size) chunks.push(ev.data); };
+            recorder.onstop = () => {
+              if (chunks.length && bg.isConnected) {
+                if (myUrl) { try { URL.revokeObjectURL(myUrl); } catch (e) {} }
+                myUrl = URL.createObjectURL(new Blob(chunks, { type: chunks[0].type || 'audio/webm' }));
+                const rm = $('[data-act=replay-me]'); if (rm) rm.disabled = false;
+              }
+            };
+            recorder.start();
+          } catch (e) {}
+          startRecognition();
+        }).catch(() => { startRecognition(); });
+      } else { startRecognition(); }
     }
   });
 }
