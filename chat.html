@@ -3400,7 +3400,10 @@
   function _loadCatTerms(catId) {
     try {
       const all = JSON.parse(localStorage.getItem('glossary-user-terms') || '{}')
-      return all[catId] || []
+      const arr = all[catId] || []
+      // 跟词库保持同步:过滤掉在词库里被删除的词(glossary-deleted 存 `catId::en`)
+      const deleted = new Set(JSON.parse(localStorage.getItem('glossary-deleted') || '[]'))
+      return deleted.size ? arr.filter(w => !deleted.has(catId + '::' + (w.en || ''))) : arr
     } catch (e) { return [] }
   }
 
@@ -3484,7 +3487,7 @@
 
   // 跨 tab 同步:glossary tab 改了词 / 加了新 lesson cat,这边自动 reload sidebar
   window.addEventListener('storage', (e) => {
-    if ((e.key === 'glossary-user-terms' || e.key === 'glossary-dynamic-cats') &&
+    if ((e.key === 'glossary-user-terms' || e.key === 'glossary-dynamic-cats' || e.key === 'glossary-deleted') &&
         location.hostname.includes('speak2go')) {
       renderSidebarLessons()
       _checkReviewReminder()
