@@ -2300,6 +2300,11 @@ function renderQuizDictation() {
     inp.oninput = () => renderDictSlots(w.en, inp.value);
     inp.focus();
   }
+  // 进入这个词自动播一遍例句(听音默写);用户已点过测验/复习,autoplay 不会被拦
+  try {
+    const exBtn = quizBody.querySelector('[data-action="quiz-play-ex"]');
+    speakTerm(quizExampleSentence(w), exBtn);
+  } catch (e) {}
 }
 
 // 字母数(只数字母数字,符号/空格不算)
