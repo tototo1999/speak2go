@@ -4571,6 +4571,15 @@
                 } else {
                   bubble.textContent = c
                 }
+              } else if (
+                !document.querySelector(`[data-msg-id="${newRow.id}"]`) &&
+                (newRow.message_type === 'multimodal_summary' || newRow.id === audioPlaceholderId)
+              ) {
+                // 占位之前只在状态栏显示(无气泡),现在收到最终卡片/错误 →
+                // 清掉音频状态栏 + 把这条当普通气泡渲染出来(否则卡片要刷新才出现)
+                setAudioProgress(newRow.id, '✅')
+                appendMessage(newRow)
+                scrollToBottom()
               }
               // AI 复习 marker hook(UPDATE 路径,如 worker 写卡片或 AI 回答完毕)
               if (newRow.role === 'ai') _handleAiMessageContent(c)
@@ -5573,7 +5582,7 @@
       user_id: expertUserId,
       role: 'ai',
       type: 'markdown',
-      content: `🎙 正在转写 + 提取 20 词 / 句式...\n📁 \`${audio.name}\`\n_预计 ~3 min(Scribe v2 + Gemini Flash)_`,
+      content: `🎙 [▰▱▱▱▱] 0/5 转写 + 提取生词中...\n📁 \`${audio.name}\`\n_预计 ~3 min_`,
       channel: 'main',
       source: 'ai-generated',
       message_type: 'multimodal_summary',
