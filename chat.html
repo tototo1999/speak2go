@@ -3473,11 +3473,13 @@
           '<span class="sb-check">' + (w.completed ? '☑' : '☐') + '</span>' +
           '<span class="sb-en">' + _escHtmlS(w.en) + '</span>' +
           '<span class="sb-zh">' + _escHtmlS(w.zh || '') + '</span>' +
-          (hasAudio ? '<button class="sb-play" title="听当时上课这句录音" aria-label="听课堂录音">▶️</button>' : '')
+          (hasAudio ? '<button class="sb-play" title="听当时上课这句录音" aria-label="听课堂录音">▶️</button>'
+                    : '<button class="sb-play sb-tts" title="听单词原声(朗读)" aria-label="朗读单词">🔊</button>')
         item.addEventListener('click', () => toggleSidebarWord(cat.id, w.en))
-        if (hasAudio) {
-          const pb = item.querySelector('.sb-play')
-          pb.addEventListener('click', (ev) => { ev.stopPropagation(); playLessonClip(w.audio_url, w.start, pb) })
+        const pb = item.querySelector('.sb-play')
+        if (pb) {
+          if (hasAudio) pb.addEventListener('click', (ev) => { ev.stopPropagation(); playLessonClip(w.audio_url, w.start, pb) })
+          else pb.addEventListener('click', (ev) => { ev.stopPropagation(); speakWordTTS(w.en, pb) })
         }
         list.appendChild(item)
       })
@@ -3495,6 +3497,35 @@
     _saveCatTerms(catId, terms)
     renderSidebarLessons()  // 同 tab 内重渲
     // localStorage.setItem 自动给跨 tab 触发 storage event
+  }
+
+  // 没课堂录音的词 → 播放单词 TTS 原声(浏览器 Web Speech)。
+  // 用 .speaking 类(不复用课堂录音的 .is-playing),避免 _stopSbAudio 把图标改成 ▶️。
+  let _sbTtsVoice = null
+  function _pickSbTtsVoice() {
+    if (_sbTtsVoice) return _sbTtsVoice
+    const vs = (typeof speechSynthesis !== 'undefined' && speechSynthesis.getVoices()) || []
+    _sbTtsVoice = vs.find(v => /en[-_]US/i.test(v.lang) && /female|samantha|google/i.test(v.name)) ||
+                  vs.find(v => /en[-_]US/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null
+    return _sbTtsVoice
+  }
+  if (typeof speechSynthesis !== 'undefined') {
+    speechSynthesis.addEventListener('voiceschanged', () => { _sbTtsVoice = null; _pickSbTtsVoice() })
+  }
+  function speakWordTTS(en, btn) {
+    if (typeof speechSynthesis === 'undefined' || !en) return
+    _stopSbAudio()                 // 停掉正在放的课堂录音
+    speechSynthesis.cancel()
+    document.querySelectorAll('.sb-tts.speaking').forEach(b => { b.classList.remove('speaking'); b.textContent = '🔊' })
+    const u = new SpeechSynthesisUtterance(en)
+    u.lang = 'en-US'; u.rate = 0.85
+    const v = _pickSbTtsVoice(); if (v) u.voice = v
+    if (btn) {
+      btn.classList.add('speaking'); btn.textContent = '⏸'
+      const reset = () => { btn.classList.remove('speaking'); btn.textContent = '🔊' }
+      u.onend = reset; u.onerror = reset
+    }
+    speechSynthesis.speak(u)
   }
 
   /* 课堂录音回放 — 点侧栏 ▶️ / 总结卡 🔊,从该词时间点起播 ~该句(自动停) */
