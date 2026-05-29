@@ -1760,7 +1760,7 @@ function startShadow(catId, en) {
   bg.innerHTML =
     '<div class="import-modal shadow-modal">' +
       '<div class="im-head"><h3>🎙 跟读 · <code>' + escapeHtml(en) + '</code></h3>' +
-        '<div class="im-sub">听原声 → 点「开始说」复述(说完点「⏹ 说完了」)→ 比对</div></div>' +
+        '<div class="im-sub">听原声 → 点「开始说」/按住空格 复述 → 说完点「⏹ 说完了」(或松空格)→ 比对</div></div>' +
       '<div class="sh-body">' +
         '<div class="sh-target" data-role="target">' + escapeHtml(target) + '</div>' +
         '<div class="sh-you" data-role="you"></div>' +
@@ -1797,60 +1797,80 @@ function startShadow(catId, en) {
     $('[data-role=score]').innerHTML = '<strong>命中 ' + hit + '/' + tWords.length + ' 词 · ' + pct + '%</strong>' + (hit < tWords.length ? ' — 红色是漏读/读错的' : ' 💯');
   }
 
+  function beginTalk() {
+    if (!SR || listening) return;
+    const recBtn = $('[data-act=rec]'); if (!recBtn) return;
+    // 同时跑:SpeechRecognition 出文字比对 + MediaRecorder 录下你的声音(为了"听我说的")
+    const startRecognition = () => {
+      const rec = new SR(); _shadowRec = rec;
+      rec.lang = 'en-US'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
+      let finalTxt = '';
+      listening = true;
+      recBtn.textContent = '⏹ 说完了'; recBtn.classList.add('listening');
+      $('[data-role=score]').innerHTML = '<span style="color:#ef4444">🔴 在听…说完点「⏹ 说完了」(或松开空格)</span>';
+      $('[data-role=you]').textContent = '';
+      rec.onresult = ev => {
+        let interim = '';
+        for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) finalTxt += r[0].transcript + ' '; else interim += r[0].transcript; }
+        $('[data-role=you]').textContent = '你说的:' + (finalTxt + interim).trim();
+      };
+      rec.onerror = ev => { if (ev.error && ev.error !== 'no-speech' && ev.error !== 'aborted') $('[data-role=score]').innerHTML = '<span style="color:#ef4444">识别出错(' + escapeHtml(ev.error) + '),再试一次</span>'; };
+      rec.onend = () => {
+        listening = false; recBtn.textContent = '🎙 再说一遍'; recBtn.classList.remove('listening'); _shadowRec = null;
+        cleanupMic();
+        const said = finalTxt.trim();
+        if (said) compareAndShow(said);
+      };
+      try { rec.start(); } catch (e) { listening = false; recBtn.textContent = '🎙 开始说'; recBtn.classList.remove('listening'); }
+    };
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) {
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        micStream = stream;
+        try {
+          const chunks = [];
+          recorder = new MediaRecorder(stream);
+          recorder.ondataavailable = ev => { if (ev.data && ev.data.size) chunks.push(ev.data); };
+          recorder.onstop = () => {
+            if (chunks.length && bg.isConnected) {
+              if (myUrl) { try { URL.revokeObjectURL(myUrl); } catch (e) {} }
+              myUrl = URL.createObjectURL(new Blob(chunks, { type: chunks[0].type || 'audio/webm' }));
+              const rm = $('[data-act=replay-me]'); if (rm) rm.disabled = false;
+            }
+          };
+          recorder.start();
+        } catch (e) {}
+        startRecognition();
+      }).catch(() => { startRecognition(); });
+    } else { startRecognition(); }
+  }
+  function endTalk() { if (listening) { stopRec(); cleanupMic(); } }
+
+  // 按住空格说话(对讲机式):按下=录,松开=出结果。比盯按钮还准。
+  let spaceHold = false;
+  function onKey(e) {
+    if (e.key !== ' ' && e.code !== 'Space') return;
+    const t = e.target; if (t && /^(input|textarea|select)$/i.test(t.tagName)) return;
+    if (e.type === 'keydown') {
+      if (e.repeat) { e.preventDefault(); return; }
+      e.preventDefault();
+      if (!listening) { spaceHold = true; beginTalk(); }
+    } else {
+      if (spaceHold) { e.preventDefault(); spaceHold = false; endTalk(); }
+    }
+  }
+  document.addEventListener('keydown', onKey);
+  document.addEventListener('keyup', onKey);
+
   bg.addEventListener('click', e => {
     const b = e.target.closest('button[data-act]'); if (!b) return;
     const act = b.dataset.act;
-    const recBtn = $('[data-act=rec]');
-    if (act === 'close') { stopRec(); cleanupMic(); try { if (_shadowAudio) _shadowAudio.pause(); } catch (e) {} if (myUrl) { try { URL.revokeObjectURL(myUrl); } catch (e) {} } bg.remove(); }
+    if (act === 'close') {
+      document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey);
+      stopRec(); cleanupMic(); try { if (_shadowAudio) _shadowAudio.pause(); } catch (e) {} if (myUrl) { try { URL.revokeObjectURL(myUrl); } catch (e) {} } bg.remove();
+    }
     else if (act === 'replay') { _shadowPlayClip(d); }
     else if (act === 'replay-me') { if (myUrl) { try { if (_shadowAudio) _shadowAudio.pause(); } catch (e) {} const a = new Audio(myUrl); a.play().catch(() => {}); } }
-    else if (act === 'rec') {
-      if (!SR) return;
-      if (listening) { stopRec(); cleanupMic(); return; }   // ⏹ 再点一次 = 说完了 → 比对
-      // 同时跑:SpeechRecognition 出文字比对 + MediaRecorder 录下你的声音(为了"听我说的")
-      const startRecognition = () => {
-        const rec = new SR(); _shadowRec = rec;
-        rec.lang = 'en-US'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
-        let finalTxt = '';
-        listening = true;
-        recBtn.textContent = '⏹ 说完了'; recBtn.classList.add('listening');
-        $('[data-role=score]').innerHTML = '<span style="color:#ef4444">🔴 在听…说完点「⏹ 说完了」</span>';
-        $('[data-role=you]').textContent = '';
-        rec.onresult = ev => {
-          let interim = '';
-          for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) finalTxt += r[0].transcript + ' '; else interim += r[0].transcript; }
-          $('[data-role=you]').textContent = '你说的:' + (finalTxt + interim).trim();
-        };
-        rec.onerror = ev => { if (ev.error && ev.error !== 'no-speech' && ev.error !== 'aborted') $('[data-role=score]').innerHTML = '<span style="color:#ef4444">识别出错(' + escapeHtml(ev.error) + '),再试一次</span>'; };
-        rec.onend = () => {
-          listening = false; recBtn.textContent = '🎙 再说一遍'; recBtn.classList.remove('listening'); _shadowRec = null;
-          cleanupMic();
-          const said = finalTxt.trim();
-          if (said) compareAndShow(said);
-        };
-        try { rec.start(); } catch (e) { listening = false; recBtn.textContent = '🎙 开始说'; recBtn.classList.remove('listening'); }
-      };
-      // 先要麦克风录音(给"听我说的"用),拿不到也不挡转写
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) {
-        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-          micStream = stream;
-          try {
-            const chunks = [];
-            recorder = new MediaRecorder(stream);
-            recorder.ondataavailable = ev => { if (ev.data && ev.data.size) chunks.push(ev.data); };
-            recorder.onstop = () => {
-              if (chunks.length && bg.isConnected) {
-                if (myUrl) { try { URL.revokeObjectURL(myUrl); } catch (e) {} }
-                myUrl = URL.createObjectURL(new Blob(chunks, { type: chunks[0].type || 'audio/webm' }));
-                const rm = $('[data-act=replay-me]'); if (rm) rm.disabled = false;
-              }
-            };
-            recorder.start();
-          } catch (e) {}
-          startRecognition();
-        }).catch(() => { startRecognition(); });
-      } else { startRecognition(); }
-    }
+    else if (act === 'rec') { if (listening) { spaceHold = false; endTalk(); } else { beginTalk(); } }
   });
 }
 
