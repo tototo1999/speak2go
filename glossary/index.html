@@ -564,6 +564,22 @@ section h2 .count {
 .cat-tb-btn { font-family:inherit; font-size:12px; padding:5px 11px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--text-dim); cursor:pointer; }
 .cat-tb-btn:hover { border-color:var(--accent); color:var(--accent); }
 .cat-tb-btn.danger:hover { border-color:#ef4444; color:#ef4444; }
+/* 导入挑词弹窗 */
+.import-modal-bg { position:fixed; inset:0; z-index:1100; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:20px; }
+.import-modal { background:var(--surface); border-radius:16px; max-width:460px; width:100%; max-height:82vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.25); }
+.import-modal .im-head { padding:16px 18px; border-bottom:1px solid var(--border); }
+.import-modal .im-head h3 { margin:0 0 4px; font-size:16px; }
+.import-modal .im-head .im-sub { font-size:12px; color:var(--text-dim); }
+.import-modal .im-tools { padding:8px 18px; display:flex; gap:8px; align-items:center; border-bottom:1px solid var(--border); }
+.import-modal .im-list { overflow-y:auto; padding:2px 18px; flex:1; }
+.import-modal .im-item { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); cursor:pointer; }
+.import-modal .im-item input { width:18px; height:18px; flex-shrink:0; accent-color:var(--accent); cursor:pointer; }
+.import-modal .im-item .im-en { font-family:ui-monospace,monospace; font-weight:700; }
+.import-modal .im-item .im-zh { color:var(--text-dim); font-size:13px; margin-left:auto; }
+.import-modal .im-foot { padding:14px 18px; border-top:1px solid var(--border); display:flex; gap:10px; }
+.import-modal .im-foot button { flex:1; padding:11px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text); }
+.import-modal .im-foot .im-go { background:var(--accent); color:#fff; border-color:var(--accent); }
+.import-modal .im-foot .im-go:disabled { opacity:.5; cursor:default; }
 .recover-btn {
   background: rgba(245,158,11,0.06);
   border: 1px dashed #f59e0b;
@@ -3547,156 +3563,127 @@ rebuildFavorites();
   const params = new URLSearchParams(window.location.search);
   const raw = params.get('import');
   if (!raw) return;
-  const lessonLabel = (params.get('date') || '').trim();  // 'NYC Global Center 13 2 · 2026-05-28 10:14'
+  const lessonLabel = (params.get('date') || '').trim();
+  let arr, lessonAudioUrl = '';
   try {
     const binary = atob(decodeURIComponent(raw));
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const jsonStr = new TextDecoder('utf-8').decode(bytes);
-    const parsed = JSON.parse(jsonStr);
-    // 兼容两种 payload 形态:老=数组 [{en,zh,hint}];新=对象 {audio_url, words:[{en,zh,hint,start}]}
-    let arr, lessonAudioUrl = '';
-    if (Array.isArray(parsed)) {
-      arr = parsed;
-    } else if (parsed && Array.isArray(parsed.words)) {
-      arr = parsed.words;
-      lessonAudioUrl = parsed.audio_url || '';
-    } else {
-      return;
-    }
-    if (arr.length === 0) return;
-
-    // 决定写入的 cat:有 lessonLabel → 新建/复用动态 cat;无 → fallback 到 nyc-global-center
-    let catId;
-    if (lessonLabel) {
-      // 用 lesson label 生成 stable slug 作 cat id(便于 dedup + 持久化)
-      catId = 'lesson-' + lessonLabel.toLowerCase()
-        .replace(/[^a-z0-9一-鿿]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .slice(0, 60);
-      // 检查 cat 是否已存在,不存在则创建(push 到 DATA + 持久化 + 渲染 nav tab + section)
-      let cat = DATA.find(c => c.id === catId);
-      if (!cat) {
-        cat = { id: catId, title: lessonLabel, terms: [], dynamic: true };
-        DATA.push(cat);
-        // persist 到 localStorage
-        try {
-          const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]');
-          dyn.push({ id: catId, title: lessonLabel });
-          localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn));
-        } catch (e) { console.warn('[glossary] dynamic cats persist failed', e); }
-        // 渲染 nav tab
-        const a = document.createElement('a');
-        a.href = '#';
-        a.className = 'group-link inactive';
-        a.textContent = lessonLabel + ' (0)';
-        a.dataset.cat = catId;
-        a.onclick = (e) => { e.preventDefault(); setActiveCat(catId); };
-        catsNav.appendChild(a);
-        // 渲染 section
-        const newSection = renderCategorySection(cat);
-        if (typeof noResults !== 'undefined' && noResults && main) {
-          main.insertBefore(newSection, noResults);
-        }
-      }
-    } else {
-      catId = 'nyc-global-center';
-    }
-    // 若该表之前被整体删除,导入即视为「恢复」:移出已删名单 + 确保它在 DATA 里(渲染 tab + section)
-    try {
-      const dead = JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]');
-      if (dead.includes(catId)) {
-        localStorage.setItem('glossary-deleted-cats', JSON.stringify(dead.filter(x => x !== catId)));
-      }
-    } catch (e) {}
-    if (!DATA.find(c => c.id === catId)) {
-      const title = (catId === 'nyc-global-center') ? 'NYC Global Center' : (lessonLabel || catId);
-      const reCat = { id: catId, title, terms: [] };
-      if (catId !== 'nyc-global-center') reCat.dynamic = true;
-      DATA.push(reCat);
-      const reA = document.createElement('a');
-      reA.href = '#'; reA.className = 'group-link inactive'; reA.textContent = title + ' (0)';
-      reA.dataset.cat = catId; reA.onclick = (e) => { e.preventDefault(); setActiveCat(catId); };
-      catsNav.appendChild(reA);
-      const reSec = renderCategorySection(reCat);
-      if (typeof noResults !== 'undefined' && noResults && main) main.insertBefore(reSec, noResults);
-    }
-    if (!state.userTerms[catId]) state.userTerms[catId] = [];
-
-    // 检测现有词条是否含 mojibake(UTF-8 被错解成 Latin-1 的特征字符)— 若有则全清
-    const HAS_MOJIBAKE = /Â|ä¾|å|°ç|é¨|É|Ê|Ë|Ï|Ð/;
-    const existing = state.userTerms[catId];
-    const dirty = existing.some(t => HAS_MOJIBAKE.test((t.zh || '') + (t.hint || '')));
-    if (dirty) {
-      console.warn('[glossary import] mojibake detected, clearing before re-import');
-      state.userTerms[catId] = [];
-    }
-    const seen = new Set(state.userTerms[catId].map(t => (t.en || '').toLowerCase()));
-    let addedCount = 0;
-    arr.forEach(t => {
-      const en = (t.en || (Array.isArray(t) ? t[0] : '') || '').trim();
-      if (!en || seen.has(en.toLowerCase())) return;
-      const item = {
-        en,
-        zh: t.zh || (Array.isArray(t) ? t[1] : '') || '',
-        hint: t.hint || (Array.isArray(t) ? t[2] : '') || '',
-        completed: false,
-        review_stage: 0,                              // 艾宾浩斯阶段 0-6
-        next_due_at: Date.now() + 5 * 60 * 1000,      // 5 分钟后 due(测试期);正式 1h
-      };
-      // 录音回放:课堂导入带 audio_url + 该词起播秒数 → 词卡显示 ▶️
-      if (lessonAudioUrl && typeof t.start === 'number') {
-        item.audio_url = lessonAudioUrl;
-        item.start = t.start;
-      }
-      state.userTerms[catId].push(item);
-      seen.add(en.toLowerCase());
-      addedCount++;
-    });
-    save();
-    // 清 URL 防止刷新重复导入
-    history.replaceState({}, '', location.pathname);
-    // 静默更新 UI:重建 NYC Global Center section 让新词进 DOM + 更新 nav tab (N) 计数 + 红标 +N 徽章
-    // ❌ 不切 tab,❌ 不弹 alert — 保持用户当前 active tab 不动
-    try {
-      const cat = DATA.find(c => c.id === catId);
-      if (cat && typeof renderCategorySection === 'function') {
-        // ⚠️ renderCategorySection 内部已经 remove existing,直接 insertBefore noResults(跟初始渲染 L1340 一致)
-        const newSection = renderCategorySection(cat);
-        if (typeof noResults !== 'undefined' && noResults && main) {
-          main.insertBefore(newSection, noResults);
-        }
-        // 恢复 active-cat class(如果 user 当前正在 NYC Global Center tab 时)
-        if (document.body.dataset.activeCat === catId) {
-          newSection.classList.add('active-cat');
-        }
-      }
-      // 更新 nav tab (N) 计数 + 加红标 +N 徽章
-      const topLink = catsNav.querySelector('a[data-cat="' + catId + '"]');
-      if (topLink) {
-        // 移除老 badge(如果有)
-        topLink.querySelectorAll('.cat-new-badge').forEach(el => el.remove());
-        // 重写 textContent(包含新计数)
-        const baseText = cat.title + ' (' + getMergedTerms(cat).length + ')';
-        topLink.textContent = baseText;
-        // 加红标 +N(5 秒后淡出消失,user 看到 = 提示)
-        if (addedCount > 0) {
-          const badge = document.createElement('span');
-          badge.className = 'cat-new-badge';
-          badge.textContent = '+' + addedCount;
-          topLink.appendChild(badge);
-          setTimeout(() => badge.classList.add('fade-out'), 5000);
-          setTimeout(() => { if (badge.parentNode) badge.remove(); }, 5800);
-        }
-      }
-    } catch (uiErr) {
-      console.warn('[glossary import] UI rebuild failed, data already saved:', uiErr);
-    }
-    console.log('[glossary import] silently added ' + addedCount + ' new terms to ' + catId + (dirty ? ' (mojibake cleared)' : ''));
+    const parsed = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+    if (Array.isArray(parsed)) arr = parsed;
+    else if (parsed && Array.isArray(parsed.words)) { arr = parsed.words; lessonAudioUrl = parsed.audio_url || ''; }
+    else { history.replaceState({}, '', location.pathname); return; }
   } catch (e) {
-    console.error('[glossary import] failed:', e);
+    console.error('[glossary import] decode failed', e);
+    history.replaceState({}, '', location.pathname); return;
   }
+  history.replaceState({}, '', location.pathname);   // 清 URL,防刷新重复
+  if (!arr || !arr.length) return;
+
+  // 目标 cat(只算 id,先不创建 —— 用户确认勾选后才建)
+  let catId;
+  if (lessonLabel) {
+    catId = 'lesson-' + lessonLabel.toLowerCase().replace(/[^a-z0-9一-鿿]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+  } else { catId = 'nyc-global-center'; }
+
+  // 候选 = 解析出的词里"还没在该分类"的新词(去重),让用户勾选
+  const existing = new Set((state.userTerms[catId] || []).map(t => (t.en || '').toLowerCase()));
+  const cands = arr.map(t => {
+    const en = (t.en || (Array.isArray(t) ? t[0] : '') || '').trim();
+    if (!en) return null;
+    return { en, zh: t.zh || (Array.isArray(t) ? t[1] : '') || '', hint: t.hint || (Array.isArray(t) ? t[2] : '') || '', start: (typeof t.start === 'number' ? t.start : undefined) };
+  }).filter(Boolean).filter(w => !existing.has(w.en.toLowerCase()));
+  if (!cands.length) return;   // 全是已有词,无新词可加
+
+  showImportPicker(cands, { catId, lessonLabel, lessonAudioUrl });
 })();
+
+// 勾选弹窗:列出这节课提炼的新词,用户勾选 → 加入选中的
+function showImportPicker(cands, ctx) {
+  const bg = document.createElement('div');
+  bg.className = 'import-modal-bg';
+  const rows = cands.map((w, i) =>
+    '<label class="im-item"><input type="checkbox" data-i="' + i + '" checked>' +
+      '<span class="im-en">' + escapeHtml(w.en) + '</span>' +
+      '<span class="im-zh">' + escapeHtml(w.zh) + '</span></label>'
+  ).join('');
+  bg.innerHTML =
+    '<div class="import-modal">' +
+      '<div class="im-head"><h3>📚 挑词加入「' + escapeHtml(ctx.lessonLabel || 'NYC Global Center') + '」</h3>' +
+        '<div class="im-sub">这节课提炼了 ' + cands.length + ' 个新词,勾选你要加入的</div></div>' +
+      '<div class="im-tools"><button class="cat-tb-btn" data-act="all">全选</button><button class="cat-tb-btn" data-act="none">全不选</button>' +
+        '<span class="im-count" style="margin-left:auto;align-self:center;font-size:12px;color:var(--text-dim)"></span></div>' +
+      '<div class="im-list">' + rows + '</div>' +
+      '<div class="im-foot"><button class="im-go" data-act="go"></button><button data-act="cancel">取消</button></div>' +
+    '</div>';
+  document.body.appendChild(bg);
+  const list = bg.querySelector('.im-list');
+  const upd = () => {
+    const n = list.querySelectorAll('input:checked').length;
+    bg.querySelector('.im-count').textContent = '已选 ' + n + '/' + cands.length;
+    bg.querySelector('.im-go').textContent = '加入选中 ' + n + ' 词';
+    bg.querySelector('.im-go').disabled = n === 0;
+  };
+  upd();
+  bg.addEventListener('change', e => { if (e.target.matches('input[type=checkbox]')) upd(); });
+  bg.addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]'); if (!b) return;
+    const act = b.dataset.act;
+    if (act === 'all') { list.querySelectorAll('input').forEach(c => c.checked = true); upd(); }
+    else if (act === 'none') { list.querySelectorAll('input').forEach(c => c.checked = false); upd(); }
+    else if (act === 'cancel') { bg.remove(); }
+    else if (act === 'go') {
+      const chosen = [...list.querySelectorAll('input:checked')].map(c => cands[+c.dataset.i]);
+      bg.remove();
+      if (chosen.length) doImportWords(chosen, ctx);
+    }
+  });
+}
+
+// 真正写入:建/恢复 cat → 加选中的词(带艾宾浩斯字段 + 录音回放)→ 切到该分类 + 红标
+function doImportWords(chosen, ctx) {
+  const { catId, lessonLabel, lessonAudioUrl } = ctx;
+  if (!DATA.find(c => c.id === catId)) {
+    const title = (catId === 'nyc-global-center') ? 'NYC Global Center' : (lessonLabel || catId);
+    const cat = { id: catId, title, terms: [] };
+    if (catId !== 'nyc-global-center') {
+      cat.dynamic = true;
+      try { const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]'); if (!dyn.find(c => c.id === catId)) { dyn.push({ id: catId, title }); localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn)); } } catch (e) {}
+    }
+    DATA.push(cat);
+    const a = document.createElement('a');
+    a.href = '#'; a.className = 'group-link inactive'; a.textContent = title + ' (0)';
+    a.dataset.cat = catId; a.onclick = (e) => { e.preventDefault(); setActiveCat(catId); };
+    catsNav.appendChild(a);
+    const sec = renderCategorySection(cat);
+    if (noResults && main) main.insertBefore(sec, noResults);
+  }
+  // 之前整组删过 → 导入即恢复
+  try { const dead = JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]'); if (dead.includes(catId)) localStorage.setItem('glossary-deleted-cats', JSON.stringify(dead.filter(x => x !== catId))); } catch (e) {}
+  if (!state.userTerms[catId]) state.userTerms[catId] = [];
+  const seen = new Set(state.userTerms[catId].map(t => (t.en || '').toLowerCase()));
+  let added = 0;
+  chosen.forEach(w => {
+    if (seen.has(w.en.toLowerCase())) return;
+    const item = { en: w.en, zh: w.zh || '', hint: w.hint || '', completed: false, review_stage: 0, next_due_at: Date.now() + 5 * 60 * 1000 };
+    if (lessonAudioUrl && typeof w.start === 'number') { item.audio_url = lessonAudioUrl; item.start = w.start; }
+    state.userTerms[catId].push(item); seen.add(w.en.toLowerCase()); added++;
+  });
+  save();
+  const cat = DATA.find(c => c.id === catId);
+  const ns = renderCategorySection(cat);
+  if (noResults && main) main.insertBefore(ns, noResults);
+  updateCatNavCount(catId);
+  setActiveCat(catId); applySearch();   // 切到该分类让用户看到刚加的词
+  const topLink = catsNav.querySelector('a[data-cat="' + catId + '"]');
+  if (topLink && added > 0) {
+    topLink.querySelectorAll('.cat-new-badge').forEach(el => el.remove());
+    const badge = document.createElement('span'); badge.className = 'cat-new-badge'; badge.textContent = '+' + added;
+    topLink.appendChild(badge);
+    setTimeout(() => badge.classList.add('fade-out'), 5000);
+    setTimeout(() => { if (badge.parentNode) badge.remove(); }, 5800);
+  }
+}
 
 // Set initial active group (restore from localStorage, default Vibe Coding)
 setActiveCat(localStorage.getItem('glossary-active-cat') || 'vibe-coding');
