@@ -2198,6 +2198,26 @@ function startQuiz() {
   renderQuizPhase();
 }
 
+// 艾宾浩斯间隔(跟 chat.html 一致):stage 0→6
+const QUIZ_REVIEW_INTERVALS = [5*60*1000, 60*60*1000, 24*60*60*1000, 3*24*60*60*1000, 7*24*60*60*1000, 14*24*60*60*1000, 30*24*60*60*1000];
+
+// 复习模式:从到期词建临时题库,只做「默写」一遍,做完按对错推进艾宾浩斯阶段(pass)
+function startReviewQuiz(due) {
+  const words = (due || []).map(d => {
+    const t = getTermData(d.catId, d.en) || {};
+    return { catId: d.catId, en: d.en, zh: d.zh || t.zh || '', phonetic: t.phonetic || '', hint: t.hint || '' };
+  }).filter(w => w.en && w.zh);
+  if (!words.length) { alert('没有可复习的词'); return; }
+  quizState = {
+    words, n: words.length, phase: 1, idx: 0, awaitingNext: false, reviewMode: true,
+    scores: { dictation: [], phonics: [], sentence: [] },
+  };
+  quizOverlay.classList.add('show');
+  quizOverlay.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  renderQuizPhase();
+}
+
 function closeQuiz(silent) {
   if (quizState && !silent && !quizState.finished) {
     if (!confirm('退出测验?当前进度会丢失。')) return;
@@ -2213,13 +2233,14 @@ function closeQuiz(silent) {
 
 function quizSetBar() {
   const qs = quizState;
-  qbPhase.textContent = QUIZ_PHASE_NAMES[qs.phase];
+  const totalPhases = qs.reviewMode ? 1 : 3;     // 复习只做默写一遍
+  qbPhase.textContent = qs.reviewMode ? '📚 复习默写' : QUIZ_PHASE_NAMES[qs.phase];
   qbProg.textContent = '第 ' + (qs.idx + 1) + '/' + qs.n;
   const done = (qs.phase - 1) * qs.n + qs.idx;
-  qbFill.style.width = Math.round((done / (qs.n * 3)) * 100) + '%';
+  qbFill.style.width = Math.round((done / (qs.n * totalPhases)) * 100) + '%';
   const cur = qs.phase === 1 ? qs.scores.dictation : qs.phase === 2 ? qs.scores.phonics : qs.scores.sentence;
   const ok = cur.filter(s => s >= 60).length;
-  qbScore.textContent = '本部分 ✅ ' + ok + '/' + cur.length;
+  qbScore.textContent = '✅ ' + ok + '/' + cur.length;
 }
 
 function renderQuizPhase() {
@@ -2233,7 +2254,10 @@ function renderQuizPhase() {
 function quizAdvance() {
   const qs = quizState;
   qs.idx++;
-  if (qs.idx >= qs.n) { qs.phase++; qs.idx = 0; }
+  if (qs.idx >= qs.n) {
+    if (qs.reviewMode) { finishQuiz(); return; }   // 复习只一遍默写,做完直接出结果
+    qs.phase++; qs.idx = 0;
+  }
   if (qs.phase > 3) { finishQuiz(); return; }
   renderQuizPhase();
 }
@@ -2241,7 +2265,9 @@ function quizAdvance() {
 // 提交后通用:显示反馈 + 下一题按钮(聚焦,回车即进)
 function quizShowNext(fbHtml) {
   quizState.awaitingNext = true;
-  const last = (quizState.phase === 3 && quizState.idx === quizState.n - 1);
+  const last = quizState.reviewMode
+    ? (quizState.idx === quizState.n - 1)
+    : (quizState.phase === 3 && quizState.idx === quizState.n - 1);
   const fb = quizBody.querySelector('[data-role="quiz-fb"]');
   if (fb) fb.innerHTML = fbHtml;
   const act = quizBody.querySelector('[data-role="quiz-act"]');
@@ -2468,8 +2494,40 @@ function recordQuizHistory(qs) {
 function finishQuiz() {
   const qs = quizState;
   qs.finished = true;
-  recordQuizHistory(qs);
   practiceState = null;
+
+  // ── 复习模式:按默写对错推进艾宾浩斯阶段(对=升级 pass,错=降级,重排 due)──
+  if (qs.reviewMode) {
+    let passed = 0; const missed = [];
+    qs.words.forEach((w, i) => {
+      const arr = state.userTerms[w.catId] || [];
+      const t = arr.find(x => (x.en || '').toLowerCase() === w.en.toLowerCase());
+      if (!t) return;
+      const correct = (qs.scores.dictation[i] || 0) >= 100;
+      if (correct) { t.review_stage = Math.min((t.review_stage || 0) + 1, 6); passed++; }
+      else { t.review_stage = Math.max((t.review_stage || 0) - 1, 0); missed.push(w); }
+      const stg = Math.min(t.review_stage, QUIZ_REVIEW_INTERVALS.length - 1);
+      t.next_due_at = Date.now() + QUIZ_REVIEW_INTERVALS[stg];
+    });
+    save();
+    try { localStorage.removeItem('glossary-review-queue'); } catch (e) {}
+    qbPhase.textContent = '复习完成'; qbProg.textContent = ''; qbScore.textContent = ''; qbFill.style.width = '100%';
+    quizBody.innerHTML =
+      '<div class="quiz-result">' +
+        '<div class="qr-rank ' + (passed === qs.n ? 's' : passed >= qs.n * 0.6 ? 'a' : 'c') + '">' + passed + '/' + qs.n + '</div>' +
+        '<div class="qr-total">复习完成 · 记住 ' + passed + ' 词</div>' +
+        '<div class="qr-sub">记住的词复习阶段 +1,下次到期顺延;没记住的降级、很快再考</div>' +
+        (missed.length
+          ? '<div class="qr-wrong"><h4>还没记住 (' + missed.length + ')</h4>' +
+              missed.map(w => '<div class="qr-w-item"><code>' + escapeHtml(w.en) + '</code> — ' + escapeHtml(w.zh) + '</div>').join('') +
+            '</div>'
+          : '<div class="qr-sub">全部记住 💯</div>') +
+        '<div class="quiz-actions"><button class="ghost" data-action="quiz-close">完成 ✓</button></div>' +
+      '</div>';
+    return;
+  }
+
+  recordQuizHistory(qs);
   const dAvg = quizAvg(qs.scores.dictation);
   const pAvg = quizAvg(qs.scores.phonics);
   const sAvg = quizAvg(qs.scores.sentence);
@@ -3635,6 +3693,16 @@ rebuildFavorites();
 
 // Set initial active group (restore from localStorage, default Vibe Coding)
 setActiveCat(localStorage.getItem('glossary-active-cat') || 'vibe-coding');
+
+// 从 chat 的「开始复习」跳来:?review=1 + localStorage 队列 → 起这批到期词的临时复习题库
+(function maybeStartReviewQuiz() {
+  const p = new URLSearchParams(location.search);
+  if (p.get('review') !== '1') return;
+  let q = [];
+  try { q = JSON.parse(localStorage.getItem('glossary-review-queue') || '[]'); } catch (e) {}
+  history.replaceState({}, '', location.pathname);   // 清 URL,避免刷新重开
+  if (Array.isArray(q) && q.length) setTimeout(() => startReviewQuiz(q), 250);
+})();
 
 /* ============================================================
    跨标签 / iframe 同步 — 另一个 tab 改了 localStorage,这边自动跟上

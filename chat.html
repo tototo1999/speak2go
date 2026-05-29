@@ -3655,24 +3655,9 @@
   }
 
   function _startReviewSession(dueWords) {
-    const wordList = dueWords.map(w => '- ' + w.en + (w.zh ? ' (' + w.zh + ')' : '')).join('\n')
-    const prompt =
-      '【AI 复习模式】请帮我测试这些词的掌握度。要求:\n' +
-      '\n' +
-      '出题规则:\n' +
-      '- 一次只出 1 题,3 种轮换题型:① 中译英 ② 英译中 ③ 给一句英文例句让我填空(单词挖空)\n' +
-      '- 我回答后,你判断对错并:\n' +
-      '  - 答对: 在 message 末尾加 `[REVIEW: <英文词>=correct]`\n' +
-      '  - 答错: 加 `[REVIEW: <英文词>=wrong]` + 给正确答案 + 一句简短解释\n' +
-      '- 立即出下一题,直到所有词测完\n' +
-      '- 全部测完后,输出 `[REVIEW_BATCH_END]`\n' +
-      '\n' +
-      '要复习的词:\n' + wordList + '\n' +
-      '\n' +
-      '现在开始第 1 题。'
-    const inputEl = document.getElementById('messageInput')
-    if (inputEl) inputEl.value = prompt
-    if (typeof sendMessage === 'function') sendMessage()
+    // 跳到单词表的「做题」模式:这批到期词 = 临时题库,做完按对错推进艾宾浩斯阶段(pass)
+    try { localStorage.setItem('glossary-review-queue', JSON.stringify(dueWords)) } catch (e) {}
+    window.open('/glossary/?review=1', 'speak2goGlossary')
   }
 
   function _parseReviewMarkers(content) {
