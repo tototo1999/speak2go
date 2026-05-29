@@ -190,6 +190,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
   <script src="/vendor/supabase.js"
           onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'"></script>
+  <script src="/assets/systems.js"></script>
   <script src="/vendor/marked.min.js"
           onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/marked@12/marked.min.js'"></script>
   <script src="/vendor/html2pdf.bundle.min.js"
@@ -2560,11 +2561,14 @@
     try {
       const { data: profile } = await sb
         .from('profiles')
-        .select('role,display_name')
+        .select('role,display_name,system')
         .eq('user_id', currentUser.id)
         .maybeSingle()
       currentRole = profile?.role || 'user'
       currentDisplayName = profile?.display_name || ''
+      // Resolve the bound system (well2go.ai stays forced to 'well2go'); drives
+      // product / room / branding for the rest of this session, before loadRooms().
+      applySystem(profile?.system)
       // Input area role badge: Coach → OG, Learner → Me
       const badge = document.getElementById('roleBadge')
       if (badge) {
@@ -2816,14 +2820,28 @@
   }
 
   // tradego subdirectory: industry-locked speaking practice; product='tradego' is isolated from main site rooms
-  // 双域名 — hostname-aware config(speak2go.ai = 英文老师 / well2go.ai = 康复师)
+  // Multi-system routing (Phase 0): one codebase serves speak2go / well2go / essay / korean.
+  // The bound system comes from profiles.system (resolved in init() once the profile loads),
+  // EXCEPT well2go.ai which is forced to 'well2go' to preserve current domain behavior.
+  // These start at the hostname-derived defaults so first paint (before init) matches today;
+  // init() overrides currentSystem + the three derived vars below from the profile before loadRooms().
   const _IS_WELL2GO = location.hostname.toLowerCase().includes('well2go')
-  const DEMO_INDUSTRY = _IS_WELL2GO ? 'Rehab therapy' : 'English speaking'
-  const DEMO_PRODUCT = _IS_WELL2GO ? 'well2go' : 'speak2go'
-  // Singleton room model: one room for the whole site, every account joins it on login
-  const SPEAK2GO_SINGLETON_ROOM_ID = _IS_WELL2GO
-    ? '8980e7e0-e24a-44c4-b542-47c8e9105947'  // well2go: iamaog 的 Chat
-    : '5b622bc4-88b4-47c1-9aa6-643c4b1e0f96'  // speak2go: iamarobot 的 Chat
+  let currentSystem = window.SYSTEMS[_IS_WELL2GO ? 'well2go' : 'speak2go'] || window.SYSTEMS.speak2go
+  let DEMO_INDUSTRY = currentSystem.industry
+  let DEMO_PRODUCT = currentSystem.product
+  // Singleton room model: one room for the whole system, every account joins it on login
+  let SPEAK2GO_SINGLETON_ROOM_ID = currentSystem.roomId
+
+  // Apply the resolved system to all derived routing vars. Called from init() after the
+  // profile loads. well2go.ai stays forced to 'well2go' via resolveSystemId().
+  function applySystem(profileSystem) {
+    const sysId = window.resolveSystemId(location.hostname, profileSystem)
+    currentSystem = window.SYSTEMS[sysId] || window.SYSTEMS.speak2go
+    DEMO_INDUSTRY = currentSystem.industry
+    DEMO_PRODUCT = currentSystem.product
+    SPEAK2GO_SINGLETON_ROOM_ID = currentSystem.roomId
+    return currentSystem
+  }
 
   // Admin email whitelist (must match admin.html / is_admin() RPC)
   const ADMIN_EMAILS = ['lirui88888862@gmail.com']

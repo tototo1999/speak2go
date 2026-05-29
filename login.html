@@ -232,10 +232,16 @@
       btn.disabled = true; btn.textContent = 'Creating account…'
       try {
         const target = role === 'expert' ? '/chat.html' : '/chat.html'
+        // Optional ?system= binds the new account to a learning system; absent → trigger
+        // defaults to 'speak2go'. Validated against the known set; unknown values omitted.
+        const sysParam = new URLSearchParams(location.search).get('system')
+        const VALID_SYSTEMS = ['speak2go', 'essay', 'korean', 'well2go']
+        const signupData = { role, nickname }
+        if (sysParam && VALID_SYSTEMS.includes(sysParam)) signupData.system = sysParam
         const { data, error } = await sb.auth.signUp({
           email, password,
           options: {
-            data: { role, nickname },
+            data: signupData,
             emailRedirectTo: `${window.location.origin}${target}`,
           },
         })
