@@ -712,6 +712,12 @@
     .sb-word.completed .sb-check { color: var(--teal, #1D9E75); }
     .sb-en { font-weight: 600; color: var(--text, #222); font-family: "SF Mono", Menlo, monospace; }
     .sb-zh { color: var(--text-soft, #666); font-size: 11px; margin-left: auto; }
+    .sb-play {
+      flex-shrink: 0; margin-left: 6px; border: none; background: none; cursor: pointer;
+      font-size: 12px; line-height: 1; padding: 2px 4px; border-radius: 4px; opacity: 0.8;
+    }
+    .sb-play:hover { opacity: 1; background: rgba(29,158,117,0.12); }
+    .sb-play.is-playing { opacity: 1; animation: pulse 0.8s ease-in-out infinite; }
 
     .todo-group { margin-top: 5px; padding-left: 12px; }
     .todo-pill {
@@ -3462,11 +3468,17 @@
       words.forEach(w => {
         const item = document.createElement('div')
         item.className = 'sb-word' + (w.completed ? ' completed' : '')
+        const hasAudio = w.audio_url && typeof w.start === 'number'
         item.innerHTML =
           '<span class="sb-check">' + (w.completed ? '☑' : '☐') + '</span>' +
           '<span class="sb-en">' + _escHtmlS(w.en) + '</span>' +
-          '<span class="sb-zh">' + _escHtmlS(w.zh || '') + '</span>'
+          '<span class="sb-zh">' + _escHtmlS(w.zh || '') + '</span>' +
+          (hasAudio ? '<button class="sb-play" title="听当时上课这句录音" aria-label="听课堂录音">▶️</button>' : '')
         item.addEventListener('click', () => toggleSidebarWord(cat.id, w.en))
+        if (hasAudio) {
+          const pb = item.querySelector('.sb-play')
+          pb.addEventListener('click', (ev) => { ev.stopPropagation(); playLessonClip(w.audio_url, w.start, pb) })
+        }
         list.appendChild(item)
       })
       body.appendChild(capsule)
@@ -3484,6 +3496,50 @@
     renderSidebarLessons()  // 同 tab 内重渲
     // localStorage.setItem 自动给跨 tab 触发 storage event
   }
+
+  /* 课堂录音回放 — 点侧栏 ▶️ / 总结卡 🔊,从该词时间点起播 ~该句(自动停) */
+  const SB_CLIP_SECONDS = 14
+  let _sbAudio = null, _sbStopTimer = null, _sbPlayingBtn = null
+  function _stopSbAudio() {
+    if (_sbStopTimer) { clearTimeout(_sbStopTimer); _sbStopTimer = null }
+    if (_sbAudio) { try { _sbAudio.pause() } catch (e) {} }
+    document.querySelectorAll('.sb-play.is-playing').forEach(b => { b.classList.remove('is-playing'); b.textContent = '▶️' })
+    _sbPlayingBtn = null
+  }
+  function playLessonClip(audioUrl, startSec, btn) {
+    if (!audioUrl || typeof startSec !== 'number') return
+    if (_sbPlayingBtn === btn && _sbAudio && !_sbAudio.paused) { _stopSbAudio(); return }
+    _stopSbAudio()
+    if (!_sbAudio) {
+      _sbAudio = new Audio(); _sbAudio.preload = 'none'
+      _sbAudio.addEventListener('ended', _stopSbAudio)
+      _sbAudio.addEventListener('error', _stopSbAudio)
+    }
+    const start = Math.max(0, startSec - 0.8)
+    _sbPlayingBtn = btn || null
+    if (btn) { btn.classList.add('is-playing'); btn.textContent = '⏸' }
+    const seekAndPlay = () => {
+      try { _sbAudio.currentTime = start } catch (e) {}
+      _sbAudio.play().then(() => { _sbStopTimer = setTimeout(_stopSbAudio, SB_CLIP_SECONDS * 1000) })
+        .catch(() => { _stopSbAudio(); if (btn) btn.textContent = '⚠️' })
+    }
+    if (_sbAudio.src !== audioUrl) {
+      _sbAudio.src = audioUrl
+      _sbAudio.addEventListener('loadedmetadata', seekAndPlay, { once: true })
+      _sbAudio.load()
+    } else if (_sbAudio.readyState >= 1) { seekAndPlay() }
+    else { _sbAudio.addEventListener('loadedmetadata', seekAndPlay, { once: true }); _sbAudio.load() }
+  }
+  // 总结卡里的 🔊 markdown 链接(href = <audio_url>#t=秒)→ 拦截播放,不跳转
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href*="#t="]')
+    if (!a) return
+    const href = a.getAttribute('href') || ''
+    const m = href.match(/^(.*?)#t=([\d.]+)$/)
+    if (!m || !/\/storage\/v1\/object\/public\//.test(m[1])) return
+    e.preventDefault()
+    playLessonClip(m[1], parseFloat(m[2]), null)
+  })
 
   // 跨 tab 同步:glossary tab 改了词 / 加了新 lesson cat,这边自动 reload sidebar
   window.addEventListener('storage', (e) => {

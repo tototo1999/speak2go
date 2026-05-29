@@ -1122,6 +1122,25 @@ let DATA = [
   } catch (e) { console.warn('[glossary] dynamic cats load failed:', e); }
 })();
 
+// 过滤掉用户整体删除过的表(内置 + 动态都记在 glossary-deleted-cats,刷新后仍生效)
+(function removeDeletedCats() {
+  try {
+    const dead = new Set(JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]'));
+    if (!dead.size) return;
+    for (let i = DATA.length - 1; i >= 0; i--) {
+      if (dead.has(DATA[i].id)) DATA.splice(i, 1);
+    }
+  } catch (e) { console.warn('[glossary] deleted cats filter failed:', e); }
+})();
+
+// 应用用户改过的表名(内置 + 动态都记在 glossary-cat-titles,刷新后仍生效)
+(function applyCatTitleOverrides() {
+  try {
+    const map = JSON.parse(localStorage.getItem('glossary-cat-titles') || '{}');
+    DATA.forEach(cat => { if (map[cat.id]) cat.title = map[cat.id]; });
+  } catch (e) { console.warn('[glossary] cat title overrides failed:', e); }
+})();
+
 const main = document.getElementById('main');
 const catsNav = document.getElementById('catsNav');
 const search = document.getElementById('search');
@@ -3331,6 +3350,25 @@ rebuildFavorites();
       }
     } else {
       catId = 'nyc-global-center';
+    }
+    // 若该表之前被整体删除,导入即视为「恢复」:移出已删名单 + 确保它在 DATA 里(渲染 tab + section)
+    try {
+      const dead = JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]');
+      if (dead.includes(catId)) {
+        localStorage.setItem('glossary-deleted-cats', JSON.stringify(dead.filter(x => x !== catId)));
+      }
+    } catch (e) {}
+    if (!DATA.find(c => c.id === catId)) {
+      const title = (catId === 'nyc-global-center') ? 'NYC Global Center' : (lessonLabel || catId);
+      const reCat = { id: catId, title, terms: [] };
+      if (catId !== 'nyc-global-center') reCat.dynamic = true;
+      DATA.push(reCat);
+      const reA = document.createElement('a');
+      reA.href = '#'; reA.className = 'group-link inactive'; reA.textContent = title + ' (0)';
+      reA.dataset.cat = catId; reA.onclick = (e) => { e.preventDefault(); setActiveCat(catId); };
+      catsNav.appendChild(reA);
+      const reSec = renderCategorySection(reCat);
+      if (typeof noResults !== 'undefined' && noResults && main) main.insertBefore(reSec, noResults);
     }
     if (!state.userTerms[catId]) state.userTerms[catId] = [];
 
