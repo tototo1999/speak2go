@@ -5557,7 +5557,8 @@
   function isAudioAttachment(a) {
     const name = (a?.name || '').toLowerCase()
     const mime = (a?.mime_type || '').toLowerCase()
-    return /\.(m4a|mp3|wav|aac|ogg|webm|flac)$/.test(name) || mime.startsWith('audio/')
+    // qta = iPhone QuickTime Audio(空间/分层语音备忘录),mp4/mov 也可能是录音 → 都交给 worker(会 ffmpeg 转码)
+    return /\.(m4a|mp3|wav|aac|ogg|webm|flac|qta|mp4|mov|m4v)$/.test(name) || mime.startsWith('audio/')
   }
 
   function isImageAttachment(a) {
