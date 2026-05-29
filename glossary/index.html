@@ -1162,9 +1162,9 @@ function getTermData(catId, en) {
   const cat = DATA.find(c => c.id === catId);
   if (!cat) return null;
   let orig = cat.terms.find(t => t[0] === en);
+  const userArr = state.userTerms[catId] || [];
+  const u = userArr.find(t => t.en === en);
   if (!orig) {
-    const userArr = state.userTerms[catId] || [];
-    const u = userArr.find(t => t.en === en);
     if (u) orig = [u.en, u.zh, u.hint || ''];
   }
   if (!orig) return null;
@@ -1180,7 +1180,10 @@ function getTermData(catId, en) {
     note: edit.note || '',
     sentences: Array.isArray(edit.sentences) ? edit.sentences.slice() : [],
     edited: Object.keys(edit).length > 0,
-    dictRomaji
+    dictRomaji,
+    // 录音回放:该词当时在课堂录音里的起播秒数 + 录音 URL(只有带 ▶️ 的课堂导入词有)
+    audioUrl: (u && u.audio_url) || '',
+    audioStart: (u && typeof u.start === 'number') ? u.start : null
   };
 }
 
@@ -1421,7 +1424,7 @@ function buildSentenceSectionHtml(en, zh, sentences) {
       '<div class="sentence-prompt" data-tpl="' + initIdx + '">' + buildSentencePrompt(initIdx, en, zh) + '</div>' +
       '<button type="button" class="sentence-rotate" data-action="rotate-prompt" title="换一题">↻</button>' +
     '</div>' +
-    '<textarea name="sentence-input" rows="8" placeholder="把上面的中文译成英文…" spellcheck="false" style="display:block;width:100%;box-sizing:border-box;font-size:15px;line-height:1.6;min-height:180px;resize:vertical;padding:10px 12px;font-family:-apple-system,sans-serif;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;"></textarea>' +
+    '<textarea name="sentence-input" rows="2" placeholder="把上面的中文译成英文…" spellcheck="false" style="display:block;width:100%;box-sizing:border-box;font-size:15px;line-height:1.6;min-height:62px;resize:vertical;padding:10px 12px;font-family:-apple-system,sans-serif;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;"></textarea>' +
     '<div class="sentence-feedback" data-role="sentence-feedback" style="display:none;"></div>' +
     '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
       '<button type="button" class="sentence-save" data-action="save-sentence">✓ 检查并记下</button>' +
@@ -1751,7 +1754,7 @@ function openAddTermForm(catId, btn) {
   const first = form.querySelector('[name=q]');
   if (first) {
     first.focus();
-    first.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const b = form.querySelector('[data-action=add-auto]'); if (b) b.click(); } };
+    first.onkeydown = e => { if (e.key === 'Enter' && !imeConfirmEnter(e)) { e.preventDefault(); const b = form.querySelector('[data-action=add-auto]'); if (b) b.click(); } };
   }
 }
 
@@ -2283,11 +2286,21 @@ if (quizOverlay) {
 if (quizBtn) quizBtn.addEventListener('click', startQuiz);
 if (quizCloseBtn) quizCloseBtn.addEventListener('click', () => closeQuiz(false));
 // 单一 document 回车/Esc 处理器:每次按键只做「提交」或「进下一题」之一,
+// 中文输入法 composition 跟踪:macOS 上 compositionend 常先于 keydown 触发,
+// 单靠 e.isComposing / keyCode===229 会漏掉「选字确认」那一下回车 → 误提交。
+// 加 compositionend 后的短时间窗兜底,覆盖两种事件顺序。
+let _imeComposing = false, _imeEndAt = 0;
+document.addEventListener('compositionstart', () => { _imeComposing = true; });
+document.addEventListener('compositionend', () => { _imeComposing = false; _imeEndAt = Date.now(); });
+function imeConfirmEnter(e) {
+  return e.isComposing || e.keyCode === 229 || _imeComposing || (Date.now() - _imeEndAt < 150);
+}
+
 // e.repeat 守卫杀掉「按住回车自动重复」导致的级联跳题(修 答错就直接结束)
 document.addEventListener('keydown', e => {
   if (!quizState) return;
   // 中文输入法 composition / 候选确认中:回车只确认输入,不当提交(否则填罗马音时选字回车会误提交)
-  if (e.isComposing || e.keyCode === 229) return;
+  if (imeConfirmEnter(e)) return;
   if (e.key === 'Escape') { closeQuiz(false); return; }
   if (e.key !== 'Enter' || e.repeat) return;
   e.preventDefault();
@@ -2543,7 +2556,7 @@ function renderPracticePreview() {
     input.autocomplete = 'off';
     input.spellcheck = false;
     input.oninput = e => { practiceState.playerRomaji[i] = e.target.value; };
-    input.onkeydown = e => { if (e.key === 'Enter' && !(practiceState && practiceState.quizMode)) { e.preventDefault(); submitPractice(); } };
+    input.onkeydown = e => { if (e.key === 'Enter' && !imeConfirmEnter(e) && !(practiceState && practiceState.quizMode)) { e.preventDefault(); submitPractice(); } };
     slot.appendChild(sylBtn);
     slot.appendChild(input);
     preview.appendChild(slot);
@@ -2747,8 +2760,10 @@ main.addEventListener('click', e => {
       if (e) { e.title = t; localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn)); }
     } catch (err) {}
     updateCatNavCount(catId);                 // 刷新顶部 tab 文字
-    const sec = document.getElementById('cat-' + catId);
-    if (sec) { const ns = renderCategorySection(cat); sec.replaceWith(ns); if (document.body.dataset.activeCat === catId) ns.classList.add('active-cat'); }
+    // renderCategorySection 内部已 remove 旧 section,直接 insertBefore 重新插入
+    const ns = renderCategorySection(cat);
+    if (noResults && main) main.insertBefore(ns, noResults);
+    if (document.body.dataset.activeCat === catId) ns.classList.add('active-cat');
     applySearch();
     return;
   }
