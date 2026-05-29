@@ -1640,8 +1640,9 @@ function speakTerm(text, btn) {
 }
 
 /* ============================================================
-   课堂录音回放 — 点 ▶️ 从该词当时的时间点起播,一直放到录音结束 / 再点一次按停
+   课堂录音回放 — 点 ▶️ 从该词当时的时间点起播,最多放 1 分钟 / 录音结束 / 再点一次按停
    ============================================================ */
+const LESSON_MAX_SECONDS = 60;    // 回放上限:最多放 1 分钟自动停
 let _lessonAudio = null;          // 共享 <audio>(同一时间只播一段)
 let _lessonStopTimer = null;
 let _lessonPlayingId = null;      // 当前在播的 catId::en(用稳定 key,不依赖会被重渲的 btn 节点)
@@ -1673,7 +1674,8 @@ function playTermAudio(catId, en, btn) {
   const seekAndPlay = () => {
     try { _lessonAudio.currentTime = start; } catch (e) {}
     _lessonAudio.play().then(() => {
-      // 不再 14 秒自动停:一直播到录音结束('ended' 复位)或用户再点一次(toggle 停)
+      // 最多放 1 分钟自动停;期间录音结束('ended' 复位)或用户再点一次(toggle 停)也会停
+      _lessonStopTimer = setTimeout(_stopLessonAudio, LESSON_MAX_SECONDS * 1000);
     }).catch(err => {
       console.warn('[glossary] audio play failed', err);
       _resetLessonButtons();
