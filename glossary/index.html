@@ -539,6 +539,12 @@ section h2 .count {
   transition: background 0.15s;
 }
 .add-term-btn:hover { background: rgba(29,158,117,0.12); }
+/* 整组胶囊工具条 */
+.cat-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 14px; padding:8px 0; border-bottom:1px dashed var(--border); }
+.cat-toolbar .cat-ttl { font-size:14px; font-weight:700; color:var(--text); margin-right:auto; }
+.cat-tb-btn { font-family:inherit; font-size:12px; padding:5px 11px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--text-dim); cursor:pointer; }
+.cat-tb-btn:hover { border-color:var(--accent); color:var(--accent); }
+.cat-tb-btn.danger:hover { border-color:#ef4444; color:#ef4444; }
 .recover-btn {
   background: rgba(245,158,11,0.06);
   border: 1px dashed #f59e0b;
@@ -1599,6 +1605,16 @@ function renderCategorySection(cat) {
     };
     grid.appendChild(recover);
   }
+  // 整组胶囊工具条(只给动态课程组:可重命名 / 删整组)
+  if (cat.dynamic) {
+    const bar = document.createElement('div');
+    bar.className = 'cat-toolbar';
+    bar.innerHTML =
+      '<span class="cat-ttl">📅 ' + escapeHtml(cat.title) + '</span>' +
+      '<button class="cat-tb-btn" data-action="cat-rename" data-cat="' + cat.id + '">✎ 重命名本组</button>' +
+      '<button class="cat-tb-btn danger" data-action="cat-del" data-cat="' + cat.id + '">🗑 删除本组</button>';
+    section.appendChild(bar);
+  }
   section.appendChild(grid);
   return section;
 }
@@ -2270,6 +2286,8 @@ if (quizCloseBtn) quizCloseBtn.addEventListener('click', () => closeQuiz(false))
 // e.repeat 守卫杀掉「按住回车自动重复」导致的级联跳题(修 答错就直接结束)
 document.addEventListener('keydown', e => {
   if (!quizState) return;
+  // 中文输入法 composition / 候选确认中:回车只确认输入,不当提交(否则填罗马音时选字回车会误提交)
+  if (e.isComposing || e.keyCode === 229) return;
   if (e.key === 'Escape') { closeQuiz(false); return; }
   if (e.key !== 'Enter' || e.repeat) return;
   e.preventDefault();
@@ -2711,6 +2729,51 @@ main.addEventListener('click', e => {
       btn.disabled = false; btn.textContent = orig;
       // 成功:autoLookupAddTerm 已重渲该分类(表单随之消失);失败留着让用户改词重试
     });
+    return;
+  }
+  // 整组胶囊:重命名
+  if (action === 'cat-rename') {
+    const catId = btn.dataset.cat;
+    const cat = DATA.find(c => c.id === catId);
+    if (!cat) return;
+    const name = prompt('重命名这一组胶囊:', cat.title);
+    if (name == null) return;
+    const t = name.trim();
+    if (!t) return;
+    cat.title = t;
+    try {
+      const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]');
+      const e = dyn.find(c => c.id === catId);
+      if (e) { e.title = t; localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn)); }
+    } catch (err) {}
+    updateCatNavCount(catId);                 // 刷新顶部 tab 文字
+    const sec = document.getElementById('cat-' + catId);
+    if (sec) { const ns = renderCategorySection(cat); sec.replaceWith(ns); if (document.body.dataset.activeCat === catId) ns.classList.add('active-cat'); }
+    applySearch();
+    return;
+  }
+  // 整组胶囊:删除整组(词 + 音标/笔记/删除/收藏 + tab + section)
+  if (action === 'cat-del') {
+    const catId = btn.dataset.cat;
+    const cat = DATA.find(c => c.id === catId);
+    if (!cat) return;
+    const n = (state.userTerms[catId] || []).length;
+    if (!confirm('删除整组「' + cat.title + '」?组内 ' + n + ' 个词会一起删除,不可恢复。')) return;
+    delete state.userTerms[catId];
+    [...state.deleted].forEach(id => { if (id.startsWith(catId + '::')) state.deleted.delete(id); });
+    [...state.favorites].forEach(id => { if (id.startsWith(catId + '::')) state.favorites.delete(id); });
+    Object.keys(state.edits).forEach(k => { if (k.startsWith(catId + '::')) delete state.edits[k]; });
+    const di = DATA.findIndex(c => c.id === catId);
+    if (di >= 0) DATA.splice(di, 1);
+    try {
+      const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]').filter(c => c.id !== catId);
+      localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn));
+    } catch (err) {}
+    save();
+    const navA = catsNav.querySelector('a[data-cat="' + catId + '"]'); if (navA) navA.remove();
+    const sec = document.getElementById('cat-' + catId); if (sec) sec.remove();
+    const first = DATA[0]; if (first) setActiveCat(first.id);
+    rebuildFavorites();
     return;
   }
   if (action === 'add-cancel') {
