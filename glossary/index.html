@@ -1724,17 +1724,19 @@ function openAddTermForm(catId, btn) {
   form.style.gridColumn = '1 / -1';
   form.innerHTML =
     '<form class="edit-form" onsubmit="return false">' +
-      '<div class="edit-row"><label>英文 *</label><input type="text" name="en" placeholder="e.g. Procrastinate" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>' +
-      '<div class="edit-row"><label>中文 *</label><input type="text" name="zh" placeholder="e.g. 拖延"></div>' +
-      '<div class="edit-row"><label>解释 (选填)</label><textarea name="hint" rows="2" placeholder="用法 / 例句 / 关联词…"></textarea></div>' +
+      '<div class="edit-row"><label>输入一个词(英文 / 中文)</label><input type="text" name="q" placeholder="例:credit —— 自动联网生成完整词卡" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>' +
+      '<div data-role="add-status" style="font-size:12px;min-height:16px;margin:2px 2px 8px;"></div>' +
       '<div class="edit-actions">' +
-        '<button type="button" data-action="add-save" data-cat="' + catId + '">添加</button>' +
+        '<button type="button" data-action="add-auto" data-cat="' + catId + '">🌐 自动查词并加入</button>' +
         '<button type="button" data-action="add-cancel">取消</button>' +
       '</div>' +
     '</form>';
   btn.replaceWith(form);
-  const first = form.querySelector('[name=en]');
-  if (first) first.focus();
+  const first = form.querySelector('[name=q]');
+  if (first) {
+    first.focus();
+    first.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const b = form.querySelector('[data-action=add-auto]'); if (b) b.click(); } };
+  }
 }
 
 function rebuildFavorites() {
@@ -1817,80 +1819,71 @@ function updateWebLookupBtn() {
   if (webLookupStatus) webLookupStatus.innerHTML = '';
 }
 
-async function webLookupAndAdd() {
-  const raw = search.value.trim();
-  if (!raw) return;
-  const { id: catId, title } = activeCatInfo();
-  const SUPABASE_URL = 'https://qjnagbzqhoansixqharb.supabase.co';
-  const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqbmFnYnpxaG9hbnNpeHFoYXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDIxODIsImV4cCI6MjA5MzkxODE4Mn0.GpMUVTk6JvqeciXagXQiJunc8TLFMHg3_b9reIjJ2Y8';
+// 通用:输入一个词(中/英)→ 联网 glossary-lookup → 自动生成完整词卡(en/音标/中文/释义/例句)→ 加入 catId
+// 搜索框「在网络上查」和「+ 添加单词」表单共用这一套(全自动,无手动填)
+const _GLOSSARY_SB_URL = 'https://qjnagbzqhoansixqharb.supabase.co';
+const _GLOSSARY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqbmFnYnpxaG9hbnNpeHFoYXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDIxODIsImV4cCI6MjA5MzkxODE4Mn0.GpMUVTk6JvqeciXagXQiJunc8TLFMHg3_b9reIjJ2Y8';
 
-  webLookupBtn.disabled = true;
-  const orig = webLookupBtn.textContent;
-  webLookupBtn.textContent = '🔍 查词中…';
-  if (webLookupStatus) webLookupStatus.innerHTML = '<span style="color:var(--text-dim);">🤖 正在联网查 “' + escapeHtml(raw) + '”…</span>';
-
+async function autoLookupAddTerm(catId, query, setStatus) {
+  query = (query || '').trim();
+  setStatus = setStatus || function(){};
+  if (!query) return false;
+  const cat = DATA.find(c => c.id === catId);
+  if (!cat) { setStatus('<span class="err">分类不存在</span>'); return false; }
+  setStatus('<span style="color:var(--text-dim);">🤖 正在联网查 “' + escapeHtml(query) + '” 并自动生成词卡…</span>');
   try {
-    const r = await fetch(SUPABASE_URL + '/functions/v1/glossary-lookup', {
+    const r = await fetch(_GLOSSARY_SB_URL + '/functions/v1/glossary-lookup', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + ANON_KEY, 'apikey': ANON_KEY },
-      body: JSON.stringify({ query: raw }),
+      headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + _GLOSSARY_ANON, 'apikey': _GLOSSARY_ANON },
+      body: JSON.stringify({ query }),
     });
     const data = await r.json();
-    webLookupBtn.disabled = false;
-    webLookupBtn.textContent = orig;
     if (!data || data.error || !data.en) {
-      if (webLookupStatus) webLookupStatus.innerHTML = '<span class="err">没查到结果' + (data && data.error ? '(' + escapeHtml(data.error) + ')' : '') + ',换个词试试</span>';
-      return;
+      setStatus('<span class="err">没查到结果' + (data && data.error ? '(' + escapeHtml(data.error) + ')' : '') + ',换个词试试</span>');
+      return false;
     }
-
-    const cat = DATA.find(c => c.id === catId);
-    if (!cat) { if (webLookupStatus) webLookupStatus.innerHTML = '<span class="err">当前分类不存在</span>'; return; }
-
     // 去重(内置 + 用户词,大小写不敏感)
     const dup = getMergedTerms(cat).find(t => t[0].toLowerCase() === data.en.toLowerCase());
     if (dup) {
-      if (webLookupStatus) webLookupStatus.innerHTML = '<span class="ok">“' + escapeHtml(dup[0]) + '” 已在「' + escapeHtml(title) + '」里了,帮你跳过去 →</span>';
-      search.value = ''; state.query = '';
-      setActiveCat(catId); applySearch();
-      scrollToTerm(catId, dup[0]);
-      return;
+      setStatus('<span class="ok">“' + escapeHtml(dup[0]) + '” 已在「' + escapeHtml(cat.title) + '」,帮你跳过去 →</span>');
+      search.value = ''; state.query = ''; setActiveCat(catId); applySearch(); scrollToTerm(catId, dup[0]);
+      return true;
     }
-
-    // 组合 hint:用法说明 +(可选词性)
+    // 自动写满词卡字段(跟单词卡一模一样):en / 中文 / 词性+释义 / 音标 / 例句
     const hint = (data.pos ? '[' + data.pos + '] ' : '') + (data.hint || '');
     if (!state.userTerms[catId]) state.userTerms[catId] = [];
     const term = { en: data.en, zh: data.zh || '', hint };
-    // nyc-global-center + 动态 lesson cat 走艾宾浩斯复习字段(跟导入流程一致)
-    if (catId === 'nyc-global-center' || (cat && cat.dynamic)) {
-      term.completed = false;
-      term.review_stage = 0;
-      term.next_due_at = Date.now() + 5 * 60 * 1000;
-    }
+    if (catId === 'nyc-global-center' || cat.dynamic) { term.completed = false; term.review_stage = 0; term.next_due_at = Date.now() + 5 * 60 * 1000; }
     state.userTerms[catId].push(term);
-    // 音标 + 例句存到 edits(卡片才显示罗马注音和例句笔记)
     const editKey = catId + '::' + data.en;
     const edit = Object.assign({}, state.edits[editKey] || {});
-    if (data.phonetic) edit.phonetic = data.phonetic;
-    if (data.example) edit.note = '例: ' + data.example;
+    if (data.phonetic) edit.phonetic = data.phonetic;        // 罗马注音
+    if (data.example) edit.note = '例: ' + data.example;     // 例句
     if (Object.keys(edit).length) state.edits[editKey] = edit;
     save();
-
-    // 重建该分类 section + 更新计数
     const newSection = renderCategorySection(cat);
     if (noResults && main) main.insertBefore(newSection, noResults);
     if (document.body.dataset.activeCat === catId) newSection.classList.add('active-cat');
     updateCatNavCount(catId);
-
-    // 清搜索 → 切到该 tab → 滚到新词
-    if (webLookupStatus) webLookupStatus.innerHTML = '<span class="ok">✅ 已把 “' + escapeHtml(data.en) + '” 加入「' + escapeHtml(title) + '」</span>';
-    search.value = ''; state.query = '';
-    setActiveCat(catId); applySearch();
-    scrollToTerm(catId, data.en);
+    setStatus('<span class="ok">✅ 已自动生成并加入 “' + escapeHtml(data.en) + '”</span>');
+    search.value = ''; state.query = ''; setActiveCat(catId); applySearch(); scrollToTerm(catId, data.en);
+    return true;
   } catch (e) {
-    webLookupBtn.disabled = false;
-    webLookupBtn.textContent = orig;
-    if (webLookupStatus) webLookupStatus.innerHTML = '<span class="err">查词失败: ' + escapeHtml(String(e.message || e)) + '</span>';
+    setStatus('<span class="err">查词失败: ' + escapeHtml(String(e.message || e)) + '</span>');
+    return false;
   }
+}
+
+async function webLookupAndAdd() {
+  const raw = search.value.trim();
+  if (!raw) return;
+  const { id: catId } = activeCatInfo();
+  webLookupBtn.disabled = true;
+  const orig = webLookupBtn.textContent;
+  webLookupBtn.textContent = '🔍 查词中…';
+  await autoLookupAddTerm(catId, raw, html => { if (webLookupStatus) webLookupStatus.innerHTML = html; });
+  webLookupBtn.disabled = false;
+  webLookupBtn.textContent = orig;
 }
 
 function scrollToTerm(catId, en) {
@@ -2705,25 +2698,19 @@ main.addEventListener('click', e => {
     return;
   }
 
-  // add-term flow doesn't have a card data-id
-  if (action === 'add-save') {
+  // add-term flow doesn't have a card data-id — 全自动:输入词 → 联网生成完整词卡 → 加入
+  if (action === 'add-auto') {
     const form = btn.closest('form');
     const catId = btn.dataset.cat;
-    const en = form.querySelector('[name=en]').value.trim();
-    const zh = form.querySelector('[name=zh]').value.trim();
-    const hint = form.querySelector('[name=hint]').value.trim();
-    if (!en || !zh) { alert('英文和中文都要填'); return; }
-    // dedupe within category (built-in + user)
-    const cat = DATA.find(c => c.id === catId);
-    const existing = getMergedTerms(cat).find(t => t[0].toLowerCase() === en.toLowerCase());
-    if (existing) { alert('"' + existing[0] + '" 已在该分类下'); return; }
-    if (!state.userTerms[catId]) state.userTerms[catId] = [];
-    state.userTerms[catId].push({ en, zh, hint });
-    save();
-    const newSection = renderCategorySection(cat);
-    document.getElementById('cat-' + catId).replaceWith(newSection);
-    updateCatNavCount(catId);
-    applySearch();
+    const q = form.querySelector('[name=q]').value.trim();
+    const statusEl = form.querySelector('[data-role=add-status]');
+    if (!q) { form.querySelector('[name=q]').focus(); return; }
+    btn.disabled = true;
+    const orig = btn.textContent; btn.textContent = '🔍 查词中…';
+    autoLookupAddTerm(catId, q, html => { if (statusEl) statusEl.innerHTML = html; }).then(ok => {
+      btn.disabled = false; btn.textContent = orig;
+      // 成功:autoLookupAddTerm 已重渲该分类(表单随之消失);失败留着让用户改词重试
+    });
     return;
   }
   if (action === 'add-cancel') {

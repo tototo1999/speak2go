@@ -826,6 +826,10 @@ section h2 .count {
   color: var(--accent); opacity: 1;
   animation: pulse 0.8s ease-in-out infinite;
 }
+/* ▶️ 课堂录音回放按钮:常驻可见(关键功能),播放时脉动 */
+.term .actions .play-audio { opacity: 0.85; font-size: 12px; }
+.term .actions .play-audio:hover { opacity: 1; }
+.term .actions .play-audio.is-playing { opacity: 1; animation: pulse 0.8s ease-in-out infinite; }
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.15); }
@@ -1233,9 +1237,9 @@ function getTermData(catId, en) {
   const cat = DATA.find(c => c.id === catId);
   if (!cat) return null;
   let orig = cat.terms.find(t => t[0] === en);
+  const userArr = state.userTerms[catId] || [];
+  const u = userArr.find(t => t.en === en);
   if (!orig) {
-    const userArr = state.userTerms[catId] || [];
-    const u = userArr.find(t => t.en === en);
     if (u) orig = [u.en, u.zh, u.hint || ''];
   }
   if (!orig) return null;
@@ -1251,7 +1255,10 @@ function getTermData(catId, en) {
     note: edit.note || '',
     sentences: Array.isArray(edit.sentences) ? edit.sentences.slice() : [],
     edited: Object.keys(edit).length > 0,
-    dictRomaji
+    dictRomaji,
+    // 录音回放:该词当时在课堂录音里的起播秒数 + 录音 URL(只有带 ▶️ 的课堂导入词有)
+    audioUrl: (u && u.audio_url) || '',
+    audioStart: (u && typeof u.start === 'number') ? u.start : null
   };
 }
 
@@ -1545,6 +1552,7 @@ function renderCardContent(card) {
       stageBadge +
       '<div class="actions">' +
         completedBtn +
+        ((d.audioUrl && d.audioStart != null) ? '<button class="play-audio" data-action="play-audio" title="听当时上课这句录音" aria-label="听课堂录音">▶️</button>' : '') +
         '<button class="speak" data-action="speak" title="朗读" aria-label="朗读">🔊</button>' +
         '<button class="play" data-action="play" title="练:拆音节+标重音+填罗马音" aria-label="练">🎮</button>' +
         '<button class="fav' + (isFav ? ' is-on' : '') + '" data-action="fav" title="' + (isFav ? '取消收藏' : '收藏置顶') + '" aria-label="收藏">★</button>' +
@@ -1628,6 +1636,63 @@ function speakTerm(text, btn) {
     u.onend = u.onerror = () => btn.classList.remove('is-playing');
   }
   speechSynthesis.speak(u);
+}
+
+/* ============================================================
+   课堂录音回放 — 点 ▶️ 从该词当时的时间点起播,听 ~该句(自动停)
+   ============================================================ */
+const LESSON_CLIP_SECONDS = 14;   // "只听该词那句":从起播点放 ~14 秒后自动停
+let _lessonAudio = null;          // 共享 <audio>(同一时间只播一段)
+let _lessonStopTimer = null;
+let _lessonPlayingId = null;      // 当前在播的 catId::en(用稳定 key,不依赖会被重渲的 btn 节点)
+// 复位所有 ▶️ 按钮(用 selector,避免重渲后 btn 引用失效)
+function _resetLessonButtons() {
+  document.querySelectorAll('.play-audio.is-playing').forEach(b => { b.classList.remove('is-playing'); b.textContent = '▶️'; });
+}
+function _stopLessonAudio() {
+  if (_lessonStopTimer) { clearTimeout(_lessonStopTimer); _lessonStopTimer = null; }
+  if (_lessonAudio) { try { _lessonAudio.pause(); } catch (e) {} }
+  _resetLessonButtons();
+  _lessonPlayingId = null;
+}
+function playTermAudio(catId, en, btn) {
+  const d = getTermData(catId, en);
+  if (!d || !d.audioUrl || d.audioStart == null) return;
+  const id = catId + '::' + en;
+  // 再点一次正在播的那条 = 停
+  if (_lessonPlayingId === id && _lessonAudio && !_lessonAudio.paused) { _stopLessonAudio(); return; }
+  _stopLessonAudio();
+  if (!_lessonAudio) {
+    _lessonAudio = new Audio();
+    _lessonAudio.preload = 'none';
+    _lessonAudio.addEventListener('ended', _stopLessonAudio);
+    _lessonAudio.addEventListener('error', () => { _resetLessonButtons(); _lessonPlayingId = null; });
+  }
+  const start = Math.max(0, d.audioStart - 0.8);   // 留 0.8s 引入
+  _lessonPlayingId = id;
+  if (btn) { btn.classList.add('is-playing'); btn.textContent = '⏸'; }
+  const seekAndPlay = () => {
+    try { _lessonAudio.currentTime = start; } catch (e) {}
+    _lessonAudio.play().then(() => {
+      _lessonStopTimer = setTimeout(_stopLessonAudio, LESSON_CLIP_SECONDS * 1000);
+    }).catch(err => {
+      console.warn('[glossary] audio play failed', err);
+      _resetLessonButtons();
+      if (btn) btn.textContent = '⚠️';
+      _lessonPlayingId = null;
+    });
+  };
+  // seek 需要至少有元数据(readyState>=1 HAVE_METADATA)。换源/未加载时先 load 再等 loadedmetadata。
+  if (_lessonAudio.src !== d.audioUrl) {
+    _lessonAudio.src = d.audioUrl;
+    _lessonAudio.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+    _lessonAudio.load();
+  } else if (_lessonAudio.readyState >= 1) {
+    seekAndPlay();
+  } else {
+    _lessonAudio.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+    _lessonAudio.load();
+  }
 }
 
 let total = 0;
@@ -1931,17 +1996,19 @@ function openAddTermForm(catId, btn) {
   form.style.gridColumn = '1 / -1';
   form.innerHTML =
     '<form class="edit-form" onsubmit="return false">' +
-      '<div class="edit-row"><label>英文 *</label><input type="text" name="en" placeholder="e.g. Procrastinate" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>' +
-      '<div class="edit-row"><label>中文 *</label><input type="text" name="zh" placeholder="e.g. 拖延"></div>' +
-      '<div class="edit-row"><label>解释 (选填)</label><textarea name="hint" rows="2" placeholder="用法 / 例句 / 关联词…"></textarea></div>' +
+      '<div class="edit-row"><label>输入一个词(英文 / 中文)</label><input type="text" name="q" placeholder="例:credit —— 自动联网生成完整词卡" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>' +
+      '<div data-role="add-status" style="font-size:12px;min-height:16px;margin:2px 2px 8px;"></div>' +
       '<div class="edit-actions">' +
-        '<button type="button" data-action="add-save" data-cat="' + catId + '">添加</button>' +
+        '<button type="button" data-action="add-auto" data-cat="' + catId + '">🌐 自动查词并加入</button>' +
         '<button type="button" data-action="add-cancel">取消</button>' +
       '</div>' +
     '</form>';
   btn.replaceWith(form);
-  const first = form.querySelector('[name=en]');
-  if (first) first.focus();
+  const first = form.querySelector('[name=q]');
+  if (first) {
+    first.focus();
+    first.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const b = form.querySelector('[data-action=add-auto]'); if (b) b.click(); } };
+  }
 }
 
 function rebuildFavorites() {
@@ -2028,52 +2095,38 @@ function updateWebLookupBtn() {
   if (webLookupStatus) webLookupStatus.innerHTML = '<span style="color:var(--text-dim);font-size:12px;">按回车也能直接查 →</span>';
 }
 
-async function webLookupAndAdd() {
-  const raw = search.value.trim();
-  if (!raw) return;
-  const { id: catId, title } = activeCatInfo();
-  const SUPABASE_URL = 'https://qjnagbzqhoansixqharb.supabase.co';
-  const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqbmFnYnpxaG9hbnNpeHFoYXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDIxODIsImV4cCI6MjA5MzkxODE4Mn0.GpMUVTk6JvqeciXagXQiJunc8TLFMHg3_b9reIjJ2Y8';
+// 通用:输入一个词(中/英)→ 联网 glossary-lookup → 自动生成完整词卡(en/音标/中文/释义/例句)→ 加入 catId
+const _GLOSSARY_SB_URL = 'https://qjnagbzqhoansixqharb.supabase.co';
+const _GLOSSARY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqbmFnYnpxaG9hbnNpeHFoYXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDIxODIsImV4cCI6MjA5MzkxODE4Mn0.GpMUVTk6JvqeciXagXQiJunc8TLFMHg3_b9reIjJ2Y8';
 
-  webLookupBtn.disabled = true;
-  const orig = webLookupBtn.textContent;
-  webLookupBtn.textContent = '🔍 查词中…';
-  if (webLookupStatus) webLookupStatus.innerHTML = '<span style="color:var(--text-dim);">🤖 正在联网查 “' + escapeHtml(raw) + '”…</span>';
-
+async function autoLookupAddTerm(catId, query, setStatus) {
+  query = (query || '').trim();
+  setStatus = setStatus || function(){};
+  if (!query) return false;
+  const cat = DATA.find(c => c.id === catId);
+  if (!cat) { setStatus('<span class="err">分类不存在</span>'); return false; }
+  setStatus('<span style="color:var(--text-dim);">🤖 正在联网查 “' + escapeHtml(query) + '” 并自动生成词卡…</span>');
   try {
-    const r = await fetch(SUPABASE_URL + '/functions/v1/glossary-lookup', {
+    const r = await fetch(_GLOSSARY_SB_URL + '/functions/v1/glossary-lookup', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + ANON_KEY, 'apikey': ANON_KEY },
-      body: JSON.stringify({ query: raw }),
+      headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + _GLOSSARY_ANON, 'apikey': _GLOSSARY_ANON },
+      body: JSON.stringify({ query }),
     });
     const data = await r.json();
-    webLookupBtn.disabled = false;
-    webLookupBtn.textContent = orig;
     if (!data || data.error || !data.en) {
-      if (webLookupStatus) webLookupStatus.innerHTML = '<span class="err">没查到结果' + (data && data.error ? '(' + escapeHtml(data.error) + ')' : '') + ',换个词试试</span>';
-      return;
+      setStatus('<span class="err">没查到结果' + (data && data.error ? '(' + escapeHtml(data.error) + ')' : '') + ',换个词试试</span>');
+      return false;
     }
-
-    const cat = DATA.find(c => c.id === catId);
-    if (!cat) { if (webLookupStatus) webLookupStatus.innerHTML = '<span class="err">当前分类不存在</span>'; return; }
-
     const dup = getMergedTerms(cat).find(t => t[0].toLowerCase() === data.en.toLowerCase());
     if (dup) {
-      if (webLookupStatus) webLookupStatus.innerHTML = '<span class="ok">“' + escapeHtml(dup[0]) + '” 已在「' + escapeHtml(title) + '」里了,帮你跳过去 →</span>';
-      search.value = ''; state.query = '';
-      setActiveCat(catId); applySearch();
-      scrollToTerm(catId, dup[0]);
-      return;
+      setStatus('<span class="ok">“' + escapeHtml(dup[0]) + '” 已在「' + escapeHtml(cat.title) + '」,帮你跳过去 →</span>');
+      search.value = ''; state.query = ''; setActiveCat(catId); applySearch(); scrollToTerm(catId, dup[0]);
+      return true;
     }
-
     const hint = (data.pos ? '[' + data.pos + '] ' : '') + (data.hint || '');
     if (!state.userTerms[catId]) state.userTerms[catId] = [];
     const term = { en: data.en, zh: data.zh || '', hint };
-    if (catId === 'nyc-global-center' || (cat && cat.dynamic)) {
-      term.completed = false;
-      term.review_stage = 0;
-      term.next_due_at = Date.now() + 5 * 60 * 1000;
-    }
+    if (catId === 'nyc-global-center' || cat.dynamic) { term.completed = false; term.review_stage = 0; term.next_due_at = Date.now() + 5 * 60 * 1000; }
     state.userTerms[catId].push(term);
     const editKey = catId + '::' + data.en;
     const edit = Object.assign({}, state.edits[editKey] || {});
@@ -2081,21 +2134,29 @@ async function webLookupAndAdd() {
     if (data.example) edit.note = '例: ' + data.example;
     if (Object.keys(edit).length) state.edits[editKey] = edit;
     save();
-
     const newSection = renderCategorySection(cat);
     if (noResults && main) main.insertBefore(newSection, noResults);
     if (document.body.dataset.activeCat === catId) newSection.classList.add('active-cat');
     updateCatNavCount(catId);
-
-    if (webLookupStatus) webLookupStatus.innerHTML = '<span class="ok">✅ 已把 “' + escapeHtml(data.en) + '” 加入「' + escapeHtml(title) + '」</span>';
-    search.value = ''; state.query = '';
-    setActiveCat(catId); applySearch();
-    scrollToTerm(catId, data.en);
+    setStatus('<span class="ok">✅ 已自动生成并加入 “' + escapeHtml(data.en) + '”</span>');
+    search.value = ''; state.query = ''; setActiveCat(catId); applySearch(); scrollToTerm(catId, data.en);
+    return true;
   } catch (e) {
-    webLookupBtn.disabled = false;
-    webLookupBtn.textContent = orig;
-    if (webLookupStatus) webLookupStatus.innerHTML = '<span class="err">查词失败: ' + escapeHtml(String(e.message || e)) + '</span>';
+    setStatus('<span class="err">查词失败: ' + escapeHtml(String(e.message || e)) + '</span>');
+    return false;
   }
+}
+
+async function webLookupAndAdd() {
+  const raw = search.value.trim();
+  if (!raw) return;
+  const { id: catId } = activeCatInfo();
+  webLookupBtn.disabled = true;
+  const orig = webLookupBtn.textContent;
+  webLookupBtn.textContent = '🔍 查词中…';
+  await autoLookupAddTerm(catId, raw, html => { if (webLookupStatus) webLookupStatus.innerHTML = html; });
+  webLookupBtn.disabled = false;
+  webLookupBtn.textContent = orig;
 }
 
 function scrollToTerm(catId, en) {
@@ -2909,25 +2970,18 @@ main.addEventListener('click', e => {
     return;
   }
 
-  // add-term flow doesn't have a card data-id
-  if (action === 'add-save') {
+  // add-term flow doesn't have a card data-id — 全自动:输入词 → 联网生成完整词卡 → 加入
+  if (action === 'add-auto') {
     const form = btn.closest('form');
     const catId = btn.dataset.cat;
-    const en = form.querySelector('[name=en]').value.trim();
-    const zh = form.querySelector('[name=zh]').value.trim();
-    const hint = form.querySelector('[name=hint]').value.trim();
-    if (!en || !zh) { alert('英文和中文都要填'); return; }
-    // dedupe within category (built-in + user)
-    const cat = DATA.find(c => c.id === catId);
-    const existing = getMergedTerms(cat).find(t => t[0].toLowerCase() === en.toLowerCase());
-    if (existing) { alert('"' + existing[0] + '" 已在该分类下'); return; }
-    if (!state.userTerms[catId]) state.userTerms[catId] = [];
-    state.userTerms[catId].push({ en, zh, hint });
-    save();
-    const newSection = renderCategorySection(cat);
-    document.getElementById('cat-' + catId).replaceWith(newSection);
-    updateCatNavCount(catId);
-    applySearch();
+    const q = form.querySelector('[name=q]').value.trim();
+    const statusEl = form.querySelector('[data-role=add-status]');
+    if (!q) { form.querySelector('[name=q]').focus(); return; }
+    btn.disabled = true;
+    const orig = btn.textContent; btn.textContent = '🔍 查词中…';
+    autoLookupAddTerm(catId, q, html => { if (statusEl) statusEl.innerHTML = html; }).then(() => {
+      btn.disabled = false; btn.textContent = orig;
+    });
     return;
   }
   if (action === 'add-cancel') {
@@ -2965,6 +3019,11 @@ main.addEventListener('click', e => {
 
   if (action === 'play') {
     if (card) openPractice(card);
+    return;
+  }
+
+  if (action === 'play-audio') {
+    playTermAudio(catId, en, btn);
     return;
   }
 
@@ -3315,8 +3374,18 @@ rebuildFavorites();
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     const jsonStr = new TextDecoder('utf-8').decode(bytes);
-    const arr = JSON.parse(jsonStr);
-    if (!Array.isArray(arr) || arr.length === 0) return;
+    const parsed = JSON.parse(jsonStr);
+    // 兼容两种 payload 形态:老=数组 [{en,zh,hint}];新=对象 {audio_url, words:[{en,zh,hint,start}]}
+    let arr, lessonAudioUrl = '';
+    if (Array.isArray(parsed)) {
+      arr = parsed;
+    } else if (parsed && Array.isArray(parsed.words)) {
+      arr = parsed.words;
+      lessonAudioUrl = parsed.audio_url || '';
+    } else {
+      return;
+    }
+    if (arr.length === 0) return;
 
     // 决定写入的 cat:有 lessonLabel → 新建/复用动态 cat;无 → fallback 到 nyc-global-center
     let catId;
@@ -3381,14 +3450,20 @@ rebuildFavorites();
     arr.forEach(t => {
       const en = (t.en || (Array.isArray(t) ? t[0] : '') || '').trim();
       if (!en || seen.has(en.toLowerCase())) return;
-      state.userTerms[catId].push({
+      const item = {
         en,
         zh: t.zh || (Array.isArray(t) ? t[1] : '') || '',
         hint: t.hint || (Array.isArray(t) ? t[2] : '') || '',
         completed: false,
         review_stage: 0,                              // 艾宾浩斯阶段 0-6
         next_due_at: Date.now() + 5 * 60 * 1000,      // 5 分钟后 due(测试期);正式 1h
-      });
+      };
+      // 录音回放:课堂导入带 audio_url + 该词起播秒数 → 词卡显示 ▶️
+      if (lessonAudioUrl && typeof t.start === 'number') {
+        item.audio_url = lessonAudioUrl;
+        item.start = t.start;
+      }
+      state.userTerms[catId].push(item);
       seen.add(en.toLowerCase());
       addedCount++;
     });
