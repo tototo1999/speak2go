@@ -276,6 +276,20 @@ section h2 .count {
   margin-top: 6px;
   white-space: pre-wrap;
 }
+/* 做题记录(测验成绩按时间留在卡里)*/
+.term .quiz-log {
+  margin-top: 8px; padding-top: 6px;
+  border-top: 1px dashed var(--border, rgba(0,0,0,0.1));
+}
+.term .quiz-log .ql-title { font-size: 11px; font-weight: 700; color: var(--text-dim, #888); margin-bottom: 4px; }
+.term .quiz-log .ql-row {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 11px; line-height: 1.8;
+}
+.term .quiz-log .ql-t { color: var(--text-dim, #999); font-variant-numeric: tabular-nums; min-width: 74px; }
+.term .quiz-log .ql-c { padding: 0 5px; border-radius: 4px; font-weight: 600; }
+.term .quiz-log .ql-c.ql-ok { background: var(--accent-soft); color: var(--accent); }
+.term .quiz-log .ql-c.ql-bad { background: rgba(239,68,68,0.1); color: #b91c1c; }
 .term.is-edited::after {
   content: '✎'; position: absolute; top: -6px; right: -6px;
   background: var(--accent); color: #fff;
@@ -1538,7 +1552,8 @@ function renderCardContent(card) {
       '</div>' +
     '</div>' +
     (d.hint ? '<div class="hint">' + escapeHtml(d.hint) + '</div>' : '') +
-    (d.note ? '<div class="note">' + escapeHtml(d.note) + '</div>' : '');
+    (d.note ? '<div class="note">' + escapeHtml(d.note) + '</div>' : '') +
+    quizLogHtml(d.quizLog);
 }
 
 function renderEditForm(card) {
