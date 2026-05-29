@@ -1860,6 +1860,7 @@ function setTermCompleted(catId, en) {
 const PRACTICE_FULL = 200;          // 拼读 100 + 造句 100
 const PRACTICE_PASS_RATIO = 0.6;    // 满分 60% 即通关
 function checkPracticeMastery() {
+  console.log('[mastery] called', { hasPS: !!practiceState, hasDrawer: !!(practiceState && practiceState.drawer), phonics: practiceState && practiceState.phonicsScore, sentence: practiceState && practiceState.sentenceScore, elFound: !!(practiceState && practiceState.drawer && practiceState.drawer.querySelector('[data-role="mastery"]')) });
   if (!practiceState || !practiceState.drawer) return;
   const ps = practiceState;
   const el = ps.drawer.querySelector('[data-role="mastery"]');
@@ -2905,6 +2906,7 @@ function submitPractice() {
       '<button data-action="practice-close">完成</button>' +
     '</div>';
   ps.phonicsScore = total;          // 本轮拼读分(0-100),凑本轮总分
+  console.log('[mastery] phonics submit hook, total=', total);
   checkPracticeMastery();
   result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -3232,6 +3234,7 @@ main.addEventListener('click', e => {
           grabVocabChips(data, sentence, reference, catId);
       }
       // 本轮造句分(AI):与本地分取较高,凑本轮总分
+      console.log('[mastery] ai-grade hook', { score: data && data.score, type: typeof (data && data.score), hasPS: !!practiceState, hasDrawer: !!(practiceState && practiceState.drawer), idMatch: !!(practiceState && practiceState.id === id), psId: practiceState && practiceState.id, id });
       if (practiceState && practiceState.drawer && practiceState.id === id && typeof data.score === 'number') {
         practiceState.sentenceScore = Math.max(practiceState.sentenceScore || 0, data.score);
         checkPracticeMastery();
@@ -3268,6 +3271,7 @@ main.addEventListener('click', e => {
     if (!sentence) { ta.focus(); return; }
     const grade = gradeTranslation(sentence, en);
     // 本轮造句分(本地):与 AI 分取较高,凑本轮总分(放 dup 检查前,重复句也照样计分)
+    console.log('[mastery] save-sentence hook', { score: grade && grade.score, hasPS: !!practiceState, hasDrawer: !!(practiceState && practiceState.drawer), idMatch: !!(practiceState && practiceState.id === id), psId: practiceState && practiceState.id, id });
     if (practiceState && practiceState.drawer && practiceState.id === id) {
       practiceState.sentenceScore = Math.max(practiceState.sentenceScore || 0, grade.score);
       checkPracticeMastery();
