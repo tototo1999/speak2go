@@ -1640,9 +1640,8 @@ function speakTerm(text, btn) {
 }
 
 /* ============================================================
-   课堂录音回放 — 点 ▶️ 从该词当时的时间点起播,听 ~该句(自动停)
+   课堂录音回放 — 点 ▶️ 从该词当时的时间点起播,一直放到录音结束 / 再点一次按停
    ============================================================ */
-const LESSON_CLIP_SECONDS = 14;   // "只听该词那句":从起播点放 ~14 秒后自动停
 let _lessonAudio = null;          // 共享 <audio>(同一时间只播一段)
 let _lessonStopTimer = null;
 let _lessonPlayingId = null;      // 当前在播的 catId::en(用稳定 key,不依赖会被重渲的 btn 节点)
@@ -1674,7 +1673,7 @@ function playTermAudio(catId, en, btn) {
   const seekAndPlay = () => {
     try { _lessonAudio.currentTime = start; } catch (e) {}
     _lessonAudio.play().then(() => {
-      _lessonStopTimer = setTimeout(_stopLessonAudio, LESSON_CLIP_SECONDS * 1000);
+      // 不再 14 秒自动停:一直播到录音结束('ended' 复位)或用户再点一次(toggle 停)
     }).catch(err => {
       console.warn('[glossary] audio play failed', err);
       _resetLessonButtons();
@@ -2829,7 +2828,9 @@ function computePracticeScore(ps) {
   }
   const romajiPoints = Math.round((romajiCorrect / romajiTotal) * 30);
   // ③ 重音(满分 20)
-  const stressOK = (playerSyls.length === ps.answerSyls.length) && (ps.playerStressIdx === ps.answerStressIdx);
+  // 单音节词(≤1 音节)重音落在唯一音节上是必然的,不要求用户点、也不扣分 → 直接算对
+  const stressOK = (playerSyls.length === ps.answerSyls.length) &&
+                   (ps.answerSyls.length <= 1 || ps.playerStressIdx === ps.answerStressIdx);
   const stressPoints = stressOK ? 20 : 0;
   const total = Math.max(0, Math.min(100, splitPoints + romajiPoints + stressPoints));
   const ratio = total / 100;
@@ -2865,7 +2866,8 @@ function submitPractice() {
   result.style.display = '';
   const yourCardsHtml = playerSyls.map((s, i) => {
     const isExact = ps.answerSyls[i] && s.toLowerCase() === ps.answerSyls[i].toLowerCase();
-    const isStress = i === ps.playerStressIdx;
+    // 单音节词唯一音节自动算重音(跟评分一致),不需要用户点
+    const isStress = (ps.answerSyls.length <= 1 && playerSyls.length === 1) ? (i === 0) : (i === ps.playerStressIdx);
     const cls = ['p-rc-syl'];
     if (isExact) cls.push('match');
     if (isStress) cls.push('stress');
