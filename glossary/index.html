@@ -799,6 +799,10 @@ section h2 .count {
   color: var(--accent); opacity: 1;
   animation: pulse 0.8s ease-in-out infinite;
 }
+/* ▶️ 课堂录音回放按钮:常驻可见(关键功能),播放时脉动 */
+.term .actions .play-audio { opacity: 0.85; font-size: 12px; }
+.term .actions .play-audio:hover { opacity: 1; }
+.term .actions .play-audio.is-playing { opacity: 1; animation: pulse 0.8s ease-in-out infinite; }
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.15); }
@@ -1477,6 +1481,7 @@ function renderCardContent(card) {
       stageBadge +
       '<div class="actions">' +
         completedBtn +
+        ((d.audioUrl && d.audioStart != null) ? '<button class="play-audio" data-action="play-audio" title="听当时上课这句录音" aria-label="听课堂录音">▶️</button>' : '') +
         '<button class="speak" data-action="speak" title="朗读" aria-label="朗读">🔊</button>' +
         '<button class="play" data-action="play" title="练:拆音节+标重音+填罗马音" aria-label="练">🎮</button>' +
         '<button class="fav' + (isFav ? ' is-on' : '') + '" data-action="fav" title="' + (isFav ? '取消收藏' : '收藏置顶') + '" aria-label="收藏">★</button>' +
@@ -1562,6 +1567,62 @@ function speakTerm(text, btn) {
   speechSynthesis.speak(u);
 }
 
+/* ============================================================
+   课堂录音回放 — 点 ▶️ 从该词当时的时间点起播,听 ~该句(自动停)
+   ============================================================ */
+const LESSON_CLIP_SECONDS = 14;   // "只听该词那句":从起播点放 ~14 秒后自动停
+let _lessonAudio = null;          // 共享 <audio>(同一时间只播一段)
+let _lessonStopTimer = null;
+let _lessonPlayingId = null;      // 当前在播的 catId::en(用稳定 key,不依赖会被重渲的 btn 节点)
+function _resetLessonButtons() {
+  document.querySelectorAll('.play-audio.is-playing').forEach(b => { b.classList.remove('is-playing'); b.textContent = '▶️'; });
+}
+function _stopLessonAudio() {
+  if (_lessonStopTimer) { clearTimeout(_lessonStopTimer); _lessonStopTimer = null; }
+  if (_lessonAudio) { try { _lessonAudio.pause(); } catch (e) {} }
+  _resetLessonButtons();
+  _lessonPlayingId = null;
+}
+function playTermAudio(catId, en, btn) {
+  const d = getTermData(catId, en);
+  if (!d || !d.audioUrl || d.audioStart == null) return;
+  const id = catId + '::' + en;
+  // 再点一次正在播的那条 = 停
+  if (_lessonPlayingId === id && _lessonAudio && !_lessonAudio.paused) { _stopLessonAudio(); return; }
+  _stopLessonAudio();
+  if (!_lessonAudio) {
+    _lessonAudio = new Audio();
+    _lessonAudio.preload = 'none';
+    _lessonAudio.addEventListener('ended', _stopLessonAudio);
+    _lessonAudio.addEventListener('error', () => { _resetLessonButtons(); _lessonPlayingId = null; });
+  }
+  const start = Math.max(0, d.audioStart - 0.8);   // 留 0.8s 引入
+  _lessonPlayingId = id;
+  if (btn) { btn.classList.add('is-playing'); btn.textContent = '⏸'; }
+  const seekAndPlay = () => {
+    try { _lessonAudio.currentTime = start; } catch (e) {}
+    _lessonAudio.play().then(() => {
+      _lessonStopTimer = setTimeout(_stopLessonAudio, LESSON_CLIP_SECONDS * 1000);
+    }).catch(err => {
+      console.warn('[glossary] audio play failed', err);
+      _resetLessonButtons();
+      if (btn) btn.textContent = '⚠️';
+      _lessonPlayingId = null;
+    });
+  };
+  // seek 需要至少有元数据(readyState>=1 HAVE_METADATA)。换源/未加载时先 load 再等 loadedmetadata。
+  if (_lessonAudio.src !== d.audioUrl) {
+    _lessonAudio.src = d.audioUrl;
+    _lessonAudio.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+    _lessonAudio.load();
+  } else if (_lessonAudio.readyState >= 1) {
+    seekAndPlay();
+  } else {
+    _lessonAudio.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+    _lessonAudio.load();
+  }
+}
+
 let total = 0;
 DATA.forEach(cat => { total += cat.terms.length; });
 totalCountEl.textContent = total;
@@ -1608,14 +1669,15 @@ function renderCategorySection(cat) {
     };
     grid.appendChild(recover);
   }
-  // 整组胶囊工具条(只给动态课程组:可重命名 / 删整组)
-  if (cat.dynamic) {
+  // 表格顶部管理工具条(每个表格都有:改名 / 新建表 / 删除此表)
+  {
     const bar = document.createElement('div');
     bar.className = 'cat-toolbar';
     bar.innerHTML =
-      '<span class="cat-ttl">📅 ' + escapeHtml(cat.title) + '</span>' +
-      '<button class="cat-tb-btn" data-action="cat-rename" data-cat="' + cat.id + '">✎ 重命名本组</button>' +
-      '<button class="cat-tb-btn danger" data-action="cat-del" data-cat="' + cat.id + '">🗑 删除本组</button>';
+      '<span class="cat-ttl">📋 ' + escapeHtml(cat.title) + '</span>' +
+      '<button class="cat-tb-btn" data-action="cat-rename" data-cat="' + cat.id + '">✎ 改名</button>' +
+      '<button class="cat-tb-btn" data-action="cat-new">➕ 新建表</button>' +
+      '<button class="cat-tb-btn danger" data-action="cat-del" data-cat="' + cat.id + '">🗑 删除此表</button>';
     section.appendChild(bar);
   }
   section.appendChild(grid);
@@ -1834,8 +1896,12 @@ function updateWebLookupBtn() {
   if (!raw) { webLookupBtn.style.display = 'none'; return; }
   webLookupBtn.style.display = '';
   webLookupBtn.disabled = false;
-  webLookupBtn.textContent = '🌐 在网络上查 “' + raw + '” 并加入「' + title + '」';
-  if (webLookupStatus) webLookupStatus.innerHTML = '';
+  // 中文查询 → 明说是去找「对应英文词」,避免误以为加的是中文
+  const isCJK = /[一-鿿]/.test(raw);
+  webLookupBtn.textContent = isCJK
+    ? '🌐 查 “' + raw + '” 的英文词并加入「' + title + '」 ⏎'
+    : '🌐 在网络上查 “' + raw + '” 并加入「' + title + '」 ⏎';
+  if (webLookupStatus) webLookupStatus.innerHTML = '<span style="color:var(--text-dim);font-size:12px;">按回车也能直接查 →</span>';
 }
 
 // 通用:输入一个词(中/英)→ 联网 glossary-lookup → 自动生成完整词卡(en/音标/中文/释义/例句)→ 加入 catId
@@ -2754,6 +2820,12 @@ main.addEventListener('click', e => {
     const t = name.trim();
     if (!t) return;
     cat.title = t;
+    // 持久化表名覆盖(内置 + 动态通用,刷新后仍生效)
+    try {
+      const map = JSON.parse(localStorage.getItem('glossary-cat-titles') || '{}');
+      map[catId] = t;
+      localStorage.setItem('glossary-cat-titles', JSON.stringify(map));
+    } catch (err) {}
     try {
       const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]');
       const e = dyn.find(c => c.id === catId);
@@ -2784,11 +2856,42 @@ main.addEventListener('click', e => {
       const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]').filter(c => c.id !== catId);
       localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn));
     } catch (err) {}
+    // 记入已删名单 — 内置表写死在源码,靠这个名单刷新后仍保持删除
+    try {
+      const dead = JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]');
+      if (!dead.includes(catId)) dead.push(catId);
+      localStorage.setItem('glossary-deleted-cats', JSON.stringify(dead));
+    } catch (err) {}
     save();
     const navA = catsNav.querySelector('a[data-cat="' + catId + '"]'); if (navA) navA.remove();
     const sec = document.getElementById('cat-' + catId); if (sec) sec.remove();
     const first = DATA[0]; if (first) setActiveCat(first.id);
     rebuildFavorites();
+    return;
+  }
+  // 新建表:建一个空的动态胶囊,渲染 tab + section 并切过去
+  if (action === 'cat-new') {
+    const name = (prompt('新建表格 — 起个名字:', '') || '').trim();
+    if (!name) return;
+    let base = 'cat-' + name.toLowerCase().replace(/[^a-z0-9一-鿿]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+    if (!base || base === 'cat-') base = 'cat';
+    let nid = base, k = 2;
+    while (DATA.find(c => c.id === nid)) { nid = base + '-' + k++; }
+    const ncat = { id: nid, title: name, terms: [], dynamic: true };
+    DATA.push(ncat);
+    try {
+      const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]');
+      dyn.push({ id: nid, title: name });
+      localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn));
+      const dead = JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]').filter(x => x !== nid);
+      localStorage.setItem('glossary-deleted-cats', JSON.stringify(dead));
+    } catch (err) {}
+    if (typeof makeCatTab === 'function') { catsNav.appendChild(makeCatTab(ncat)); }
+    else { const a = document.createElement('a'); a.href='#'; a.className='group-link'; a.textContent = name + ' (0)'; a.dataset.cat = nid; a.onclick = (ev)=>{ev.preventDefault(); setActiveCat(nid);}; catsNav.appendChild(a); }
+    const nsec = renderCategorySection(ncat);
+    if (noResults && main) main.insertBefore(nsec, noResults);
+    setActiveCat(nid);
+    applySearch();
     return;
   }
   if (action === 'add-cancel') {
@@ -2821,6 +2924,11 @@ main.addEventListener('click', e => {
     id = card.dataset.id;
     [catId, en] = id.split('::');
   } else {
+    return;
+  }
+
+  if (action === 'play-audio') {
+    playTermAudio(catId, en, btn);
     return;
   }
 
@@ -3141,6 +3249,16 @@ search.addEventListener('input', e => {
   applySearch();
 });
 
+// 回车:本地搜不到时,自动联网查对应英文词并加入当前胶囊(不用再点蓝按钮)
+search.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.repeat) return;
+  if (!search.value.trim()) return;
+  if (noResults.classList.contains('show') && webLookupBtn && !webLookupBtn.disabled) {
+    e.preventDefault();
+    webLookupAndAdd();
+  }
+});
+
 rebuildFavorites();
 
 // 给老数据补 default completed=false(老 NYC Global Center 词)
@@ -3165,8 +3283,18 @@ rebuildFavorites();
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     const jsonStr = new TextDecoder('utf-8').decode(bytes);
-    const arr = JSON.parse(jsonStr);
-    if (!Array.isArray(arr) || arr.length === 0) return;
+    const parsed = JSON.parse(jsonStr);
+    // 兼容两种 payload 形态:老=数组 [{en,zh,hint}];新=对象 {audio_url, words:[{en,zh,hint,start}]}
+    let arr, lessonAudioUrl = '';
+    if (Array.isArray(parsed)) {
+      arr = parsed;
+    } else if (parsed && Array.isArray(parsed.words)) {
+      arr = parsed.words;
+      lessonAudioUrl = parsed.audio_url || '';
+    } else {
+      return;
+    }
+    if (arr.length === 0) return;
 
     // 决定写入的 cat:有 lessonLabel → 新建/复用动态 cat;无 → fallback 到 nyc-global-center
     let catId;
@@ -3219,14 +3347,20 @@ rebuildFavorites();
     arr.forEach(t => {
       const en = (t.en || (Array.isArray(t) ? t[0] : '') || '').trim();
       if (!en || seen.has(en.toLowerCase())) return;
-      state.userTerms[catId].push({
+      const item = {
         en,
         zh: t.zh || (Array.isArray(t) ? t[1] : '') || '',
         hint: t.hint || (Array.isArray(t) ? t[2] : '') || '',
         completed: false,
         review_stage: 0,                              // 艾宾浩斯阶段 0-6
         next_due_at: Date.now() + 5 * 60 * 1000,      // 5 分钟后 due(测试期);正式 1h
-      });
+      };
+      // 录音回放:课堂导入带 audio_url + 该词起播秒数 → 词卡显示 ▶️
+      if (lessonAudioUrl && typeof t.start === 'number') {
+        item.audio_url = lessonAudioUrl;
+        item.start = t.start;
+      }
+      state.userTerms[catId].push(item);
       seen.add(en.toLowerCase());
       addedCount++;
     });

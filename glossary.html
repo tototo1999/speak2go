@@ -2998,6 +2998,52 @@ main.addEventListener('click', e => {
     return;
   }
 
+  // 整组胶囊:重命名
+  if (action === 'cat-rename') {
+    const catId = btn.dataset.cat;
+    const cat = DATA.find(c => c.id === catId);
+    if (!cat) return;
+    const name = prompt('重命名这一组胶囊:', cat.title);
+    if (name == null) return;
+    const t = name.trim();
+    if (!t) return;
+    cat.title = t;
+    try {
+      const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]');
+      const e = dyn.find(c => c.id === catId);
+      if (e) { e.title = t; localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn)); }
+    } catch (err) {}
+    updateCatNavCount(catId);
+    const ns = renderCategorySection(cat);
+    if (noResults && main) main.insertBefore(ns, noResults);
+    if (document.body.dataset.activeCat === catId) ns.classList.add('active-cat');
+    applySearch();
+    return;
+  }
+  // 整组胶囊:删除整组(词 + 音标/笔记/删除/收藏 + tab + section)
+  if (action === 'cat-del') {
+    const catId = btn.dataset.cat;
+    const cat = DATA.find(c => c.id === catId);
+    if (!cat) return;
+    const n = (state.userTerms[catId] || []).length;
+    if (!confirm('删除整组「' + cat.title + '」?组内 ' + n + ' 个词会一起删除,不可恢复。')) return;
+    delete state.userTerms[catId];
+    [...state.deleted].forEach(id => { if (id.startsWith(catId + '::')) state.deleted.delete(id); });
+    [...state.favorites].forEach(id => { if (id.startsWith(catId + '::')) state.favorites.delete(id); });
+    Object.keys(state.edits).forEach(k => { if (k.startsWith(catId + '::')) delete state.edits[k]; });
+    const di = DATA.findIndex(c => c.id === catId);
+    if (di >= 0) DATA.splice(di, 1);
+    try {
+      const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]').filter(c => c.id !== catId);
+      localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn));
+    } catch (err) {}
+    save();
+    const navA = catsNav.querySelector('a[data-cat="' + catId + '"]'); if (navA) navA.remove();
+    const sec = document.getElementById('cat-' + catId); if (sec) sec.remove();
+    const first = DATA[0]; if (first) setActiveCat(first.id);
+    rebuildFavorites();
+    return;
+  }
   // add-term flow doesn't have a card data-id — 全自动:输入词 → 联网生成完整词卡 → 加入
   if (action === 'add-auto') {
     const form = btn.closest('form');
