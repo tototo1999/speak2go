@@ -1747,6 +1747,8 @@ function playTermAudio(catId, en, btn) {
 const SHADOW_CLIP_SECONDS = 7;     // 跟读片段:从起播点放 ~7 秒(≈ 一句),不放整段
 // 注:原 _shadowAudio/_shadowRec 全局单例已改为每个 renderShadow 实例的闭包局部,
 // 避免抽屉内嵌跟读与独立弹窗跟读并存时互相踩停(残留麦克风/识别)。
+// 但仍需一个全局「单路录音」互斥:同时只允许一个跟读实例在录,开新的先停旧的(否则旧麦不释放)。
+let _shadowActiveCleanup = null;
 
 function _shadowSentence(d) {
   const m = /例[:：]\s*([^·]+)/.exec((d.note || '') + ' · ' + (d.hint || ''));
@@ -1773,7 +1775,8 @@ function _shadowPlayClip(d, holder) {
   if (holder.stopTimer) { clearTimeout(holder.stopTimer); holder.stopTimer = null; }   // 清上次的自动停定时器,避免叠加/关闭后仍 fire
   const audio = new Audio(); audio.preload = 'none'; audio.src = d.audioUrl; holder.audio = audio;
   const start = Math.max(0, d.audioStart - 0.5);
-  const go = () => { try { audio.currentTime = start; } catch (e) {} audio.play().then(() => {
+  const go = () => { if (holder.audio !== audio) return;   // 连点已被新实例取代 → 这个旧 audio 不再播
+    try { audio.currentTime = start; } catch (e) {} audio.play().then(() => {
     holder.stopTimer = setTimeout(() => { try { audio.pause(); } catch (e) {} }, SHADOW_CLIP_SECONDS * 1000);
   }).catch(() => {}); };
   audio.onloadedmetadata = go;   // 赋值式而非 addEventListener,换源/重播不叠加监听
@@ -1800,14 +1803,14 @@ function startShadow(catId, en) {
       '</div>' +
     '</div>';
   document.body.appendChild(bg);
-  renderShadow(bg, catId, en, { spaceHold: true, autoplay: true, modal: true });
+  // onClose 在任何关闭路径(关闭按钮 / Esc / 背景点击)都会被 fullCleanup 调用 → 解绑这俩监听,不泄漏
+  let escH;
+  const cleanupModalListeners = () => { try { document.removeEventListener('keydown', escH); } catch (e) {} };
+  renderShadow(bg, catId, en, { spaceHold: true, autoplay: true, modal: true, onClose: cleanupModalListeners });
   // 背景点击 / Esc 关闭(走「关闭」按钮以复用其清理:停麦、撤 objectURL、解绑)
   const _close = () => { const cb = bg.querySelector('[data-act=close]'); if (cb) cb.click(); };
   bg.addEventListener('mousedown', e => { if (e.target === bg) _close(); });
-  const escH = e => {
-    if (!bg.isConnected) { document.removeEventListener('keydown', escH); return; }
-    if (e.key === 'Escape') { document.removeEventListener('keydown', escH); _close(); }
-  };
+  escH = e => { if (e.key === 'Escape') _close(); };
   document.addEventListener('keydown', escH);
 }
 
@@ -1864,6 +1867,9 @@ function renderShadow(container, catId, en, opts) {
       const rec = new SR(); myRec = rec;
       rec.lang = 'en-US'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
       let finalTxt = '';
+      // 单路录音互斥:开录前先停掉别处正在录的跟读实例(防两路麦克风并存、旧麦不释放)
+      if (_shadowActiveCleanup && _shadowActiveCleanup !== fullCleanup) { try { _shadowActiveCleanup(); } catch (e) {} }
+      _shadowActiveCleanup = fullCleanup;
       listening = true;
       recBtn.textContent = '⏹ 说完了'; recBtn.classList.add('listening');
       $('[data-role=score]').innerHTML = '<span style="color:#ef4444">🔴 在听…说完点「⏹ 说完了」(或松开空格)</span>';
@@ -1876,6 +1882,7 @@ function renderShadow(container, catId, en, opts) {
       rec.onerror = ev => { if (ev.error && ev.error !== 'no-speech' && ev.error !== 'aborted') { const s = $('[data-role=score]'); if (s) s.innerHTML = '<span style="color:#ef4444">识别出错(' + escapeHtml(ev.error) + '),再试一次</span>'; } };
       rec.onend = () => {
         listening = false; recBtn.textContent = '🎙 再说一遍'; recBtn.classList.remove('listening'); myRec = null;
+        if (_shadowActiveCleanup === fullCleanup) _shadowActiveCleanup = null;
         cleanupMic();
         const said = finalTxt.trim();
         if (said) compareAndShow(said);
@@ -1929,10 +1936,13 @@ function renderShadow(container, catId, en, opts) {
   function fullCleanup() {
     try { document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); } catch (e) {}
     stopRec(); cleanupMic(); talkAborted = true;
+    if (_shadowActiveCleanup === fullCleanup) _shadowActiveCleanup = null;
     try { if (clip.audio) clip.audio.pause(); } catch (e) {}
     if (clip.stopTimer) { clearTimeout(clip.stopTimer); clip.stopTimer = null; }
     try { if (replayAudio) replayAudio.pause(); } catch (e) {}
+    try { if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel(); } catch (e) {}   // 没原声的词靠 TTS 念例句,关闭也要停
     if (myUrl) { try { URL.revokeObjectURL(myUrl); } catch (e) {} myUrl = null; }
+    if (typeof opts.onClose === 'function') { try { opts.onClose(); } catch (e) {} }   // 模态:解绑 Esc/背景监听
   }
   // 内嵌:存 cleanup 到 practiceState,关抽屉时调用
   if (!opts.modal && typeof practiceState !== 'undefined' && practiceState) {
@@ -2354,9 +2364,7 @@ async function autoLookupAddTerm(catId, query, setStatus, opts) {
       updateCatNavCount(catId);
       reRenderSection();
     } else {
-      const newSection = renderCategorySection(cat);
-      if (noResults && main) main.insertBefore(newSection, noResults);
-      if (document.body.dataset.activeCat === catId) newSection.classList.add('active-cat');
+      reRenderSection();   // 内含 drawerOpen 守卫:该分类正开练习抽屉时跳过重渲,避免销毁抽屉
       updateCatNavCount(catId);
       search.value = ''; state.query = ''; setActiveCat(catId); applySearch(); scrollToTerm(catId, data.en);
     }
@@ -3804,9 +3812,10 @@ main.addEventListener('click', e => {
     if (zh && zh !== orig[1]) edit.zh = zh;
     if (hint !== (orig[2] || '')) edit.hint = hint;
     if (note) edit.note = note;
-    // 保留已记的造句句子(save-sentence 单独写入 state.edits[id].sentences)
+    // 保留已记的造句句子 + 做题记录(都单独写入 state.edits[id],编辑保存时不能丢)
     const prevEdit = state.edits[id] || {};
     if (Array.isArray(prevEdit.sentences) && prevEdit.sentences.length) edit.sentences = prevEdit.sentences;
+    if (Array.isArray(prevEdit.quizLog) && prevEdit.quizLog.length) edit.quizLog = prevEdit.quizLog;
     if (Object.keys(edit).length === 0) delete state.edits[id];
     else state.edits[id] = edit;
     save();
@@ -3975,7 +3984,9 @@ function doImportWords(chosen, ctx) {
   const seen = new Set(state.userTerms[catId].map(t => (t.en || '').toLowerCase()));
   let added = 0;
   chosen.forEach(w => {
-    state.deleted.delete(catId + '::' + w.en);   // 之前删过同名词 → 导入即取消墓碑,否则导入后仍被过滤隐身
+    // 之前删过同名词 → 导入即取消墓碑(大小写不敏感,删时与这次推来的 en 大小写可能不同,如 API/api)
+    const tl = (catId + '::' + w.en).toLowerCase();
+    [...state.deleted].forEach(k => { if (k.toLowerCase() === tl) state.deleted.delete(k); });
     if (seen.has(w.en.toLowerCase())) return;
     const item = { en: w.en, zh: w.zh || '', hint: w.hint || '', completed: false, review_stage: 0, next_due_at: Date.now() + 5 * 60 * 1000 };
     if (lessonAudioUrl && typeof w.start === 'number') { item.audio_url = lessonAudioUrl; item.start = w.start; }
