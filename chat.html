@@ -4628,6 +4628,13 @@
 
   // Audio upload placeholder tracking — while non-null, typing indicator stays on (audio still cooking)
   let audioPlaceholderId = null
+  // Text reply placeholder tracking — worker INSERTs a "..." stub then UPDATEs it with the real
+  // content. While non-null, typing indicator stays on until the real text lands (mirrors audio).
+  let textPlaceholderId = null
+  function isTextPlaceholder(c) {
+    const t = (c || '').trim()
+    return t === '' || /^[.…]+$/.test(t)   // empty, "...", or ellipsis only
+  }
 
   function subscribeRoom(roomId) {
     if (realtimeChannel) sb.removeChannel(realtimeChannel)
@@ -4657,6 +4664,12 @@
             if (isAudioProg) {
               setAudioProgress(newRow.id, c)
             } else {
+              // Text "..." stub just got its real content → AI finished → hide typing now
+              if (newRow.id === textPlaceholderId && !isTextPlaceholder(c)) {
+                textPlaceholderId = null
+                clearTimeout(typingTimer)
+                hideTyping()
+              }
               const groupEl = document.querySelector(`.msg-group[data-msg-id="${newRow.id}"]`)
               const bubble = groupEl?.querySelector('.msg-bubble')
               if (bubble) {
@@ -4738,9 +4751,17 @@
               }, 600000)
               // Make sure typing is showing
               showTyping()
-            } else if (!audioPlaceholderId) {
-              // No audio in flight → normal "AI replied, hide typing" behavior
+            } else if (isTextPlaceholder(_c)) {
+              // Worker inserted a "..." stub — AI is STILL generating. Keep typing on;
+              // hide only when the real content lands via UPDATE (see UPDATE handler).
+              textPlaceholderId = payload.new.id
               clearTimeout(typingTimer)
+              typingTimer = setTimeout(() => { textPlaceholderId = null; hideTyping(); setBridgeStatus(false) }, 600000)
+              showTyping()
+            } else if (!audioPlaceholderId) {
+              // Real content arrived in one shot (no stub) → AI done → hide typing
+              clearTimeout(typingTimer)
+              textPlaceholderId = null
               hideTyping()
             }
             // else: brain replied while audio is still cooking — KEEP typing on (don't hide)
