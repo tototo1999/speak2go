@@ -2591,13 +2591,11 @@ function renderQuizDictation() {
     inp.oninput = () => renderDictSlots(w.en, inp.value);
     inp.focus();
   }
-  // 进入这个词自动播一遍例句(听音默写);只在有真例句时自动播 —
-  // 没真例句时合成框架句会把目标英文词念出来 = 等于报答案,故不自动播(用户仍可手动点 🔊)
+  // 进入这个词自动播一遍例句(听音默写)—— 不用点按钮。
+  // 有真例句用真的,否则用合成框架句(跟「🔊 听例句」按钮同款);音标已显示,自动播不算泄答案。
   try {
-    if (w.example) {
-      const exBtn = quizBody.querySelector('[data-action="quiz-play-ex"]');
-      speakTerm(w.example, exBtn);
-    }
+    const exBtn = quizBody.querySelector('[data-action="quiz-play-ex"]');
+    speakTerm(quizExampleSentence(w), exBtn);
   } catch (e) {}
 }
 
