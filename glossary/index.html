@@ -1216,11 +1216,15 @@ const totalCountEl = document.getElementById('totalCount');
 const favSection = document.getElementById('favorites');
 const favGrid = document.getElementById('favoritesGrid');
 const favCountEl = document.getElementById('favCount');
+// localStorage 安全读取:解析失败/被写坏时回退,绝不让整页脚本崩死
+function _gjParse(key, fb) { try { const v = localStorage.getItem(key); if (v == null) return fb; const p = JSON.parse(v); return p == null ? fb : p; } catch (e) { console.warn('[glossary] localStorage 解析失败,回退:', key, e); return fb; } }
+function _gjArr(key) { const v = _gjParse(key, []); return Array.isArray(v) ? v : []; }
+function _gjObj(key) { const v = _gjParse(key, {}); return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {}; }
 const state = {
-  favorites: new Set(JSON.parse(localStorage.getItem('glossary-favorites') || '[]')),
-  deleted: new Set(JSON.parse(localStorage.getItem('glossary-deleted') || '[]')),
-  edits: JSON.parse(localStorage.getItem('glossary-edits') || '{}'),
-  userTerms: JSON.parse(localStorage.getItem('glossary-user-terms') || '{}'),
+  favorites: new Set(_gjArr('glossary-favorites')),
+  deleted: new Set(_gjArr('glossary-deleted')),
+  edits: _gjObj('glossary-edits'),
+  userTerms: _gjObj('glossary-user-terms'),
   query: ''
 };
 
@@ -1691,7 +1695,7 @@ function _resetLessonButtons() {
 }
 function _stopLessonAudio() {
   if (_lessonStopTimer) { clearTimeout(_lessonStopTimer); _lessonStopTimer = null; }
-  if (_lessonAudio) { try { _lessonAudio.pause(); } catch (e) {} }
+  if (_lessonAudio) { try { _lessonAudio.pause(); } catch (e) {} _lessonAudio.onloadedmetadata = null; }  // 清挂起的 seek 回调,避免叠加
   _resetLessonButtons();
   _lessonPlayingId = null;
 }
@@ -1712,6 +1716,7 @@ function playTermAudio(catId, en, btn) {
   _lessonPlayingId = id;
   if (btn) { btn.classList.add('is-playing'); btn.textContent = '⏸'; }
   const seekAndPlay = () => {
+    if (_lessonPlayingId !== id) return;   // 元数据加载期间又点了别的词 → 这次回调作废
     try { _lessonAudio.currentTime = start; } catch (e) {}
     _lessonAudio.play().then(() => {
       // 最多放 1 分钟自动停;期间录音结束('ended' 复位)或用户再点一次(toggle 停)也会停
@@ -1726,12 +1731,12 @@ function playTermAudio(catId, en, btn) {
   // seek 需要至少有元数据(readyState>=1 HAVE_METADATA)。换源/未加载时先 load 再等 loadedmetadata。
   if (_lessonAudio.src !== d.audioUrl) {
     _lessonAudio.src = d.audioUrl;
-    _lessonAudio.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+    _lessonAudio.onloadedmetadata = seekAndPlay;   // 赋值式:重复点击只保留最后一个,不叠加
     _lessonAudio.load();
   } else if (_lessonAudio.readyState >= 1) {
     seekAndPlay();
   } else {
-    _lessonAudio.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+    _lessonAudio.onloadedmetadata = seekAndPlay;
     _lessonAudio.load();
   }
 }
@@ -1740,7 +1745,8 @@ function playTermAudio(catId, en, btn) {
    🎙 跟读:听该词那句真人原声短片段 → 你复述 → Web Speech 转写 → 比对例句标命中/漏读
    ============================================================ */
 const SHADOW_CLIP_SECONDS = 7;     // 跟读片段:从起播点放 ~7 秒(≈ 一句),不放整段
-let _shadowAudio = null, _shadowRec = null;
+// 注:原 _shadowAudio/_shadowRec 全局单例已改为每个 renderShadow 实例的闭包局部,
+// 避免抽屉内嵌跟读与独立弹窗跟读并存时互相踩停(残留麦克风/识别)。
 
 function _shadowSentence(d) {
   const m = /例[:：]\s*([^·]+)/.exec((d.note || '') + ' · ' + (d.hint || ''));
@@ -1749,7 +1755,9 @@ function _shadowSentence(d) {
 function _shadowNorm(s) {
   return String(s || '').toLowerCase().replace(/[^a-z0-9'\s]/g, ' ').split(/\s+/).filter(Boolean);
 }
-function _shadowPlayClip(d) {
+// holder:每个 renderShadow 实例传入自己的 {audio} 容器,片段播放互不干扰
+function _shadowPlayClip(d, holder) {
+  holder = holder || {};
   // 没课堂录音 → TTS 朗读例句当原声
   if (!d.audioUrl || d.audioStart == null) {
     if (typeof speechSynthesis !== 'undefined') {
@@ -1761,15 +1769,14 @@ function _shadowPlayClip(d) {
     }
     return;
   }
-  try { if (_shadowAudio) { _shadowAudio.pause(); } } catch (e) {}
-  _shadowAudio = new Audio(); _shadowAudio.preload = 'none'; _shadowAudio.src = d.audioUrl;
+  try { if (holder.audio) { holder.audio.pause(); } } catch (e) {}
+  const audio = new Audio(); audio.preload = 'none'; audio.src = d.audioUrl; holder.audio = audio;
   const start = Math.max(0, d.audioStart - 0.5);
-  let stopT = null;
-  const go = () => { try { _shadowAudio.currentTime = start; } catch (e) {} _shadowAudio.play().then(() => {
-    stopT = setTimeout(() => { try { _shadowAudio.pause(); } catch (e) {} }, SHADOW_CLIP_SECONDS * 1000);
+  const go = () => { try { audio.currentTime = start; } catch (e) {} audio.play().then(() => {
+    setTimeout(() => { try { audio.pause(); } catch (e) {} }, SHADOW_CLIP_SECONDS * 1000);
   }).catch(() => {}); };
-  _shadowAudio.addEventListener('loadedmetadata', go, { once: true });
-  _shadowAudio.load();
+  audio.onloadedmetadata = go;   // 赋值式而非 addEventListener,换源/重播不叠加监听
+  audio.load();
 }
 
 function startShadow(catId, en) {
@@ -1808,15 +1815,18 @@ function renderShadow(container, catId, en, opts) {
   const $ = s => bg.querySelector(s);
   const _tEl = $('[data-role=target]'); if (_tEl) _tEl.innerHTML = escapeHtml(target);
   if (!SR) { const _sEl = $('[data-role=score]'); if (_sEl) _sEl.innerHTML = '<span style="color:#ef4444">这个浏览器不支持语音识别,用 Chrome / Edge / Safari</span>'; const _rb = $('[data-act=rec]'); if (_rb) _rb.disabled = true; }
-  if (opts.autoplay) _shadowPlayClip(d);   // 弹窗进来自动听一遍;内嵌不自动放
+  const clip = {};   // 本实例的片段播放器(holder.audio),与其它跟读实例互不干扰
+  if (opts.autoplay) _shadowPlayClip(d, clip);   // 弹窗进来自动听一遍;内嵌不自动放
 
-  let listening = false, recorder = null, micStream = null, myUrl = null;
+  // 全部为本实例闭包局部(不再用全局单例),两个跟读实例并存也不互相踩
+  let listening = false, recorder = null, micStream = null, myUrl = null, myRec = null;
+  let micStarting = false, talkAborted = false, replayAudio = null;
   function cleanupMic() {
     try { if (recorder && recorder.state !== 'inactive') recorder.stop(); } catch (e) {}
     try { if (micStream) micStream.getTracks().forEach(t => t.stop()); } catch (e) {}
     micStream = null;
   }
-  function stopRec() { try { if (_shadowRec) _shadowRec.stop(); } catch (e) {} }
+  function stopRec() { try { if (myRec) myRec.stop(); } catch (e) {} }
   function compareAndShow(said) {
     if (!bg.isConnected) return;
     const tWords = _shadowNorm(target);
@@ -1831,11 +1841,14 @@ function renderShadow(container, catId, en, opts) {
   }
 
   function beginTalk() {
-    if (!SR || listening) return;
+    if (!SR || listening || micStarting) return;   // 已在录 / 正在起麦 → 挡掉重入(防连点空格起多次 getUserMedia)
     const recBtn = $('[data-act=rec]'); if (!recBtn) return;
+    talkAborted = false;
     // 同时跑:SpeechRecognition 出文字比对 + MediaRecorder 录下你的声音(为了"听我说的")
     const startRecognition = () => {
-      const rec = new SR(); _shadowRec = rec;
+      micStarting = false;
+      if (talkAborted) { cleanupMic(); return; }   // 等麦期间用户已松手 → 取消,不开始识别
+      const rec = new SR(); myRec = rec;
       rec.lang = 'en-US'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
       let finalTxt = '';
       listening = true;
@@ -1847,17 +1860,20 @@ function renderShadow(container, catId, en, opts) {
         for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) finalTxt += r[0].transcript + ' '; else interim += r[0].transcript; }
         $('[data-role=you]').textContent = '你说的:' + (finalTxt + interim).trim();
       };
-      rec.onerror = ev => { if (ev.error && ev.error !== 'no-speech' && ev.error !== 'aborted') $('[data-role=score]').innerHTML = '<span style="color:#ef4444">识别出错(' + escapeHtml(ev.error) + '),再试一次</span>'; };
+      rec.onerror = ev => { if (ev.error && ev.error !== 'no-speech' && ev.error !== 'aborted') { const s = $('[data-role=score]'); if (s) s.innerHTML = '<span style="color:#ef4444">识别出错(' + escapeHtml(ev.error) + '),再试一次</span>'; } };
       rec.onend = () => {
-        listening = false; recBtn.textContent = '🎙 再说一遍'; recBtn.classList.remove('listening'); _shadowRec = null;
+        listening = false; recBtn.textContent = '🎙 再说一遍'; recBtn.classList.remove('listening'); myRec = null;
         cleanupMic();
         const said = finalTxt.trim();
         if (said) compareAndShow(said);
+        else if (bg.isConnected) { const s = $('[data-role=score]'); if (s) s.innerHTML = '<span style="color:#ef4444">没听清,再说一遍(Safari 对长句识别不稳,建议短句或用 Chrome)</span>'; }
       };
       try { rec.start(); } catch (e) { listening = false; recBtn.textContent = '🎙 开始说'; recBtn.classList.remove('listening'); }
     };
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) {
+      micStarting = true;
       navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        if (talkAborted) { try { stream.getTracks().forEach(t => t.stop()); } catch (e) {} micStarting = false; return; }
         micStream = stream;
         try {
           const chunks = [];
@@ -1876,7 +1892,10 @@ function renderShadow(container, catId, en, opts) {
       }).catch(() => { startRecognition(); });
     } else { startRecognition(); }
   }
-  function endTalk() { if (listening) { stopRec(); cleanupMic(); } }
+  function endTalk() {
+    if (listening) { stopRec(); cleanupMic(); }
+    else if (micStarting) { talkAborted = true; }   // 还在等麦克风就松手了 → 标记取消,resolve 后自动收尾
+  }
 
   // 按住空格说话(对讲机式):按下=录,松开=出结果。比盯按钮还准。
   let spaceHold = false;
@@ -1902,10 +1921,14 @@ function renderShadow(container, catId, en, opts) {
     const act = b.dataset.act;
     if (act === 'close') {
       document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey);
-      stopRec(); cleanupMic(); try { if (_shadowAudio) _shadowAudio.pause(); } catch (e) {} if (myUrl) { try { URL.revokeObjectURL(myUrl); } catch (e) {} } if (opts.modal) bg.remove();
+      stopRec(); cleanupMic(); talkAborted = true;
+      try { if (clip.audio) clip.audio.pause(); } catch (e) {}
+      try { if (replayAudio) replayAudio.pause(); } catch (e) {}
+      if (myUrl) { try { URL.revokeObjectURL(myUrl); } catch (e) {} myUrl = null; }
+      if (opts.modal) bg.remove();
     }
-    else if (act === 'replay') { _shadowPlayClip(d); }
-    else if (act === 'replay-me') { if (myUrl) { try { if (_shadowAudio) _shadowAudio.pause(); } catch (e) {} const a = new Audio(myUrl); a.play().catch(() => {}); } }
+    else if (act === 'replay') { _shadowPlayClip(d, clip); }
+    else if (act === 'replay-me') { if (myUrl) { try { if (clip.audio) clip.audio.pause(); } catch (e) {} if (!replayAudio) replayAudio = new Audio(); replayAudio.src = myUrl; replayAudio.play().catch(() => {}); } }
     else if (act === 'rec') { if (listening) { spaceHold = false; endTalk(); } else { beginTalk(); } }
   });
 }
@@ -2268,10 +2291,21 @@ async function autoLookupAddTerm(catId, query, setStatus, opts) {
       setStatus('<span class="err">没查到结果' + (data && data.error ? '(' + escapeHtml(data.error) + ')' : '') + ',换个词试试</span>');
       return false;
     }
-    // 去重(内置 + 用户词,大小写不敏感)
+    // 重加 = 先取消之前的硬删墓碑(否则加完仍被 getMergedTerms 过滤掉 → 词隐身,UI 却提示已加入)
+    const tombKey = catId + '::' + data.en;
+    const hadTomb = state.deleted.delete(tombKey);
+    // 去重(内置 + 用户词,大小写不敏感;此时墓碑已清,删过的词也会被认出)
     const dup = getMergedTerms(cat).find(t => t[0].toLowerCase() === data.en.toLowerCase());
     if (dup) {
-      setStatus('<span class="ok">“' + escapeHtml(dup[0]) + '” 已在「' + escapeHtml(cat.title) + '」' + (opts.silent ? '' : ',帮你跳过去 →') + '</span>');
+      if (hadTomb) {
+        save();   // 取消墓碑要持久化,否则刷新又隐身
+        setStatus('<span class="ok">“' + escapeHtml(dup[0]) + '” 已恢复到「' + escapeHtml(cat.title) + '」' + (opts.silent ? '' : ' →') + '</span>');
+        const sec = document.getElementById('cat-' + catId);
+        if (sec) { const wasActive = sec.classList.contains('active-cat'); const ns = renderCategorySection(cat); if (noResults && main) main.insertBefore(ns, noResults); if (wasActive) ns.classList.add('active-cat'); }
+        updateCatNavCount(catId);
+      } else {
+        setStatus('<span class="ok">“' + escapeHtml(dup[0]) + '” 已在「' + escapeHtml(cat.title) + '」' + (opts.silent ? '' : ',帮你跳过去 →') + '</span>');
+      }
       if (!opts.silent) { search.value = ''; state.query = ''; setActiveCat(catId); applySearch(); scrollToTerm(catId, dup[0]); }
       return true;
     }
@@ -2289,8 +2323,10 @@ async function autoLookupAddTerm(catId, query, setStatus, opts) {
     save();
     setStatus('<span class="ok">✅ 已自动生成并加入 “' + escapeHtml(data.en) + '”</span>');
     if (opts.silent) {
-      // 不重渲当前视图(留在错题卡),只更新计数;新词下次进该分类时出现
+      // 错题卡里抓生词:不跳转,但仍把该分类 section 重渲一遍,保证计数与卡片数一致(不靠"下次进分类才出现")
       updateCatNavCount(catId);
+      const sec = document.getElementById('cat-' + catId);
+      if (sec) { const wasActive = sec.classList.contains('active-cat'); const ns = renderCategorySection(cat); if (noResults && main) main.insertBefore(ns, noResults); if (wasActive) ns.classList.add('active-cat'); }
     } else {
       const newSection = renderCategorySection(cat);
       if (noResults && main) main.insertBefore(newSection, noResults);
@@ -2471,6 +2507,7 @@ function renderQuizPhase() {
 
 function quizAdvance() {
   const qs = quizState;
+  if (!qs || qs.finished) return;   // 结果页已出 → 回车不再推进(防越界 + 防重复 finishQuiz)
   qs.idx++;
   if (qs.idx >= qs.n) {
     if (qs.reviewMode) { finishQuiz(); return; }   // 复习只一遍默写,做完直接出结果
@@ -2518,10 +2555,13 @@ function renderQuizDictation() {
     inp.oninput = () => renderDictSlots(w.en, inp.value);
     inp.focus();
   }
-  // 进入这个词自动播一遍例句(听音默写);用户已点过测验/复习,autoplay 不会被拦
+  // 进入这个词自动播一遍例句(听音默写);只在有真例句时自动播 —
+  // 没真例句时合成框架句会把目标英文词念出来 = 等于报答案,故不自动播(用户仍可手动点 🔊)
   try {
-    const exBtn = quizBody.querySelector('[data-action="quiz-play-ex"]');
-    speakTerm(quizExampleSentence(w), exBtn);
+    if (w.example) {
+      const exBtn = quizBody.querySelector('[data-action="quiz-play-ex"]');
+      speakTerm(w.example, exBtn);
+    }
   } catch (e) {}
 }
 
@@ -2568,7 +2608,10 @@ function quizDeleteWord() {
   qs.n = qs.words.length;
   qs.awaitingNext = false;
   if (qs.n === 0) { finishQuiz(); return; }
-  if (qs.idx >= qs.n) { qs.phase++; qs.idx = 0; if (qs.phase > 3) { finishQuiz(); return; } }
+  if (qs.idx >= qs.n) {
+    if (qs.reviewMode) { finishQuiz(); return; }   // 复习只默写一遍,删到最后一个 = 直接出结果(不进②拼读)
+    qs.phase++; qs.idx = 0; if (qs.phase > 3) { finishQuiz(); return; }
+  }
   renderQuizPhase();
 }
 
@@ -2716,28 +2759,33 @@ function recordQuizHistory(qs) {
 
 function finishQuiz() {
   const qs = quizState;
+  if (!qs || qs.finished) return;   // 幂等:结果页只结算一次(防回车重复推进艾宾浩斯/重复写做题记录)
   qs.finished = true;
+  qs.awaitingNext = false;
   practiceState = null;
 
   // ── 复习模式:按默写对错推进艾宾浩斯阶段(对=升级 pass,错=降级,重排 due)──
   if (qs.reviewMode) {
-    let passed = 0; const missed = [];
+    let passed = 0, valid = 0; const missed = [];
     qs.words.forEach((w, i) => {
       const arr = state.userTerms[w.catId] || [];
       const t = arr.find(x => (x.en || '').toLowerCase() === w.en.toLowerCase());
-      if (!t) return;
+      if (!t) return;   // 查不到对应 userTerm 的词不计入分母(否则 passed/n 口径不一致)
+      valid++;
       const correct = (qs.scores.dictation[i] || 0) >= 100;
       if (correct) { t.review_stage = Math.min((t.review_stage || 0) + 1, 6); passed++; }
       else { t.review_stage = Math.max((t.review_stage || 0) - 1, 0); missed.push(w); }
       const stg = Math.min(t.review_stage, QUIZ_REVIEW_INTERVALS.length - 1);
       t.next_due_at = Date.now() + QUIZ_REVIEW_INTERVALS[stg];
     });
+    recordQuizHistory(qs);   // 复习也留做题记录(只有默写分,p/s 记 null)
     save();
     try { localStorage.removeItem('glossary-review-queue'); } catch (e) {}
+    if (!valid) valid = qs.n;   // 兜底:全查不到时仍显示总数,避免 0/0
     qbPhase.textContent = '复习完成'; qbProg.textContent = ''; qbScore.textContent = ''; qbFill.style.width = '100%';
     quizBody.innerHTML =
       '<div class="quiz-result">' +
-        '<div class="qr-rank ' + (passed === qs.n ? 's' : passed >= qs.n * 0.6 ? 'a' : 'c') + '">' + passed + '/' + qs.n + '</div>' +
+        '<div class="qr-rank ' + (passed === valid ? 's' : passed >= valid * 0.6 ? 'a' : 'c') + '">' + passed + '/' + valid + '</div>' +
         '<div class="qr-total">复习完成 · 记住 ' + passed + ' 词</div>' +
         '<div class="qr-sub">记住的词复习阶段 +1,下次到期顺延;没记住的降级、很快再考</div>' +
         (missed.length
@@ -2816,9 +2864,10 @@ function imeConfirmEnter(e) {
 // e.repeat 守卫杀掉「按住回车自动重复」导致的级联跳题(修 答错就直接结束)
 document.addEventListener('keydown', e => {
   if (!quizState) return;
+  if (e.key === 'Escape') { closeQuiz(false); return; }   // 结果页 Esc 仍可关闭
+  if (quizState.finished) return;   // 结果页停留:回车不再触发任何提交/推进(防重复结算)
   // 中文输入法 composition / 候选确认中:回车只确认输入,不当提交(否则填罗马音时选字回车会误提交)
   if (imeConfirmEnter(e)) return;
-  if (e.key === 'Escape') { closeQuiz(false); return; }
   if (e.key !== 'Enter' || e.repeat) return;
   e.preventDefault();
   if (quizState.awaitingNext) { quizAdvance(); return; }
@@ -3352,6 +3401,11 @@ main.addEventListener('click', e => {
       if (!dead.includes(catId)) dead.push(catId);
       localStorage.setItem('glossary-deleted-cats', JSON.stringify(dead));
     } catch (err) {}
+    // 清掉改过的表名,避免日后同 id 复用时残留旧名
+    try {
+      const tm = JSON.parse(localStorage.getItem('glossary-cat-titles') || '{}');
+      if (tm[catId]) { delete tm[catId]; localStorage.setItem('glossary-cat-titles', JSON.stringify(tm)); }
+    } catch (err) {}
     save();
     const navA = catsNav.querySelector('a[data-cat="' + catId + '"]'); if (navA) navA.remove();
     const sec = document.getElementById('cat-' + catId); if (sec) sec.remove();
@@ -3884,6 +3938,7 @@ function doImportWords(chosen, ctx) {
   const seen = new Set(state.userTerms[catId].map(t => (t.en || '').toLowerCase()));
   let added = 0;
   chosen.forEach(w => {
+    state.deleted.delete(catId + '::' + w.en);   // 之前删过同名词 → 导入即取消墓碑,否则导入后仍被过滤隐身
     if (seen.has(w.en.toLowerCase())) return;
     const item = { en: w.en, zh: w.zh || '', hint: w.hint || '', completed: false, review_stage: 0, next_due_at: Date.now() + 5 * 60 * 1000 };
     if (lessonAudioUrl && typeof w.start === 'number') { item.audio_url = lessonAudioUrl; item.start = w.start; }
@@ -3922,11 +3977,42 @@ setActiveCat(localStorage.getItem('glossary-active-cat') || 'vibe-coding');
    跨标签 / iframe 同步 — 另一个 tab 改了 localStorage,这边自动跟上
    ============================================================ */
 function reloadFromStorage() {
-  state.favorites = new Set(JSON.parse(localStorage.getItem('glossary-favorites') || '[]'));
-  state.deleted = new Set(JSON.parse(localStorage.getItem('glossary-deleted') || '[]'));
-  state.edits = JSON.parse(localStorage.getItem('glossary-edits') || '{}');
-  const newUserTerms = JSON.parse(localStorage.getItem('glossary-user-terms') || '{}');
-  // Rebuild categories whose user terms changed
+ try {
+  state.favorites = new Set(_gjArr('glossary-favorites'));
+  state.deleted = new Set(_gjArr('glossary-deleted'));
+  state.edits = _gjObj('glossary-edits');
+  const newUserTerms = _gjObj('glossary-user-terms');
+
+  // —— 分类增删改名同步(另一个 tab 新建/删组/改名)——
+  const dynCats = _gjArr('glossary-dynamic-cats');
+  const deadCats = new Set(_gjArr('glossary-deleted-cats'));
+  const titleMap = _gjObj('glossary-cat-titles');
+  // 新增:dynamic-cats 里有、本 tab DATA 里没有、且没被删的 → 建 tab + section
+  dynCats.forEach(c => {
+    if (!c || !c.id || deadCats.has(c.id) || DATA.find(d => d.id === c.id)) return;
+    const cat = { id: c.id, title: titleMap[c.id] || c.title || c.id, terms: [], dynamic: true };
+    DATA.push(cat);
+    if (!catsNav.querySelector('a[data-cat="' + c.id + '"]')) {
+      const a = document.createElement('a'); a.href = '#'; a.className = 'group-link inactive';
+      a.textContent = cat.title + ' (0)'; a.dataset.cat = c.id;
+      a.onclick = (ev) => { ev.preventDefault(); setActiveCat(c.id); }; catsNav.appendChild(a);
+    }
+    const sec = renderCategorySection(cat);
+    if (noResults && main) main.insertBefore(sec, noResults);
+  });
+  // 删除:本 tab 还在、但已被另一个 tab 删掉的 → 移除 tab + section(修幽灵空胶囊)
+  for (let i = DATA.length - 1; i >= 0; i--) {
+    if (!deadCats.has(DATA[i].id)) continue;
+    const cid = DATA[i].id;
+    DATA.splice(i, 1);
+    const navA = catsNav.querySelector('a[data-cat="' + cid + '"]'); if (navA) navA.remove();
+    const sec = document.getElementById('cat-' + cid); if (sec) sec.remove();
+    delete state.userTerms[cid];
+  }
+  // 改名同步
+  DATA.forEach(cat => { if (titleMap[cat.id] && cat.title !== titleMap[cat.id]) { cat.title = titleMap[cat.id]; updateCatNavCount(cat.id); } });
+
+  // —— 用户词变化同步 ——
   DATA.forEach(cat => {
     const oldArr = state.userTerms[cat.id] || [];
     const newArr = newUserTerms[cat.id] || [];
@@ -3947,7 +4033,10 @@ function reloadFromStorage() {
   });
   rebuildFavorites();
   updateDelToggle();
+  // 当前 active 分类被另一个 tab 删了 → 切到第一个
+  if (!DATA.find(c => c.id === document.body.dataset.activeCat) && DATA[0]) setActiveCat(DATA[0].id);
   applySearch();
+ } catch (e) { console.warn('[glossary] reloadFromStorage failed:', e); }
 }
 window.addEventListener('storage', e => {
   if (e.key && e.key.startsWith('glossary-')) reloadFromStorage();
