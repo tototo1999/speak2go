@@ -2374,7 +2374,7 @@
           <div class="chat-status">
             <div class="status-item offline" id="bridgeStatus" title="AI service status">
               <div class="dot"></div>
-              <span class="brain-badge" id="brainBadge" title="AI backend online indicator">serverless</span>
+              <span class="brain-badge" id="brainBadge" title="AI backend online indicator">LLM</span>
               <span id="chatRoomModel">AI</span>
               <svg class="signal-online" width="14" height="11" viewBox="0 0 14 11" fill="currentColor" aria-hidden="true">
                 <rect x="1"   y="7" width="3" height="3" rx="0.5"/>
@@ -5724,17 +5724,43 @@
     return resp.json()
   }
 
-  // 2026-05-26: after serverless cutover, bridge_state has no live writer,
-  // so the badge is pinned green. Function names preserved for callers; param ignored.
-  function setBridgeStatus(_online) {
+  // 2026-05-29: 状态栏修活。serverless 切换后没有 daemon 心跳,改成直接探活
+  // chat2go-ingest Edge Function:OPTIONS 预检(CORS,无害、不触发 AI 跑)200=在线。
+  let _bridgeHeartbeatTimer = null
+  function setBridgeStatus(online) {
     const el = document.getElementById('bridgeStatus')
     if (!el) return
-    el.className = 'status-item online'
-    el.title = 'AI service status'
+    el.className = online ? 'status-item online' : 'status-item offline'
+    el.title = online ? 'LLM backend online' : 'LLM backend unreachable'
     el.style.cursor = 'default'
   }
-  async function refreshBridgeStatus() { setBridgeStatus(true) }
-  function startBridgeHeartbeatPolling() { setBridgeStatus(true) }
+  // 无害探活:OPTIONS 预检 chat2go-ingest,只确认函数可达,不带 body、不触发 worker。
+  async function probeBackendOnline() {
+    try {
+      const ctrl = new AbortController()
+      const t = setTimeout(() => ctrl.abort(), 6000)
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/chat2go-ingest`, {
+        method: 'OPTIONS',
+        headers: {
+          'origin': location.origin,
+          'access-control-request-method': 'POST',
+        },
+        signal: ctrl.signal,
+      })
+      clearTimeout(t)
+      return resp.ok || resp.status === 204
+    } catch (_) {
+      return false
+    }
+  }
+  async function refreshBridgeStatus() {
+    setBridgeStatus(await probeBackendOnline())
+  }
+  function startBridgeHeartbeatPolling() {
+    refreshBridgeStatus()                       // 立即探一次
+    if (_bridgeHeartbeatTimer) clearInterval(_bridgeHeartbeatTimer)
+    _bridgeHeartbeatTimer = setInterval(refreshBridgeStatus, 30000)  // 每 30s 复查
+  }
   async function requestBridgeRestart() { /* deprecated: no daemon to restart */ }
 
   // Claude Code-style typing verbs (~100 items). English-teacher vibe: evaluate / explain / drill / summarize / casual mix.
