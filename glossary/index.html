@@ -1770,10 +1770,11 @@ function _shadowPlayClip(d, holder) {
     return;
   }
   try { if (holder.audio) { holder.audio.pause(); } } catch (e) {}
+  if (holder.stopTimer) { clearTimeout(holder.stopTimer); holder.stopTimer = null; }   // 清上次的自动停定时器,避免叠加/关闭后仍 fire
   const audio = new Audio(); audio.preload = 'none'; audio.src = d.audioUrl; holder.audio = audio;
   const start = Math.max(0, d.audioStart - 0.5);
   const go = () => { try { audio.currentTime = start; } catch (e) {} audio.play().then(() => {
-    setTimeout(() => { try { audio.pause(); } catch (e) {} }, SHADOW_CLIP_SECONDS * 1000);
+    holder.stopTimer = setTimeout(() => { try { audio.pause(); } catch (e) {} }, SHADOW_CLIP_SECONDS * 1000);
   }).catch(() => {}); };
   audio.onloadedmetadata = go;   // 赋值式而非 addEventListener,换源/重播不叠加监听
   audio.load();
@@ -1800,6 +1801,14 @@ function startShadow(catId, en) {
     '</div>';
   document.body.appendChild(bg);
   renderShadow(bg, catId, en, { spaceHold: true, autoplay: true, modal: true });
+  // 背景点击 / Esc 关闭(走「关闭」按钮以复用其清理:停麦、撤 objectURL、解绑)
+  const _close = () => { const cb = bg.querySelector('[data-act=close]'); if (cb) cb.click(); };
+  bg.addEventListener('mousedown', e => { if (e.target === bg) _close(); });
+  const escH = e => {
+    if (!bg.isConnected) { document.removeEventListener('keydown', escH); return; }
+    if (e.key === 'Escape') { document.removeEventListener('keydown', escH); _close(); }
+  };
+  document.addEventListener('keydown', escH);
 }
 
 // 跟读内核(独立弹窗 + 抽屉内嵌 ⑤ 共用):绑定 container 内的
@@ -1815,6 +1824,10 @@ function renderShadow(container, catId, en, opts) {
   const $ = s => bg.querySelector(s);
   const _tEl = $('[data-role=target]'); if (_tEl) _tEl.innerHTML = escapeHtml(target);
   if (!SR) { const _sEl = $('[data-role=score]'); if (_sEl) _sEl.innerHTML = '<span style="color:#ef4444">这个浏览器不支持语音识别,用 Chrome / Edge / Safari</span>'; const _rb = $('[data-act=rec]'); if (_rb) _rb.disabled = true; }
+  // 不支持录音回放(无 MediaRecorder/getUserMedia)→ 标注那个一直禁用的「我说的」按钮,别让它当哑钮
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder)) {
+    const _rm = $('[data-act=replay-me]'); if (_rm) { _rm.title = '本浏览器不支持录音回放(识别仍可用)'; _rm.textContent = '🔇 我说的'; }
+  }
   const clip = {};   // 本实例的片段播放器(holder.audio),与其它跟读实例互不干扰
   if (opts.autoplay) _shadowPlayClip(d, clip);   // 弹窗进来自动听一遍;内嵌不自动放
 
@@ -1911,20 +1924,26 @@ function renderShadow(container, catId, en, opts) {
     }
   }
   if (opts.spaceHold) { document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey); }
-  // 内嵌:存 cleanup 到 practiceState,关抽屉时停麦/解绑
+  // 统一清理:解绑空格键 + 停识别/麦克风 + 停片段原声 + 停"我说的"回放 + 清自动停定时器 + 撤 objectURL
+  // 模态 close 与抽屉内嵌 closePractice 共用,保证两条关闭路径行为一致(修内嵌路径漏停音频/漏撤 URL)
+  function fullCleanup() {
+    try { document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); } catch (e) {}
+    stopRec(); cleanupMic(); talkAborted = true;
+    try { if (clip.audio) clip.audio.pause(); } catch (e) {}
+    if (clip.stopTimer) { clearTimeout(clip.stopTimer); clip.stopTimer = null; }
+    try { if (replayAudio) replayAudio.pause(); } catch (e) {}
+    if (myUrl) { try { URL.revokeObjectURL(myUrl); } catch (e) {} myUrl = null; }
+  }
+  // 内嵌:存 cleanup 到 practiceState,关抽屉时调用
   if (!opts.modal && typeof practiceState !== 'undefined' && practiceState) {
-    practiceState._shadowCleanup = () => { try { document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); } catch (e) {} stopRec(); cleanupMic(); };
+    practiceState._shadowCleanup = fullCleanup;
   }
 
   bg.addEventListener('click', e => {
     const b = e.target.closest('button[data-act]'); if (!b) return;
     const act = b.dataset.act;
     if (act === 'close') {
-      document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey);
-      stopRec(); cleanupMic(); talkAborted = true;
-      try { if (clip.audio) clip.audio.pause(); } catch (e) {}
-      try { if (replayAudio) replayAudio.pause(); } catch (e) {}
-      if (myUrl) { try { URL.revokeObjectURL(myUrl); } catch (e) {} myUrl = null; }
+      fullCleanup();
       if (opts.modal) bg.remove();
     }
     else if (act === 'replay') { _shadowPlayClip(d, clip); }
@@ -2292,16 +2311,24 @@ async function autoLookupAddTerm(catId, query, setStatus, opts) {
       return false;
     }
     // 重加 = 先取消之前的硬删墓碑(否则加完仍被 getMergedTerms 过滤掉 → 词隐身,UI 却提示已加入)
-    const tombKey = catId + '::' + data.en;
-    const hadTomb = state.deleted.delete(tombKey);
+    // 取消之前的硬删墓碑(大小写不敏感 — 查词返回的 en 大小写可能跟删时不同,精确比会漏)
+    const tombLow = (catId + '::' + data.en).toLowerCase();
+    let hadTomb = false;
+    [...state.deleted].forEach(k => { if (k.toLowerCase() === tombLow) { state.deleted.delete(k); hadTomb = true; } });
+    // 该分类是否正开着练习抽屉:开着就别整段重渲(会把抽屉连同造句反馈一起销毁),只更新计数
+    const drawerOpen = (typeof practiceState !== 'undefined' && practiceState && practiceState.catId === catId);
+    const reRenderSection = () => {
+      if (drawerOpen) return;
+      const sec = document.getElementById('cat-' + catId);
+      if (sec) { const wasActive = sec.classList.contains('active-cat'); const ns = renderCategorySection(cat); if (noResults && main) main.insertBefore(ns, noResults); if (wasActive) ns.classList.add('active-cat'); }
+    };
     // 去重(内置 + 用户词,大小写不敏感;此时墓碑已清,删过的词也会被认出)
     const dup = getMergedTerms(cat).find(t => t[0].toLowerCase() === data.en.toLowerCase());
     if (dup) {
       if (hadTomb) {
         save();   // 取消墓碑要持久化,否则刷新又隐身
         setStatus('<span class="ok">“' + escapeHtml(dup[0]) + '” 已恢复到「' + escapeHtml(cat.title) + '」' + (opts.silent ? '' : ' →') + '</span>');
-        const sec = document.getElementById('cat-' + catId);
-        if (sec) { const wasActive = sec.classList.contains('active-cat'); const ns = renderCategorySection(cat); if (noResults && main) main.insertBefore(ns, noResults); if (wasActive) ns.classList.add('active-cat'); }
+        reRenderSection();
         updateCatNavCount(catId);
       } else {
         setStatus('<span class="ok">“' + escapeHtml(dup[0]) + '” 已在「' + escapeHtml(cat.title) + '」' + (opts.silent ? '' : ',帮你跳过去 →') + '</span>');
@@ -2323,10 +2350,9 @@ async function autoLookupAddTerm(catId, query, setStatus, opts) {
     save();
     setStatus('<span class="ok">✅ 已自动生成并加入 “' + escapeHtml(data.en) + '”</span>');
     if (opts.silent) {
-      // 错题卡里抓生词:不跳转,但仍把该分类 section 重渲一遍,保证计数与卡片数一致(不靠"下次进分类才出现")
+      // 错题卡里抓生词:不跳转;重渲该分类 section 对齐计数,但抽屉开着时跳过重渲(否则销毁抽屉)
       updateCatNavCount(catId);
-      const sec = document.getElementById('cat-' + catId);
-      if (sec) { const wasActive = sec.classList.contains('active-cat'); const ns = renderCategorySection(cat); if (noResults && main) main.insertBefore(ns, noResults); if (wasActive) ns.classList.add('active-cat'); }
+      reRenderSection();
     } else {
       const newSection = renderCategorySection(cat);
       if (noResults && main) main.insertBefore(newSection, noResults);
@@ -2737,18 +2763,24 @@ function submitQuizSentence() {
 function recordQuizHistory(qs) {
   const at = Date.now();
   qs.words.forEach((w, i) => {
-    const key = w.catId + '::' + w.en;
-    const edit = Object.assign({}, state.edits[key] || {});
-    const log = Array.isArray(edit.quizLog) ? edit.quizLog.slice() : [];
-    log.push({
+    const entry = {
       at,
       d: qs.scores.dictation[i] != null ? qs.scores.dictation[i] : null,
       p: qs.scores.phonics[i] != null ? qs.scores.phonics[i] : null,
       s: qs.scores.sentence[i] != null ? qs.scores.sentence[i] : null,
+    };
+    // 写进所有含该词的分类卡片(题库按 en 去重抽题,同名词跨分类共享同一份做题记录)
+    const enL = (w.en || '').toLowerCase();
+    const keys = new Set([w.catId + '::' + w.en]);
+    DATA.forEach(cat => { getMergedTerms(cat).forEach(t => { if ((t[0] || '').toLowerCase() === enL) keys.add(cat.id + '::' + t[0]); }); });
+    keys.forEach(key => {
+      const edit = Object.assign({}, state.edits[key] || {});
+      const log = Array.isArray(edit.quizLog) ? edit.quizLog.slice() : [];
+      log.push(entry);
+      if (log.length > 20) log.splice(0, log.length - 20);   // 只留最近 20 次
+      edit.quizLog = log;
+      state.edits[key] = edit;
     });
-    if (log.length > 20) log.splice(0, log.length - 20);   // 只留最近 20 次
-    edit.quizLog = log;
-    state.edits[key] = edit;
   });
   save();
   // 重渲当前可见的相关卡片,让"做题记录"立刻出现(不在编辑态的才动)
@@ -2872,7 +2904,12 @@ document.addEventListener('keydown', e => {
   e.preventDefault();
   if (quizState.awaitingNext) { quizAdvance(); return; }
   if (quizState.phase === 1) submitQuizDictation();
-  else if (quizState.phase === 2) submitPractice();
+  else if (quizState.phase === 2) {
+    // 拼读题:没切分也没填任何罗马音就回车 → 不结算(否则空 Enter 把该词锁成 0 分);仍可点「提交」显式交卷
+    const ps = practiceState;
+    const touched = ps && (((ps.playerRomaji || []).some(r => (r || '').trim())) || (typeof getPracticePlayerSyls === 'function' && getPracticePlayerSyls().length > 1));
+    if (touched) submitPractice();
+  }
   else if (quizState.phase === 3) submitQuizSentence();
 });
 
@@ -3961,7 +3998,12 @@ function doImportWords(chosen, ctx) {
 }
 
 // Set initial active group (restore from localStorage, default Vibe Coding)
-setActiveCat(localStorage.getItem('glossary-active-cat') || 'vibe-coding');
+// 校验存的 active-cat 还在(否则它指向已删分类 → 无 section 匹配 → 内容区全空白)
+(function initActiveCat() {
+  const saved = localStorage.getItem('glossary-active-cat');
+  const target = (saved && DATA.find(c => c.id === saved)) ? saved : (DATA.find(c => c.id === 'vibe-coding') ? 'vibe-coding' : (DATA[0] && DATA[0].id));
+  if (target) setActiveCat(target);
+})();
 
 // 从 chat 的「开始复习」跳来:?review=1 + localStorage 队列 → 起这批到期词的临时复习题库
 (function maybeStartReviewQuiz() {
@@ -3969,6 +4011,7 @@ setActiveCat(localStorage.getItem('glossary-active-cat') || 'vibe-coding');
   if (p.get('review') !== '1') return;
   let q = [];
   try { q = JSON.parse(localStorage.getItem('glossary-review-queue') || '[]'); } catch (e) {}
+  try { localStorage.removeItem('glossary-review-queue'); } catch (e) {}   // 读取即消费:中途退出也不留陈旧队列被重放
   history.replaceState({}, '', location.pathname);   // 清 URL,避免刷新重开
   if (Array.isArray(q) && q.length) setTimeout(() => startReviewQuiz(q), 250);
 })();
