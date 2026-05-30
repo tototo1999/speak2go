@@ -590,6 +590,17 @@ section h2 .count {
 .shadow-modal .sh-target .sh-miss { color:#ef4444; text-decoration:underline; }
 .shadow-modal .sh-you { font-size:13px; color:var(--text-dim); text-align:center; min-height:18px; }
 .shadow-modal .sh-score { font-size:14px; text-align:center; margin-top:10px; min-height:20px; }
+/* 跟读 — 抽屉内嵌版(⑤ 跟读) */
+.practice-drawer .drawer-shadow { margin-top:14px; padding-top:14px; border-top:1px dashed var(--border); }
+.practice-drawer .drawer-shadow .sh-target { font-size:18px; line-height:1.7; text-align:center; margin:10px 0; }
+.practice-drawer .drawer-shadow .sh-target .sh-hit { color:var(--accent); }
+.practice-drawer .drawer-shadow .sh-target .sh-miss { color:#ef4444; text-decoration:underline; }
+.practice-drawer .drawer-shadow .sh-you { font-size:13px; color:var(--text-dim,#888); text-align:center; min-height:18px; }
+.practice-drawer .drawer-shadow .sh-score { font-size:14px; text-align:center; margin-top:8px; min-height:20px; }
+.practice-drawer .drawer-shadow .sh-foot button { font-family:inherit; font-size:13px; font-weight:500; padding:8px 14px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text); cursor:pointer; }
+.practice-drawer .drawer-shadow .sh-foot button.im-go { background:var(--accent); color:#fff; border-color:var(--accent); }
+.practice-drawer .drawer-shadow .sh-foot button.im-go.listening { background:#ef4444; border-color:#ef4444; }
+.practice-drawer .drawer-shadow .sh-foot button:disabled { opacity:.5; cursor:default; }
 .term .actions .shadow { opacity:.85; }
 .term .actions .shadow:hover { opacity:1; }
 .recover-btn {
@@ -1739,6 +1750,17 @@ function _shadowNorm(s) {
   return String(s || '').toLowerCase().replace(/[^a-z0-9'\s]/g, ' ').split(/\s+/).filter(Boolean);
 }
 function _shadowPlayClip(d) {
+  // 没课堂录音 → TTS 朗读例句当原声
+  if (!d.audioUrl || d.audioStart == null) {
+    if (typeof speechSynthesis !== 'undefined') {
+      try { speechSynthesis.cancel(); } catch (e) {}
+      const u = new SpeechSynthesisUtterance(_shadowSentence(d));
+      u.lang = 'en-US'; u.rate = 0.85;
+      const v = (typeof pickEnVoice === 'function') ? pickEnVoice() : null; if (v) u.voice = v;
+      try { speechSynthesis.speak(u); } catch (e) {}
+    }
+    return;
+  }
   try { if (_shadowAudio) { _shadowAudio.pause(); } } catch (e) {}
   _shadowAudio = new Audio(); _shadowAudio.preload = 'none'; _shadowAudio.src = d.audioUrl;
   const start = Math.max(0, d.audioStart - 0.5);
@@ -1751,10 +1773,6 @@ function _shadowPlayClip(d) {
 }
 
 function startShadow(catId, en) {
-  const d = getTermData(catId, en);
-  if (!d) return;
-  const target = _shadowSentence(d);
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const bg = document.createElement('div');
   bg.className = 'import-modal-bg';
   bg.innerHTML =
@@ -1762,7 +1780,7 @@ function startShadow(catId, en) {
       '<div class="im-head"><h3>🎙 跟读 · <code>' + escapeHtml(en) + '</code></h3>' +
         '<div class="im-sub">听原声 → 点「开始说」/按住空格 复述 → 说完点「⏹ 说完了」(或松空格)→ 比对</div></div>' +
       '<div class="sh-body">' +
-        '<div class="sh-target" data-role="target">' + escapeHtml(target) + '</div>' +
+        '<div class="sh-target" data-role="target"></div>' +
         '<div class="sh-you" data-role="you"></div>' +
         '<div class="sh-score" data-role="score"></div>' +
       '</div>' +
@@ -1774,9 +1792,23 @@ function startShadow(catId, en) {
       '</div>' +
     '</div>';
   document.body.appendChild(bg);
+  renderShadow(bg, catId, en, { spaceHold: true, autoplay: true, modal: true });
+}
+
+// 跟读内核(独立弹窗 + 抽屉内嵌 ⑤ 共用):绑定 container 内的
+// [data-role=target/you/score] 与 [data-act=replay/rec/replay-me/close]。
+// opts: { onScore(pct), spaceHold, autoplay, modal }。modal 闭包全程用 bg,故 container 别名 bg。
+function renderShadow(container, catId, en, opts) {
+  opts = opts || {};
+  const bg = container;
+  const d = getTermData(catId, en);
+  if (!d) return;
+  const target = _shadowSentence(d);
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const $ = s => bg.querySelector(s);
-  if (!SR) { $('[data-role=score]').innerHTML = '<span style="color:#ef4444">这个浏览器不支持语音识别,用 Chrome / Edge / Safari</span>'; $('[data-act=rec]').disabled = true; }
-  _shadowPlayClip(d);   // 进来自动听一遍原句
+  const _tEl = $('[data-role=target]'); if (_tEl) _tEl.innerHTML = escapeHtml(target);
+  if (!SR) { const _sEl = $('[data-role=score]'); if (_sEl) _sEl.innerHTML = '<span style="color:#ef4444">这个浏览器不支持语音识别,用 Chrome / Edge / Safari</span>'; const _rb = $('[data-act=rec]'); if (_rb) _rb.disabled = true; }
+  if (opts.autoplay) _shadowPlayClip(d);   // 弹窗进来自动听一遍;内嵌不自动放
 
   let listening = false, recorder = null, micStream = null, myUrl = null;
   function cleanupMic() {
@@ -1795,6 +1827,7 @@ function startShadow(catId, en) {
     $('[data-role=you]').innerHTML = '你说的:' + escapeHtml(said || '(没听清)');
     const pct = tWords.length ? Math.round(hit / tWords.length * 100) : 0;
     $('[data-role=score]').innerHTML = '<strong>命中 ' + hit + '/' + tWords.length + ' 词 · ' + pct + '%</strong>' + (hit < tWords.length ? ' — 红色是漏读/读错的' : ' 💯');
+    if (typeof opts.onScore === 'function') opts.onScore(pct);   // 跟读分(0-100)回传抽屉总分
   }
 
   function beginTalk() {
@@ -1858,15 +1891,18 @@ function startShadow(catId, en) {
       if (spaceHold) { e.preventDefault(); spaceHold = false; endTalk(); }
     }
   }
-  document.addEventListener('keydown', onKey);
-  document.addEventListener('keyup', onKey);
+  if (opts.spaceHold) { document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey); }
+  // 内嵌:存 cleanup 到 practiceState,关抽屉时停麦/解绑
+  if (!opts.modal && typeof practiceState !== 'undefined' && practiceState) {
+    practiceState._shadowCleanup = () => { try { document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); } catch (e) {} stopRec(); cleanupMic(); };
+  }
 
   bg.addEventListener('click', e => {
     const b = e.target.closest('button[data-act]'); if (!b) return;
     const act = b.dataset.act;
     if (act === 'close') {
       document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey);
-      stopRec(); cleanupMic(); try { if (_shadowAudio) _shadowAudio.pause(); } catch (e) {} if (myUrl) { try { URL.revokeObjectURL(myUrl); } catch (e) {} } bg.remove();
+      stopRec(); cleanupMic(); try { if (_shadowAudio) _shadowAudio.pause(); } catch (e) {} if (myUrl) { try { URL.revokeObjectURL(myUrl); } catch (e) {} } if (opts.modal) bg.remove();
     }
     else if (act === 'replay') { _shadowPlayClip(d); }
     else if (act === 'replay-me') { if (myUrl) { try { if (_shadowAudio) _shadowAudio.pause(); } catch (e) {} const a = new Audio(myUrl); a.play().catch(() => {}); } }
@@ -2034,37 +2070,39 @@ function setTermCompleted(catId, en) {
   return true;
 }
 
-// 🎮 练习抽屉「本轮总分」:拼读(0-100)+ 造句(0-100),≥满分 PRACTICE_PASS_RATIO 自动通关打钩。
-// 本轮 = 一次抽屉(openPractice 时清零);拼读取最新提交分,造句取本地/AI 较高分。
-const PRACTICE_FULL = 200;          // 拼读 100 + 造句 100
-const PRACTICE_PASS_RATIO = 0.6;    // 满分 60% 即通关
+// 🎮 练习抽屉「本轮总分」:拼读(0-100)+ 造句(0-100)+ 跟读(0-100),三项都做完后
+// ≥满分 PRACTICE_PASS_RATIO 自动通关打钩。本轮 = 一次抽屉(openPractice 时清零);
+// 拼读取最新提交分,造句/跟读取本轮最高分。
+const PRACTICE_FULL = 300;          // 拼读 100 + 造句 100 + 跟读 100
+const PRACTICE_PASS_RATIO = 0.6;    // 满分 60% 即通关(三项必做)
 function checkPracticeMastery() {
-  console.log('[mastery] called', { hasPS: !!practiceState, hasDrawer: !!(practiceState && practiceState.drawer), phonics: practiceState && practiceState.phonicsScore, sentence: practiceState && practiceState.sentenceScore, elFound: !!(practiceState && practiceState.drawer && practiceState.drawer.querySelector('[data-role="mastery"]')) });
   if (!practiceState || !practiceState.drawer) return;
   const ps = practiceState;
   const el = ps.drawer.querySelector('[data-role="mastery"]');
   if (!el) return;
-  const p = ps.phonicsScore, s = ps.sentenceScore;
+  const p = ps.phonicsScore, s = ps.sentenceScore, r = ps.shadowScore;
   const pass = Math.round(PRACTICE_FULL * PRACTICE_PASS_RATIO);
-  if (p == null || s == null) {
+  if (p == null || s == null || r == null) {
     const parts = [];
     if (p != null) parts.push('拼读 ' + p);
     if (s != null) parts.push('造句 ' + s);
+    if (r != null) parts.push('跟读 ' + r);
     if (!parts.length) { el.style.display = 'none'; return; }
     el.style.display = '';
     el.className = 'practice-mastery hint';
-    el.innerHTML = '本轮 ' + parts.join(' · ') + ' / ' + PRACTICE_FULL + ' · 拼读+造句都做完才算总分(≥' + pass + ' 通关)';
+    el.innerHTML = '本轮 ' + parts.join(' · ') + ' / ' + PRACTICE_FULL + ' · 拼读+造句+跟读 三项都做完才判定(≥' + pass + ' 通关)';
     return;
   }
-  const total = p + s;
+  const total = p + s + r;
+  const detail = '(拼' + p + '+造' + s + '+读' + r + ')';
   el.style.display = '';
   if (total >= pass) {
     const marked = setTermCompleted(ps.catId, ps.en);
     el.className = 'practice-mastery pass';
-    el.innerHTML = '🎉 本轮总分 <b>' + total + '</b>/' + PRACTICE_FULL + ' · 已通关 ✓' + (marked ? '' : '(此词无通关项,仅显示总分)');
+    el.innerHTML = '🎉 本轮总分 <b>' + total + '</b>/' + PRACTICE_FULL + ' ' + detail + ' · 已通关 ✓' + (marked ? '' : '(此词无通关项,仅显示总分)');
   } else {
     el.className = 'practice-mastery fail';
-    el.innerHTML = '本轮总分 <b>' + total + '</b>/' + PRACTICE_FULL + ' · 还差 ' + (pass - total) + ' 到 ' + pass + ' 通关';
+    el.innerHTML = '本轮总分 <b>' + total + '</b>/' + PRACTICE_FULL + ' ' + detail + ' · 还差 ' + (pass - total) + ' 到 ' + pass + ' 通关';
   }
 }
 
@@ -2894,6 +2932,7 @@ let practiceState = null;
 
 function closePractice() {
   if (!practiceState) return;
+  if (typeof practiceState._shadowCleanup === 'function') { try { practiceState._shadowCleanup(); } catch (e) {} }  // 停跟读麦/解绑
   if (practiceState.card) practiceState.card.classList.remove('is-practicing');
   if (practiceState.drawer && practiceState.drawer.parentNode) {
     practiceState.drawer.parentNode.removeChild(practiceState.drawer);
@@ -2941,7 +2980,7 @@ function openPractice(card) {
     answerBounds: syllablesToBounds(answerSyls),
     playerBounds: new Set(), playerStressIdx: -1, playerRomaji: [],
     submitted: false,
-    phonicsScore: null, sentenceScore: null   // 本轮总分用:拼读 / 造句(开抽屉清零)
+    phonicsScore: null, sentenceScore: null, shadowScore: null   // 本轮总分用:拼读 / 造句 / 跟读(开抽屉清零)
   };
   const drawer = document.createElement('div');
   drawer.className = 'practice-drawer';
@@ -2961,12 +3000,29 @@ function openPractice(card) {
     '</div>' +
     '<div class="practice-result" data-role="result" style="display:none;"></div>' +
     buildSentenceSectionHtml(en, d.zh, d.sentences) +
+    '<div class="practice-shadow drawer-shadow" data-role="shadow-section">' +
+      '<div class="practice-step" style="margin-top:0;">⑤ 跟读 — 听原声 → 复述 → 比对</div>' +
+      '<div class="sh-target" data-role="target"></div>' +
+      '<div class="sh-you" data-role="you"></div>' +
+      '<div class="sh-score" data-role="score"></div>' +
+      '<div class="sh-foot" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
+        '<button type="button" data-act="replay">🔊 原句</button>' +
+        '<button type="button" class="im-go" data-act="rec">🎙 开始说</button>' +
+        '<button type="button" data-act="replay-me" disabled>🔊 我说的</button>' +
+      '</div>' +
+    '</div>' +
     '<div class="practice-mastery" data-role="mastery" style="display:none;"></div>';
   card.parentNode.insertBefore(drawer, card.nextSibling);
   card.classList.add('is-practicing');
   practiceState.drawer = drawer;
   renderPracticeLetters();
   renderPracticePreview();
+  // ⑤ 跟读内嵌:分数回传本轮总分(后台累加)
+  const shadowSec = drawer.querySelector('[data-role="shadow-section"]');
+  if (shadowSec) renderShadow(shadowSec, catId, en, {
+    spaceHold: false, autoplay: false, modal: false,
+    onScore: pct => { if (practiceState) { practiceState.shadowScore = Math.max(practiceState.shadowScore || 0, pct); checkPracticeMastery(); } }
+  });
   drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -3151,7 +3207,6 @@ function submitPractice() {
       '<button data-action="practice-close">完成</button>' +
     '</div>';
   ps.phonicsScore = total;          // 本轮拼读分(0-100),凑本轮总分
-  console.log('[mastery] phonics submit hook, total=', total);
   checkPracticeMastery();
   result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -3484,7 +3539,6 @@ main.addEventListener('click', e => {
           grabVocabChips(data, sentence, reference, catId);
       }
       // 本轮造句分(AI):与本地分取较高,凑本轮总分
-      console.log('[mastery] ai-grade hook', { score: data && data.score, type: typeof (data && data.score), hasPS: !!practiceState, hasDrawer: !!(practiceState && practiceState.drawer), idMatch: !!(practiceState && practiceState.id === id), psId: practiceState && practiceState.id, id });
       if (practiceState && practiceState.drawer && practiceState.id === id && typeof data.score === 'number') {
         practiceState.sentenceScore = Math.max(practiceState.sentenceScore || 0, data.score);
         checkPracticeMastery();
@@ -3521,7 +3575,6 @@ main.addEventListener('click', e => {
     if (!sentence) { ta.focus(); return; }
     const grade = gradeTranslation(sentence, en);
     // 本轮造句分(本地):与 AI 分取较高,凑本轮总分(放 dup 检查前,重复句也照样计分)
-    console.log('[mastery] save-sentence hook', { score: grade && grade.score, hasPS: !!practiceState, hasDrawer: !!(practiceState && practiceState.drawer), idMatch: !!(practiceState && practiceState.id === id), psId: practiceState && practiceState.id, id });
     if (practiceState && practiceState.drawer && practiceState.id === id) {
       practiceState.sentenceScore = Math.max(practiceState.sentenceScore || 0, grade.score);
       checkPracticeMastery();
