@@ -2506,7 +2506,11 @@ const QUIZ_REVIEW_INTERVALS = [5*60*1000, 60*60*1000, 24*60*60*1000, 3*24*60*60*
 
 // 复习模式:从到期词建临时题库,只做「默写」一遍,做完按对错推进艾宾浩斯阶段(pass)
 function startReviewQuiz(due) {
-  const words = (due || []).map(d => {
+  // 防御:即使队列里混进了已删的词/分类(墓碑),复习也不放它们进来
+  const deadCats = new Set(_gjArr('glossary-deleted-cats'));
+  const words = (due || []).filter(d =>
+    d && d.en && !state.deleted.has(d.catId + '::' + d.en) && !deadCats.has(d.catId)
+  ).map(d => {
     const t = getTermData(d.catId, d.en) || {};
     const meta = quizMeta(t);   // 复习也带上真例句(听力句)+ 音标
     return { catId: d.catId, en: d.en, zh: d.zh || t.zh || '', phonetic: meta.phonetic, hint: t.hint || '', example: meta.example };

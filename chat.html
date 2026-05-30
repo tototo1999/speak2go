@@ -3615,11 +3615,17 @@
     if (!location.hostname.includes('speak2go')) return []
     try {
       const all = JSON.parse(localStorage.getItem('glossary-user-terms') || '{}')
+      // 删词只加墓碑、不物理删(词仍留在 glossary-user-terms)。复习扫描必须尊重墓碑,
+      // 否则已删的词(整组或单词)还会被当到期词推进复习。
+      const deleted = new Set(JSON.parse(localStorage.getItem('glossary-deleted') || '[]'))
+      const deadCats = new Set(JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]'))
       const now = Date.now()
       const due = []
       Object.entries(all).forEach(([catId, terms]) => {
-        (terms || []).forEach(t => {
+        if (deadCats.has(catId)) return                       // 整个分类已删 → 跳过
+        ;(terms || []).forEach(t => {
           if (!t || !t.en) return
+          if (deleted.has(catId + '::' + t.en)) return        // 该词已删(墓碑)→ 跳过
           if (!t.next_due_at || t.completed) return
           if (t.next_due_at <= now) due.push({ catId, en: t.en, zh: t.zh || '', stage: t.review_stage || 0 })
         })
