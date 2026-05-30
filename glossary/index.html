@@ -1089,6 +1089,8 @@ footer {
 </footer>
 
 <script src="romanizer-dict.js"></script>
+<script src="/vendor/supabase.js"
+        onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'"></script>
 <script>
 // 2026-05-28:DATA 改 let,初始化后会从 localStorage 加载动态 lesson cats(每个录音 = 一个 tab)
 let DATA = [
@@ -4095,6 +4097,135 @@ function reloadFromStorage() {
 window.addEventListener('storage', e => {
   if (e.key && e.key.startsWith('glossary-')) reloadFromStorage();
 });
+
+// ============ 账号同步:词典跟账号走(Supabase per-account)============
+// 未登录 → 纯本地;有 session → 加载时拉云端并集合并、本地变更防抖推回。
+// 合并保证「删掉的词不复活」:删除恒留墓碑(glossary-deleted),并集后被墓碑压住。
+const _GLOSSARY_SYNC_KEYS = [
+  'glossary-user-terms', 'glossary-deleted', 'glossary-deleted-cats',
+  'glossary-dynamic-cats', 'glossary-cat-titles', 'glossary-edits', 'glossary-favorites'
+];
+const _glossarySync = (() => {
+  let sb = null, uid = null, pushTimer = null, applying = false, started = false;
+
+  function readBlob() {
+    const b = {};
+    for (const k of _GLOSSARY_SYNC_KEYS) {
+      const v = localStorage.getItem(k);
+      if (v != null) { try { b[k] = JSON.parse(v); } catch (e) {} }
+    }
+    return b;
+  }
+  function writeBlob(b) {
+    applying = true;
+    try {
+      for (const k of _GLOSSARY_SYNC_KEYS) {
+        if (b[k] !== undefined) localStorage.setItem(k, JSON.stringify(b[k]));
+      }
+    } finally { applying = false; }
+  }
+
+  const uniqArr = a => Array.from(new Set((a || []).filter(x => x != null)));
+  function mergeUserTerms(s, l) {
+    s = s || {}; l = l || {};
+    const out = {}, cats = new Set([...Object.keys(s), ...Object.keys(l)]);
+    for (const c of cats) {
+      const map = new Map();
+      for (const t of (s[c] || [])) if (t && t.en) map.set(String(t.en).toLowerCase(), t);
+      for (const t of (l[c] || [])) if (t && t.en) map.set(String(t.en).toLowerCase(), t); // 本地覆盖
+      out[c] = [...map.values()];
+    }
+    return out;
+  }
+  function mergeDynCats(s, l) {
+    const map = new Map();
+    for (const c of (s || [])) if (c && c.id) map.set(c.id, c);
+    for (const c of (l || [])) if (c && c.id) {
+      const prev = map.get(c.id);
+      map.set(c.id, { id: c.id, title: (c.title || (prev && prev.title) || c.id) });
+    }
+    return [...map.values()];
+  }
+  function mergeEdits(s, l) {
+    s = s || {}; l = l || {};
+    const out = {}, keys = new Set([...Object.keys(s), ...Object.keys(l)]);
+    for (const k of keys) {
+      const a = s[k] || {}, b = l[k] || {};
+      const m = { ...a, ...b }; // 本地覆盖标量(note/phonetic 等)
+      const ql = new Map();
+      for (const e of (a.quizLog || [])) if (e && e.at != null) ql.set(e.at, e);
+      for (const e of (b.quizLog || [])) if (e && e.at != null) ql.set(e.at, e);
+      const quizLog = [...ql.values()].sort((x, y) => x.at - y.at);
+      if (quizLog.length) m.quizLog = quizLog;
+      if (Array.isArray(a.sentences) || Array.isArray(b.sentences)) {
+        const seen = new Set(), sent = [];
+        for (const x of [...(a.sentences || []), ...(b.sentences || [])]) {
+          const key = JSON.stringify(x);
+          if (!seen.has(key)) { seen.add(key); sent.push(x); }
+        }
+        m.sentences = sent;
+      }
+      out[k] = m;
+    }
+    return out;
+  }
+  function merge(server, local) {
+    server = server || {}; local = local || {};
+    return {
+      'glossary-user-terms': mergeUserTerms(server['glossary-user-terms'], local['glossary-user-terms']),
+      'glossary-deleted': uniqArr([...(server['glossary-deleted'] || []), ...(local['glossary-deleted'] || [])]),
+      'glossary-deleted-cats': uniqArr([...(server['glossary-deleted-cats'] || []), ...(local['glossary-deleted-cats'] || [])]),
+      'glossary-favorites': uniqArr([...(server['glossary-favorites'] || []), ...(local['glossary-favorites'] || [])]),
+      'glossary-dynamic-cats': mergeDynCats(server['glossary-dynamic-cats'], local['glossary-dynamic-cats']),
+      'glossary-cat-titles': { ...(server['glossary-cat-titles'] || {}), ...(local['glossary-cat-titles'] || {}) },
+      'glossary-edits': mergeEdits(server['glossary-edits'], local['glossary-edits']),
+    };
+  }
+
+  async function push(blob) {
+    if (!sb || !uid) return;
+    try {
+      const { error } = await sb.from('glossary_state')
+        .upsert({ user_id: uid, data: blob || readBlob(), updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+      if (error) console.warn('[glossary-sync] push error', error.message);
+    } catch (e) { console.warn('[glossary-sync] push failed', e); }
+  }
+  function schedulePush() {
+    if (!sb || !uid || applying) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(() => push(), 1200);
+  }
+  async function pull() {
+    try {
+      const { data, error } = await sb.from('glossary_state').select('data').eq('user_id', uid).maybeSingle();
+      if (error) { console.warn('[glossary-sync] pull error', error.message); return; }
+      const merged = merge((data && data.data) || {}, readBlob());
+      writeBlob(merged);
+      try { reloadFromStorage(); } catch (e) {}
+      await push(merged); // 并集写回云端收敛
+      console.log('[glossary-sync] 已从账号拉取并合并');
+    } catch (e) { console.warn('[glossary-sync] pull failed', e); }
+  }
+
+  async function start() {
+    if (started) return; started = true;
+    if (!window.supabase || !window.supabase.createClient) { console.warn('[glossary-sync] supabase-js 未加载,纯本地模式'); return; }
+    sb = window.supabase.createClient(_GLOSSARY_SB_URL, _GLOSSARY_ANON);
+    let session = null;
+    try { const r = await sb.auth.getSession(); session = r.data && r.data.session; } catch (e) {}
+    if (!session || !session.user) { console.log('[glossary-sync] 未登录 → 纯本地模式'); return; }
+    uid = session.user.id;
+    const _set = localStorage.setItem.bind(localStorage);
+    localStorage.setItem = function (k, v) {
+      _set(k, v);
+      if (typeof k === 'string' && _GLOSSARY_SYNC_KEYS.indexOf(k) >= 0) schedulePush();
+    };
+    await pull();
+  }
+
+  return { start, merge };
+})();
+_glossarySync.start();
 
 const themeBtn = document.getElementById('themeBtn');
 function setTheme(t) {
