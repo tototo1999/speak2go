@@ -46,7 +46,7 @@
       glossaryLang: 'ko',
       essayMode: false,
       industry: 'Korean speaking',
-      roomId: '', // placeholder — created in Phase 2
+      roomId: 'f015f5d5-2163-490f-bf99-92a2ffa45bdd', // product='korean', serverless=true
     },
   };
 
