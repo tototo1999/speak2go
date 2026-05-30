@@ -2443,6 +2443,22 @@ function quizRank(score) {
 }
 
 // 整库聚合(所有分类去重),取有中文的词
+// 从 hint/note 里抽真例句 + 音标。
+// lesson 词把 "音标 · 例:句子 · 出现 ×N" 塞在 hint 里;web 查词存在 note「例: …」。
+function quizMeta(d) {
+  const hint = d.hint || '', note = d.note || '';
+  let example = '';
+  let m = /例[:：]\s*(.+?)\s*·\s*出现/.exec(hint) || /例[:：]\s*(.+?)\s*·\s*出现/.exec(note);
+  if (m) example = m[1].trim();
+  else { m = /例[:：]\s*(.+)$/.exec(note) || /例[:：]\s*(.+)$/.exec(hint); if (m) example = m[1].trim(); }
+  let phonetic = d.phonetic || '';
+  if (!phonetic && hint) {
+    const seg = hint.split(' · ')[0].trim();
+    if (seg && !/例[:：]/.test(seg) && !/出现/.test(seg)) phonetic = seg;
+  }
+  return { example, phonetic };
+}
+
 function buildQuizPool() {
   const seen = new Set();
   const pool = [];
@@ -2455,11 +2471,8 @@ function buildQuizPool() {
       seen.add(key);
       const d = getTermData(cat.id, en);
       if (!d || !d.zh) return;          // 没中文出不了默写题
-      // 例句:词自带的(web 查词 / 课上存的 note「例: …」)优先
-      let example = '';
-      const noteEx = /例[:：]\s*(.+)/.exec(d.note || '');
-      if (noteEx) example = noteEx[1].trim();
-      pool.push({ catId: cat.id, en: d.en, zh: d.zh, phonetic: d.phonetic || '', hint: d.hint || '', example });
+      const meta = quizMeta(d);         // 真例句 + 音标(优先 note/hint 里的)
+      pool.push({ catId: cat.id, en: d.en, zh: d.zh, phonetic: meta.phonetic, hint: d.hint || '', example: meta.example });
     });
   });
   return pool;
@@ -2495,7 +2508,8 @@ const QUIZ_REVIEW_INTERVALS = [5*60*1000, 60*60*1000, 24*60*60*1000, 3*24*60*60*
 function startReviewQuiz(due) {
   const words = (due || []).map(d => {
     const t = getTermData(d.catId, d.en) || {};
-    return { catId: d.catId, en: d.en, zh: d.zh || t.zh || '', phonetic: t.phonetic || '', hint: t.hint || '' };
+    const meta = quizMeta(t);   // 复习也带上真例句(听力句)+ 音标
+    return { catId: d.catId, en: d.en, zh: d.zh || t.zh || '', phonetic: meta.phonetic, hint: t.hint || '', example: meta.example };
   }).filter(w => w.en && w.zh);
   if (!words.length) { alert('没有可复习的词'); return; }
   quizState = {
