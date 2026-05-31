@@ -278,13 +278,6 @@ section h2 .count {
   margin-top: 6px;
   white-space: pre-wrap;
 }
-.term .note .note-speak {
-  float: right; background: none; border: none; cursor: pointer;
-  color: var(--text-dim); font-size: 13px; line-height: 1.5;
-  padding: 0; margin-left: 6px;
-}
-.term .note .note-speak:hover { color: var(--accent); }
-.term .note .note-speak.is-playing { color: var(--accent); animation: pulse-fade 0.8s ease-in-out infinite; }
 /* 做题记录(测验成绩按时间留在卡里)*/
 .term .quiz-log {
   margin-top: 8px; padding-top: 6px;
@@ -1598,6 +1591,8 @@ function renderCardContent(card) {
   const stageBadge = showDoneBtn && stage >= 0
     ? '<span class="stage-badge stage-' + stage + '" title="艾宾浩斯阶段 ' + stage + '/6">' + (stage === 6 ? '✓ 掌握' : STAGE_LABELS[stage] || '?') + '</span>'
     : '';
+  // 有例句(note「例: …」或 lesson hint「… 例:句子 …」)就给跟读 🎙,不必非得有课堂录音
+  const hasExample = /例[:：]\s*\S/.test((d.note || '') + ' ' + (d.hint || ''));
   card.innerHTML =
     '<div class="head">' +
       '<code class="en">' + escapeHtml(d.en) + '</code>' +
@@ -1607,7 +1602,7 @@ function renderCardContent(card) {
       '<div class="actions">' +
         completedBtn +
         ((d.audioUrl && d.audioStart != null) ? '<button class="play-audio" data-action="play-audio" title="听当时上课这句录音" aria-label="听课堂录音">▶️</button>' : '') +
-        ((d.audioUrl && d.audioStart != null) ? '<button class="shadow" data-action="shadow" title="跟读:听原句→你复述→比对" aria-label="跟读">🎙</button>' : '') +
+        (((d.audioUrl && d.audioStart != null) || hasExample) ? '<button class="shadow" data-action="shadow" title="跟读例句:听原句→你复述→比对" aria-label="跟读">🎙</button>' : '') +
         '<button class="speak" data-action="speak" title="朗读" aria-label="朗读">🔊</button>' +
         '<button class="play" data-action="play" title="练:拆音节+标重音+填罗马音" aria-label="练">🎮</button>' +
         '<button class="fav' + (isFav ? ' is-on' : '') + '" data-action="fav" title="' + (isFav ? '取消收藏' : '收藏置顶') + '" aria-label="收藏">★</button>' +
@@ -1616,9 +1611,7 @@ function renderCardContent(card) {
       '</div>' +
     '</div>' +
     (d.hint ? '<div class="hint">' + escapeHtml(d.hint) + '</div>' : '') +
-    (d.note ? '<div class="note">' +
-      (/例[:：]\s*\S/.test(d.note) ? '<button class="note-speak" data-action="speak-note" title="朗读例句" aria-label="朗读例句">🔊</button>' : '') +
-      escapeHtml(d.note) + '</div>' : '') +
+    (d.note ? '<div class="note">' + escapeHtml(d.note) + '</div>' : '') +
     quizLogHtml(d.quizLog);
 }
 
@@ -3689,13 +3682,6 @@ main.addEventListener('click', e => {
 
   if (action === 'speak') {
     speakTerm(en, btn);
-    return;
-  }
-
-  // 朗读例句(词卡笔记里的「例: …」整句)
-  if (action === 'speak-note') {
-    const d = getTermData(catId, en);
-    if (d) { const s = _shadowSentence(d); if (s) speakTerm(s, btn); }
     return;
   }
 
