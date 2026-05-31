@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>speak2go — Handoff &amp; Dump (2026-05-30)</title>
+<style>
+:root{
+  --bg:#0c0f14; --panel:#12161f; --panel2:#0e1219; --ink:#e7edf5; --dim:#9aa7b8;
+  --accent:#1D9E75; --accent2:#36c08f; --line:#1e2735; --code:#0a0d12; --warn:#e0b341; --danger:#e0584f;
+  --chip:#1a2230;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#13321f22,transparent),var(--bg);
+  color:var(--ink);font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;}
+.wrap{max-width:980px;margin:0 auto;padding:0 22px 100px}
+header.hero{padding:46px 0 26px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.hero h1{margin:0 0 6px;font-size:30px;letter-spacing:.5px}
+.hero .sub{color:var(--dim);font-size:15px}
+.hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12.5px;color:var(--dim)}
+.chip b{color:var(--accent2);font-weight:600}
+nav.toc{position:sticky;top:0;background:#0c0f14ee;backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+  padding:10px 0;margin:0 0 24px;z-index:5;display:flex;flex-wrap:wrap;gap:6px}
+nav.toc a{color:var(--dim);text-decoration:none;font-size:12.5px;padding:4px 10px;border-radius:6px;border:1px solid transparent}
+nav.toc a:hover{color:var(--ink);border-color:var(--line);background:var(--panel)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 26px;margin:0 0 18px}
+section h2{margin:0 0 14px;font-size:20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px}
+section h2 .n{color:var(--accent);font-size:14px;font-weight:700;background:var(--accent-soft,#1D9E7518);border:1px solid #1D9E7530;border-radius:8px;padding:2px 9px}
+h3{font-size:15.5px;margin:20px 0 8px;color:var(--accent2)}
+p{margin:8px 0}
+ul,ol{margin:8px 0 8px 4px;padding-left:22px}
+li{margin:5px 0}
+a{color:var(--accent2)}
+code{background:var(--code);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#bfe9d4}
+pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;
+  font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cdd9e6}
+pre.dump{max-height:480px}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--accent2);font-weight:600}
+td code{font-size:12px}
+blockquote{margin:12px 0;padding:10px 16px;border-left:3px solid var(--accent);background:var(--panel2);border-radius:0 8px 8px 0;color:var(--dim)}
+.tag{display:inline-block;border-radius:6px;padding:1px 8px;font-size:11.5px;font-weight:700;margin-right:6px}
+.t-hi{background:#e0584f22;color:#ff8d85;border:1px solid #e0584f44}
+.t-mid{background:#e0b34122;color:#f0cd72;border:1px solid #e0b34144}
+.t-lo{background:#1D9E7522;color:#5fd6aa;border:1px solid #1D9E7544}
+.kvs{width:100%}
+.kvs td:first-child{color:var(--dim);width:160px;white-space:nowrap}
+.foot{color:var(--dim);font-size:12.5px;text-align:center;margin-top:30px}
+.warn{color:var(--warn)}
+hr{border:none;border-top:1px solid var(--line);margin:18px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>🎓 speak2go — Handoff &amp; Project Dump</h1>
+  <div class="sub">AI 语言学习平台 · 单入口多系统(英语课 / 英文作文 / 韩语)· 接手先读这份</div>
+  <div class="meta">
+    <span class="chip">📅 <b>2026-05-30</b></span>
+    <span class="chip">🌐 <b>speak2go.ai</b></span>
+    <span class="chip">📦 <b>tototo1999/speak2go</b></span>
+    <span class="chip">🔀 182 commits</span>
+    <span class="chip">🗓 2026-05-19 → 2026-05-30</span>
+    <span class="chip">⚙️ GitHub Pages · 纯静态</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#s1">1 定位</a>
+  <a href="#s2">2 部署/仓库</a>
+  <a href="#s3">3 目录结构</a>
+  <a href="#s4">4 后端</a>
+  <a href="#s5">5 超级单词卡</a>
+  <a href="#s6">6 坑</a>
+  <a href="#s7">7 待办</a>
+  <a href="#s8">8 最近改动</a>
+  <a href="#s9">9 常用命令</a>
+  <a href="#dump">📂 项目 Dump</a>
+</nav>
+
+<section id="s1">
+  <h2><span class="n">1</span> 一句话定位</h2>
+  <p>speak2go 是从 chat2go 长出来的 <b>AI 语言学习平台</b>:学生上传课堂录音 → 云端 ASR 转写 + LLM 提炼生词/句式/批改 → 学生在「超级单词卡」里用艾宾浩斯复习 + 默写/拼读/造句/跟读多种主动回忆练习。</p>
+  <p><b>单入口、多系统</b>:一个登录页按用户身份路由到三个<b>互相独立</b>的前端(英语课 / 英文作文 / 韩语),后端共享一套 Supabase,按 <code>rooms.product</code> 隔离。</p>
+</section>
+
+<section id="s2">
+  <h2><span class="n">2</span> 部署与仓库</h2>
+  <table class="kvs">
+    <tr><td>线上域名</td><td><b>speak2go.ai</b>(GitHub Pages,<code>CNAME</code> 写死)</td></tr>
+    <tr><td>Git 仓库</td><td><code>github.com/tototo1999/speak2go</code>(独立 repo,跟 chat2go 分开)</td></tr>
+    <tr><td>本地路径</td><td><code>/Users/dami2026/speak2go</code></td></tr>
+    <tr><td>默认分支</td><td><code>main</code>(push 即部署,GH Pages 自动构建 ~1–2 分钟)</td></tr>
+    <tr><td>后端</td><td>Supabase(PostgreSQL + Auth + Realtime + Storage + Edge Functions)</td></tr>
+  </table>
+  <p><b>纯静态前端</b>(无框架、无构建步骤),HTML/CSS/JS 直接托管。JS 依赖本地化在 <code>vendor/</code>。</p>
+  <p><code>well2go.ai</code> 是另一个独立 repo(<code>tototo1999/well2go</code>),跑旧版 chat.html,<b>不在本仓库内</b>;改本仓库不影响它,但日后同步新代码过去要连 <code>assets/systems.js</code> 一起拷(见坑 §6)。</p>
+</section>
+
+<section id="s3">
+  <h2><span class="n">3</span> 目录结构(前端各系统独立)</h2>
+<pre>speak2go/
+├── index.html            # 落地页
+├── login.html            # 单入口登录 → 读 profiles.system → 路由到对应系统
+├── assets/systems.js     # ⭐ 多系统配置表(window.SYSTEMS + resolveSystemId)
+├── chat.html             # 调试室(老主界面,6390 行)
+│
+├── glossary/index.html   # ⭐⭐ 英语课「超级单词卡」— 词库唯一真文件(4169 行)
+├── essay/index.html      # 英文作文系统前端(独立一份,444 行)
+├── korean/index.html     # 韩语系统前端(从 glossary fork 韩化,3834 行)
+│
+├── glossary.html         # 死链:重定向到 /glossary/(legacy)
+├── vendor/               # 本地化 JS 依赖(supabase-js / marked / html2pdf)
+├── glass-demo/           # Mentra 眼镜 demo — HOLD(设备没到货,别动)
+├── wow-fridge/           # wooooow 社区相关实验
+└── docs/                 # 设计文档 / 本 handoff</pre>
+
+  <h3>三/四系统配置(<code>assets/systems.js</code> → <code>window.SYSTEMS</code>)</h3>
+  <table>
+    <tr><th>system</th><th>label</th><th>path</th><th>product</th><th>roomId</th></tr>
+    <tr><td>speak2go</td><td>English lesson</td><td><code>/glossary/</code></td><td><code>speak2go</code></td><td><code>5b622bc4-88b4-47c1-9aa6-643c4b1e0f96</code></td></tr>
+    <tr><td>essay</td><td>English essay</td><td><code>/essay/</code></td><td><code>essay</code></td><td><code>01c240c3-9b94-472f-953b-d27584749008</code></td></tr>
+    <tr><td>korean</td><td>Korean lesson</td><td><code>/korean/</code></td><td><code>korean</code></td><td><code>f015f5d5-2163-490f-bf99-92a2ffa45bdd</code></td></tr>
+    <tr><td>well2go</td><td>健康健身</td><td>(well2go.ai 独立 repo)</td><td><code>well2go</code></td><td><code>8980e7e0-e24a-44c4-b542-47c8e9105947</code></td></tr>
+  </table>
+  <p>路由:纯函数 <code>resolveSystemId(hostname, profileSystem)</code> — <b>well2go.ai 域名强制走 <code>well2go</code></b>(保留旧行为),否则按用户 <code>profiles.system</code>(默认 <code>speak2go</code>)。迁移 <code>20260530000000</code> 加的 <code>profiles.system</code> 列对存量 51 用户零影响。</p>
+</section>
+
+<section id="s4">
+  <h2><span class="n">4</span> 后端架构(2026-05-26 全云化)</h2>
+  <blockquote>已 100% serverless,<b>0 个 Hermes/本地 agent 在跑</b>。所有产品 <code>rooms.serverless=true</code>。</blockquote>
+  <p>录音处理链路(统一入口):</p>
+<pre>学生上传录音 → chat2go-ingest (Edge Function)
+  → 读 rooms.product 选提炼 prompt
+  → ASR: ElevenLabs Scribe v2(转写)
+  → LLM: Gemini Flash + Claude(分段提炼 / 批改)
+  → speak2go_worker / chat2go_worker(按 product 分流)
+  → 写回 messages + 生成生词卡 / 作文批改 / 韩语卡</pre>
+  <p>按 product 的提炼差异:</p>
+  <ul>
+    <li><b>speak2go</b>:课堂录音 → 提炼最多 50 生词 + <code>practice_patterns</code> 句式 + 真例句。</li>
+    <li><b>essay</b>:作文课录音 → <code>ESSAY_PROMPT</code>(writing_points + essay_prompts + key_phrases);批改走五维 rubric(<code>essay-score</code> trailer)。</li>
+    <li><b>korean</b>:<code>KOREAN_PROMPT</code>(한글/romaja/中文 + 句式)+ <code>_build_korean_card</code>,支持 한글 时间戳;导入深链指向独立 <code>/korean/</code>。</li>
+  </ul>
+  <p>SQL 默认走 <b>Supabase MCP</b>(<code>execute_sql</code> / <code>apply_migration</code>),DDL/RLS 用 preview-then-go。</p>
+</section>
+
+<section id="s5">
+  <h2><span class="n">5</span> 「超级单词卡」(glossary/index.html)核心功能</h2>
+  <p>项目最核心、迭代最密的一块(英语课系统)。</p>
+  <ul>
+    <li><b>词库跟账号走</b>:登录后 <code>glossary_state</code>(jsonb)+ RLS,拉/推并集合并(墓碑并集 — 删词不复活、云端空不丢本地)。未登录纯本地 localStorage。换浏览器不丢词。</li>
+    <li><b>艾宾浩斯复习</b>:词有 <code>review_stage</code>(0→6)+ <code>next_due_at</code>;到期进复习队列。</li>
+    <li><b>🎮 游戏(单卡片练习抽屉)</b>:三步一体 — ① 拼读(切音节 + 标重音 + 填罗马音)② 造句(本地 <code>gradeTranslation</code> 评分,离线可用)③ 跟读(听例句/课堂原声 → 复述 → 比对)。本轮三项满 300 自动通关打钩。<b>全保留。</b></li>
+    <li><b>📝 测验</b> <span class="tag t-lo">2026-05-30 改</span>:整库随机抽 10 词,<b>只做默写</b>(看中文拼英文,字母格提示),出总分 + 错词清单 + 再来一组。</li>
+    <li><b>📚 复习</b>:到期词<b>只做默写</b>一遍,按对错推进艾宾浩斯阶段。</li>
+    <li><b>默写自动播例句</b>:进默写题自动朗读真例句(听音默写)。</li>
+    <li><b>联网查词</b>:<code>glossary-lookup</code> / Gemini 补音标 + 例句。</li>
+  </ul>
+  <blockquote><b>测验/复习 = 纯默写</b>(2026-05-30 砍掉了原「默写→拼读→造句」三阶段,只游戏保留多题型)。这是当前最新形态,别误以为测验还有拼读/造句。</blockquote>
+</section>
+
+<section id="s6">
+  <h2><span class="n">6</span> 坑 / 注意事项</h2>
+  <ol>
+    <li><b class="warn">glossary/index.html 含 4 个 NUL 字节</b>(第 1462/1466 行附近)。直接 <code>grep</code> 会被当二进制,要加 <code>-a</code>;或先 <code>tr -d '\000'</code> 出干净副本。Edit 工具正常可用。</li>
+    <li><b>词库唯一真文件 = <code>glossary/index.html</code></b>。<code>glossary.html</code> 是重定向,<code>romanizer.html</code> 已弃用,chat2go 仓库里的 glossary 是死副本 —— 词库/测验/题卡需求<b>只改 <code>glossary/index.html</code></b>。</li>
+    <li><b>三系统前端独立</b>:改 glossary 不动 essay/korean,反之亦然。但<b>后端 schema 共享</b> —— 改表结构要意识到三系统都受影响。</li>
+    <li><b class="warn">RLS 还没硬隔离</b>(见 §7):系统间隔离目前只在前端,DB 层 <code>USING(true)</code> 的洞还在,任何登录用户用 API 能摸到别系统房间。<b>安全敏感,改前务必在 Supabase 分支测。</b></li>
+    <li><b>glass-demo/ HOLD</b>:Mentra 眼镜没到货,别碰。</li>
+    <li><b>well2go systems.js 同步隐患</b>:well2go 独立 repo 跑旧 chat.html 不受影响;但谁日后同步新 chat.html 过去<b>必须连 <code>assets/systems.js</code> 一起拷</b>,否则报 <code>Cannot read undefined 'speak2go'</code>。</li>
+    <li><b>online-first 工作流</b>:默认改线上 → push main → 轮询 speak2go.ai 验。给用户的链接用线上绝对 URL。</li>
+    <li><b>录音公开链</b>:已改永久公开链(<code>dd65619</code>),不再 24h 后 403。</li>
+  </ol>
+</section>
+
+<section id="s7">
+  <h2><span class="n">7</span> 待办 / 下一步</h2>
+  <h3><span class="tag t-hi">高危</span>优先 / 有风险</h3>
+  <ul>
+    <li><b>RLS 硬隔离(Phase 1)</b>:① 固化 speak2go 单例房间 RLS 策略进迁移(现仅存在线上 DB、无迁移)② <code>products_for_system()</code> helper + 系统作用域的 rooms/room_members/templates 策略 ③ <code>profiles.system</code> 防自改触发器。验收:3 测试用户各只见自己系统、跨系统 join 被拒。<b>先在 Supabase 分支测再合。</b></li>
+    <li><b>韩语 lesson 胶囊 slug 不含 한글 的边界 bug</b>:<code>autoImportFromUrl</code> slug 正则 <code>[^a-z0-9一-鿿]</code> 没含谚文 Unicode 块 → 纯 한글 标签 slug 成空 <code>lesson-</code>,多个纯韩标签课会撞进同一 catId。修:正则加 <code>가-힣</code>。</li>
+  </ul>
+  <h3><span class="tag t-mid">收尾</span>验收 / 收尾</h3>
+  <ul>
+    <li><b>韩语端到端实测</b>:真韩语录音传 korean 房间 → 提炼卡 → 点深链 → 한글 导入 + 朗读 + 测验。</li>
+    <li><b>英文作文录音→写作要点端到端实测</b>:<code>_build_essay_card</code> 已单测,真录音链路还没跑过。</li>
+    <li><b>绑定真实用户 + room_members</b>:给韩语/作文各绑一个真用户(<code>admin_set_user_system</code> RPC)+ 加 <code>room_members</code>;现在只有 <code>iamarobot</code> 绑了 essay。</li>
+  </ul>
+  <h3><span class="tag t-lo">增强</span>体验增强(选做)</h3>
+  <ul>
+    <li>造句游戏接 lesson 的 <code>practice_patterns</code>(现在只用通用 SENTENCE_BANK);造句结果回写艾宾浩斯。</li>
+    <li>「已记住」毕业词库 tab:stage 6 的词从活跃复习毕业归档。</li>
+    <li>句型库:把 worker 产出的 <code>practice_patterns</code> 持久化成可滚动积累的句式资产。</li>
+    <li>不规则动词三态专项练习。</li>
+    <li>PWA / 单文件打包离线版。</li>
+    <li>韩语听写题(ko-KR TTS 播 → 打 한글),phase ② 现在对韩语跳过。</li>
+  </ul>
+</section>
+
+<section id="s8">
+  <h2><span class="n">8</span> 最近改动(近 5 个 commit)</h2>
+<pre>dd65619 fix(chat): 语音录音改用永久公开链,不再 24h 后 403
+cd791f1 fix(glossary): 跟读「原句」录音加载失败时 TTS 兜底,不再变哑钮
+ae7dcd1 feat(glossary): 内置词库 70 词补例句 → 也能跟读 🎙
+d5caea9 fix(glossary): 跟读 🎙 改挂例句而非仅课堂录音 + 撤掉误加的例句 🔊
+1ce4907 feat(glossary): 测验/复习只保留默写 — 去掉自然拼读+造句两阶段</pre>
+</section>
+
+<section id="s9">
+  <h2><span class="n">9</span> 常用命令</h2>
+<pre># 改完推送(online-first)
+cd /Users/dami2026/speak2go
+git add -A &amp;&amp; git commit -m "类型(scope): 描述" &amp;&amp; git push origin main
+# 然后轮询 speak2go.ai 验证部署(GH Pages ~1-2 分钟)
+
+# 读含 NUL 的 glossary 文件
+tr -d '\000' &lt; glossary/index.html &gt; /tmp/gloss.html   # 干净副本
+grep -an "关键字" glossary/index.html                    # 直接 grep 要加 -a</pre>
+  <p>提交信息约定:中文,<code>类型(scope): 描述</code>(feat/fix/ui/docs)。</p>
+</section>
+
+<section id="dump">
+  <h2>📂 项目 Dump</h2>
+  <h3>文件树(depth 2,排除 .git / vendor)</h3>
+  <pre class="dump">assets
+assets/acrylic_prosthetic.png
+assets/emotion_tri_ring.png
+assets/family_recipe.png
+assets/family_selfie.png
+assets/flow_cinema.png
+assets/lexi_30s_campaign_vlog.mp4
+assets/lexi_apartment_lounge.png
+assets/lexi_apartment_party.png
+assets/lexi_work_1.jpeg
+assets/lexi_work_2.jpeg
+assets/lexi_work_3.jpeg
+assets/lexi_work_4.jpeg
+assets/lexi_work_5.jpeg
+assets/lexi_work_6.jpeg
+assets/moebius_loop.png
+assets/recursive_feedback.png
+assets/rpg_sandbox.png
+assets/systems.js
+assets/zine_camera.png
+chat.html
+CNAME
+docs
+docs/HANDOFF.md
+docs/superpowers
+essay
+essay/index.html
+glass-demo
+glass-demo/chat.html
+glass-demo/index.html
+glass-demo/login.html
+glossary
+glossary.html
+glossary/_snapshots
+glossary/index.html
+glossary/romanizer-dict.js
+glossary/romanizer.html
+index.html
+korean
+korean/index.html
+login.html
+multimodal_output
+multimodal_output/lexi_3d_lounge.html
+multimodal_output/lexi_apartment_lounge.html
+multimodal_output/lexi_apartment_party.html
+multimodal_output/scene_1_frame.html
+multimodal_output/scene_2_frame.html
+probe_health.log
+wow-fridge
+wow-fridge/assets
+wow-fridge/engineering_schematic.html
+wow-fridge/index.html</pre>
+  <h3>完整 Git Log(182 commits)</h3>
+  <pre class="dump">dd65619  2026-05-30  fix(chat): 语音录音改用永久公开链,不再 24h 后 403
+cd791f1  2026-05-30  fix(glossary): 跟读「原句」录音加载失败时 TTS 兜底,不再变哑钮
+ae7dcd1  2026-05-30  feat(glossary): 内置词库 70 词补例句 → 也能跟读 🎙
+d5caea9  2026-05-30  fix(glossary): 跟读 🎙 改挂例句而非仅课堂录音 + 撤掉误加的例句 🔊
+1ce4907  2026-05-30  feat(glossary): 测验/复习只保留默写 — 去掉自然拼读+造句两阶段
+af2aa56  2026-05-30  ui(glossary): 英文改用 ui-monospace(跟罗马注音同款干净等宽)
+23e511e  2026-05-30  ui(glossary): 英文单词换衬线字体(词典感),等宽对齐处保持不变
+08d1c27  2026-05-30  fix(review): 复习扫描尊重删除墓碑 — 已删词/分类不再进复习
+9b70a2d  2026-05-30  fix(glossary): 测验/复习默写自动播「真例句」而非通用句
+82d8a1c  2026-05-30  ui(glossary): 默写题卡(测试/复习)自动播例句,不用点按钮
+3650bae  2026-05-30  feat(glossary): 词典跟账号走 — Supabase per-account 同步
+bc8a395  2026-05-30  docs(spec): 超级单词卡词典跟账号走 — Supabase per-account 同步设计
+becfe31  2026-05-30  fix(chat): 文字回复 typing 指示器全程显示 — &#x27;...&#x27; 占位符不再误触发隐藏
+c6e6d3a  2026-05-29  fix(glossary): 复审第三轮 — 修 9 个(数据丢失/麦克风泄漏/我自己的修复缺口)
+6a98c71  2026-05-29  fix(glossary): 复审第二轮 12 个 bug(含修复引入的 1 个回归)
+182599f  2026-05-29  fix(glossary): 修掉审计确认的 18 个 bug(数据损坏/隐身/泄漏/越界)
+6401dd6  2026-05-29  fix(chat): LLM 徽章大写(text-transform uppercase);探活去掉浏览器禁设 header
+9068bad  2026-05-29  feat(glossary): 🎮 抽屉并入跟读 → 3 个游戏,总分满 300(≥60%=180 三项必做)
+bf4b1e6  2026-05-29  fix(chat): 状态栏修活 — OPTIONS 探活 chat2go-ingest 真实反映在线/离线;徽章 serverless → LLM
+1f67d5d  2026-05-29  feat(korean): 韩语单词表独立前端（fork 自英语 glossary）
+ffca55b  2026-05-29  chore(glossary): 固定版本快照 — 超级单词卡 20260529
+443052a  2026-05-29  ui(glossary): 页面更名「超级单词卡」(原 Vibe Coding 名词表)
+3ddeaa0  2026-05-29  feat(essay): 独立英文作文批改前端 /essay/
+4a47576  2026-05-29  feat(glossary): 跟读加「按住空格说话」对讲机式控制
+de696e0  2026-05-29  feat(glossary): 跟读改连续录音(手动停,修截断)+ 回放自己录音
+1f8a576  2026-05-29  feat(multi-system): Phase 0 — 按 profiles.system 路由 + systems.js 配置
+43c85fa  2026-05-29  feat(glossary): 词卡加 🎙 跟读(真人原声 + Web Speech 比对例句)
+7aa9c52  2026-05-29  feat(glossary): 一键导入改成勾选导入(挑词加入)
+9687352  2026-05-29  fix(glossary): 录音回放上限改 1 分钟(60s 自动停)
+9dc0aee  2026-05-29  feat(glossary): 默写进入每个词自动播例句(听音默写)
+afd6e6e  2026-05-29  feat: 开始复习 → 跳到到期词临时题库做题,做完推进艾宾浩斯阶段(pass)
+0fe8d27  2026-05-29  feat(chat): 侧栏没课堂录音的词加 🔊 朗读原声(Web Speech TTS)
+9e83e8b  2026-05-29  fix(glossary): 课堂录音回放不再 14 秒自动停 — 起播后一直放到结束/按停
+96e03f4  2026-05-29  debug(glossary): 本轮总分加 console.log 诊断 — 定位为何没触发(临时)
+9143b11  2026-05-29  feat(glossary): 🎮 练习抽屉本轮总分 → ≥60% 自动通关打钩 + 同步 chat todo 侧栏
+f1423a1  2026-05-29  feat(glossary): 测验成绩按时间留在单词卡(做题记录)
+2b32137  2026-05-29  feat(glossary): 造句错题卡 → 一键把生词加进单词表
+2b77548  2026-05-29  feat(chat): 单词表按钮指向线上绝对 URL — 本地打开 chat 也跳 speak2go.ai/glossary/
+28823a8  2026-05-29  feat(glossary+chat): 点单词听当时上课录音片段 + 统一到 /glossary/
+99735dc  2026-05-29  feat(glossary): 整组胶囊编辑 — ✎重命名本组 / 🗑删除本组
+d303100  2026-05-29  fix(glossary.html): 同步回车输入法守卫到根 glossary.html(线上 speak2go.ai/glossary.html 用的就是它)
+82c698a  2026-05-29  fix(glossary): 回车守卫覆盖全部输入框 + macOS 输入法时序兜底;造句框收到 2 行
+e38dc7b  2026-05-29  fix(glossary): 测验回车加中文输入法守卫 — 填罗马音选字回车不再误提交
+e0afc35  2026-05-29  feat(glossary): 加词改全自动(联网生成完整词卡)+ 正式注音重音大写
+16047fb  2026-05-29  feat(glossary): 每个表格顶部加管理工具条(改名/新建/删除)
+a0626ba  2026-05-29  feat(glossary): 搜中文回车自动查对应英文词并加入
+c0b37c6  2026-05-29  feat(glossary): ✕ 删除按钮扩展到所有胶囊(含内置)
+91a2b13  2026-05-29  feat(glossary): 动态录音课胶囊加 ✕ 整体删除按钮
+0823581  2026-05-28  fix(chat): todo 侧栏胶囊跟词库删除同步
+d5c8288  2026-05-28  fix(chat): 恢复 AI 音频处理状态栏 + 状态栏模式下渲染最终卡片
+79932d1  2026-05-28  feat(chat): .qta/.mp4/.mov 也触发 speak2go worker(worker 端 ffmpeg 转码)
+5c78bae  2026-05-28  fix(glossary): 拼读算分重做(降难度)+ 删词跨分类全删
+dedb9b6  2026-05-28  ui(glossary): 测验竖向压缩 ~30%,一页放下(尤其自然拼读)
+8aec59d  2026-05-28  feat(glossary): 默写题加 🗑 删除此词(从单词表永久移除 + 跳过本组)
+01c6301  2026-05-28  feat(glossary): 默写题加 🔊 听例句(只播音不显示句子)
+c80d8c3  2026-05-28  feat(glossary): legacy glossary.html 同步测验做题模式
+4091403  2026-05-28  feat(glossary): 📝 测验做题模式 — 整库抽10词 × 默写/自然拼读/造句 × 总分
+ec9256b  2026-05-28  feat(glossary): 🎮 罗马音练习回车直接提交
+3342a64  2026-05-28  feat(glossary): 搜不到的词一键联网查并加入单词表
+35dd97b  2026-05-28  feat(glossary): IPA → 罗马注音 渲染层转换
+0635073  2026-05-28  fix(chat): 翻译按钮 (5-26 cutover 后回归) — translateMessage 显式调 chat-translate EF
+050d7cd  2026-05-28  feat(chat): 中/EN 一键切换胶囊加到 chat.html (跟 index.html 联动)
+f09c296  2026-05-28  feat(homepage): 中/EN 一键切换胶囊
+d4df099  2026-05-28  feat(speak2go): AI 主动复习闭环 — 艾宾浩斯曲线 + 双向 marker 同步
+542bf20  2026-05-28  feat: add interactive engineering schematic HTML dashboard with custom Mermaid rendering
+a1214e7  2026-05-27  feat: 每个录音 = 顶部独立 tab(跟 Vibe Coding / Claude Code 并列)
+aa75e81  2026-05-27  fix(glossary): 长 lesson_date 不再挤掉 N-M 进度数字 + 折叠 ▾
+694059b  2026-05-27  feat: NYC Global Center + chat sidebar 按日期分组胶囊 + 完成度双向同步
+4c9e7dd  2026-05-27  fix(glossary): import 后立即反映新词 + NYC Global Center 红标 +N 徽章
+aea9463  2026-05-27  feat(speak2go): 网页上传音频自动触发 vocab worker(plan v2 方案 A)
+f209e72  2026-05-27  fix(chat): 单词表按钮从嵌入模式改成新 tab 打开
+cd352c5  2026-05-27  fix(glossary): import 静默化 — 不弹 alert + 不切 tab,只让 NYC Global Center (N) 数字增加
+1eb80cd  2026-05-27  feat: NYC Global Center 单词表 — glossary.html 原生托管
+a286731  2026-05-27  sync(glossary): textarea 占满宽度
+33ef32f  2026-05-27  sync(glossary): textarea 加大 + 看示例
+500a6a5  2026-05-27  sync(glossary): AI 评分接通 Edge Function
+f66797c  2026-05-27  sync(glossary): AB 对比 + textarea 加大 + AI 占位
+4cbe14c  2026-05-27  style: increase global width to 1056px (20% wider) and change outer background to a thin soft grey-beige
+a6de08e  2026-05-27  style: constrain global body width to 880px centered portrait wrapper with clay backdrop
+aba9262  2026-05-27  sync(glossary): 造句搬进游戏 + 🔊 朗读整句
+13bd0d1  2026-05-27  style: remove screen-overlay-tag capsule and tune minion eye size down to 58px for perfect centered Q-style fit
+c59a0b8  2026-05-27  style: enlarge minion eye by 25% (90px) and add 5 Q-style fanned-out eyelashes for extreme close-up
+3d3590b  2026-05-27  sync(glossary): 造句防重 + 清空按钮
+9ff95e4  2026-05-27  style: enlarge minion eyeball and eyelashes for maximum screen coverage and cute Q-style aesthetic
+acc5e56  2026-05-27  style: change Mom back to selfie to fix identical video issue, enlarge Minion eye, and add eyelashes
+38f3e5d  2026-05-27  style: replace creepy eyes with cute Minion eye and second travel vlog video
+af3113b  2026-05-27  style: simplify creepy robot eyes to single cute blinking eye and fix asset paths
+0bfb736  2026-05-27  sync(glossary): 修空类目 + 加词 按钮不见
+a070ec0  2026-05-27  feat: embed animated autoplaying travel vlog video in refrigerator magnet
+3b3bcc1  2026-05-27  sync(glossary): 造句评分 + 中文点击提示
+0daa374  2026-05-27  feat: show real photo screens (selfie &amp; recipe) in refrigerator magnets
+b234038  2026-05-27  feat: deploy dopamine-style W00000W refrigerator magnet landing page to /wow-fridge/
+f581357  2026-05-27  sync(glossary): badge 计数对齐 + 误删恢复
+c6deda6  2026-05-27  sync(glossary): Claude Code 类 10 → 20 词
+0b3c59c  2026-05-27  sync(glossary): 100 句造句 + 收藏 tab 过滤 + 🎮 图标 + Tab 键修复
+783b0f8  2026-05-27  sync(glossary): Claude Code 类 + 硬删 + tab CSS 通用化 (from chat2go)
+b5f4c78  2026-05-27  sync(glossary): section 标题精致化
+4d2913f  2026-05-27  sync(glossary): Vibe Coding → Top 50 扁平结构
+e85857c  2026-05-27  sync(glossary): 主目录 tab 互斥切换
+9b79b1b  2026-05-27  sync(glossary): 头部缩小 + storage 跨 tab 同步
+d5a8ee4  2026-05-27  sync(glossary): 造句练习功能 from chat2go
+e1f1881  2026-05-27  fix(chat): 单词表改成 tab 切换,跟现有 2/1 胶囊一致
+a150ad7  2026-05-27  feat(chat): 顶部加单词表胶囊 → 弹 modal 嵌 /glossary/ iframe
+6d7b799  2026-05-27  feat(glossary): 部署单词表 + 罗马注音游戏 → speak2go.ai/glossary/
+8b02555  2026-05-27  feat: well2go 默认 todo 切康复治疗中文模板
+90d225f  2026-05-26  ui: 拆 bridgeStatus 心跳轮询(serverless 后 bridge_state 无写者)
+fac090d  2026-05-26  feat: 去 Hermes + 接入 chat2go-ingest serverless 路径
+99b95c0  2026-05-25  feat: redesign 3D lobby cafe into NYC Penthouse Sunset Rooftop party with Manhattan skyline
+220e0ae  2026-05-25  feat: redesign 3D lounge into bright Scandinavian Lobby Cafe with warm Bossa BGM
+2ee1232  2026-05-25  feat: add 4 dynamic animated NPCs with custom visors and BPM reactive speeds
+58a6e03  2026-05-25  feat: upgrade 3D sandbox to third-person spring-arm follow perspective with red-haired player avatar Lexi
+992299d  2026-05-25  feat: integrate real-time procedural Web Audio synthesizer into 3D game sandbox
+407cac5  2026-05-25  feat: add fully playable 3D WebGL pointer lock first-person game sandbox
+ad665d9  2026-05-25  feat: deploy interactive lounges &amp; party showcases to speak2go
+a97d248  2026-05-24  feat(glass-demo): 音频上传走 Edge Function speak2go-ingest
+1c0e2c1  2026-05-24  feat(glass-demo): 复刻完整 chat UI 到 /glass-demo/
+5d1b1de  2026-05-24  feat(glass-demo): 建 v2 实验路径占位页
+b2c5e32  2026-05-23  ui(index): 删 slogan — 留白极简
+f59f799  2026-05-23  feat(auth): 关闭注册 tab(全站统一不开放注册)
+e9f455b  2026-05-23  feat(well2go): 主题从康复治疗换成健康/健身/拉伸
+f7b0cbf  2026-05-23  fix(i18n): TYPING_VERBS 改成每次循环按 hostname 取
+181d912  2026-05-23  feat(i18n): well2go TYPING_VERBS 换 100 个康复中文短语
+7c894a4  2026-05-23  feat(i18n): well2go.ai 静态 UI 中文化 (P1)
+a80ff31  2026-05-23  fix(well2go): hostname-aware SINGLETON_ROOM_ID + DEMO_PRODUCT
+41260cc  2026-05-23  feat(brand): hostname-aware brand swap — well2go.ai 自动换 brand
+ee49b12  2026-05-23  feat(reset): ↻ Reset 顺便清 Materials folders (expert_material_folders)
+b978159  2026-05-23  fix(typing): loadMessages 轮询补 audioPlaceholderId 守卫
+1a791f3  2026-05-23  fix(send): 删 sendMessage 里引用已废弃 voice 变量的代码
+f770f49  2026-05-23  feat(speak2go): 🎤 语音输入改用 MediaRecorder + mlx-whisper(中改)
+322037e  2026-05-23  feat(typing): audio 进度条进 status bar — 不再独立气泡被刷掉
+16a8f97  2026-05-23  ui(typing): audio 模式简化读秒显示 — mm:ss + &quot;processing audio…&quot;
+395d22b  2026-05-23  fix(typing): audio 上传期间 typing indicator 持续跑到 5/5 完成
+90c2328  2026-05-23  ui: 重新加回语音输入按钮 — JS/CSS 都在,只缺 HTML 按钮
+aeb7560  2026-05-23  feat(speak2go): 上传录音转写 4-step 进度条
+9b98340  2026-05-23  feat(todo): timeline-tree 改 3 层 — 录音(顶) → 时间段 → 知识点
+97fa96e  2026-05-22  ui: 删 🎙 重抽 todo 按钮 — 上传录音自动出 timeline-tree 后冗余
+7f4cfe0  2026-05-22  feat(reset): reset_room 顺便清空 active todo template payload
+c531f04  2026-05-22  feat(speak2go): Swap T↔S 按钮 — T/S 启发式翻车兜底
+4307ac6  2026-05-22  $(cat &lt;&lt;COMMITEOF feat: 整条实时课堂录音流 ripped — 聚焦上传录音转写
+3bef821  2026-05-22  ui: 隐 mic 按钮 — 范围调整,聚焦上传录音转写,实时流暂停
+847ea42  2026-05-22  feat(ui): chat-head 加 Materials 工具栏按钮 — 点开弹模态框
+1581271  2026-05-22  feat(ui): 删 Materials 文件库 + 橙胶囊 room title — 仅保留 todo
+3b5803a  2026-05-21  fix(chat): 过滤纯 _event marker attachment 避免渲染 &quot;undefined 0B&quot;
+9a9e418  2026-05-21  ui: 材料库 head 右侧加 caret 占位(切换教材包预留)
+926fcad  2026-05-21  ui: 材料库 head 改成 todo 同款奶白胶囊 + 笔图标(代替简陋 toolbar)
+9f4ab59  2026-05-21  feat: 教学材料文件库 v2 — 可编辑树状目录(folders → files)
+cdfefc0  2026-05-21  ui: 教学材料库从 sidebar-head flex 横放改成正经下挂面板
+f188948  2026-05-21  feat: 橙胶囊点击展开教学材料文件库
+d453202  2026-05-21  feat: 定时 10-min review + 课后 todo 提议确认流 + 私聊完整 transcript
+7531397  2026-05-21  fix: WS 自动重连 — 后端 asr_server 重启不再无声断课堂录音
+2d9e499  2026-05-21  ui: todo done 去掉 line-through, 打钩就够
+8568858  2026-05-21  feat(speak2go-only): 去掉 todo lock + 双钩 pass — 任意 group 直接 + 展开,任意一 ✓ 即 pass
+98c6e71  2026-05-21  perf: VAD 段累积 buffer ≥15s + 紧凑 directive — 4 项录音流优化
+aeeba9e  2026-05-21  fix(chat): 用户上翻不再被吸回底部 — autoScrollPinned 阈值 80px,只有发消息/初始加载强制下拉
+5f37b31  2026-05-21  fix: mic 按钮显示去掉 focal_user_id 门槛 — 三角色架构无第三方学生
+0e392d8  2026-05-21  ui: 主页/login 配色对齐聊天框,蓝色 #2563eb 改橙色 #f97316
+e90aa89  2026-05-21  ui(index): speaking 卡名对齐 logo 样式 Speak2GO + beta TLD
+d218d7f  2026-05-21  ui(index): slogan Tutor 改 Assistant
+b4b325a  2026-05-21  ui(index): speaking 卡名改 speak2go 品牌名,disabled 卡统一 Ready Go…
+87c0e70  2026-05-21  ui(index): slogan 改为 AI Engineers × Frontier LLMs = Your Personal AI Tutor
+8ac529b  2026-05-21  i18n: 全站改纯英文 — 字体换 Inter + Playfair Display
+a920b2e  2026-05-21  ui: 翻译按钮改用 🌐 globe 经纬线图标
+72f9265  2026-05-21  ui: 翻译按钮移到底部 rate-bar 最右,跟 ✓✗⋯⬆ 同一排
+e0140f4  2026-05-21  feat: 每条消息加 🌐 翻译按钮 — 双向 EN ↔ 中,灰字接原文下方
+784699b  2026-05-21  feat(chat): AI 写 todo 后 sidebar 自动重渲
+d0c39ff  2026-05-21  i18n: TYPING_VERBS 改 NYC 短句 2-4 词,不再是单 -ing 词
+4dee5ca  2026-05-21  i18n: 全站 UI 英文化 + TYPING_VERBS 100 个纽约味动词
+26a27df  2026-05-21  feat: todo 面板加 mic 按钮 — AI 从最近录音抽 todo 项
+0c9c542  2026-05-21  refactor: 删声纹注册 modal + 录音注册逻辑 — 三角色架构纠偏
+a7fd31c  2026-05-20  fix: 取消上传 20MB 大小限制 — speak2go 课堂录音常超过
+716b741  2026-05-20  feat: 上传支持音频文件 — 课堂录音直接给 AI 助教转写分析
+82015b1  2026-05-20  ui: 输入区改 fancy 录音麦克风,移除旧 Web Speech 听写按钮
+63900af  2026-05-20  fix: loadRooms 显式触发 Classroom.refreshButton
+d82a94d  2026-05-20  feat: speak2go 改单例房模型 — 砍掉 OG/小白 角色分支
+7af59d9  2026-05-20  feat speak2go classroom realtime ASR with voice diarization and AI TA
+ac606ae  2026-05-19  fix(speak2go): chat.html 回退到英文化前(中文聊天可用),英文化 sed 有 JS 字面量误改 bug 待第二波修
+436aa73  2026-05-19  ui(speak2go): 主页改英文学习主题 (speaking/listening/writing/test prep)
+0a68527  2026-05-19  i18n: 第一波全英文化 — title/brand/login/todo/typing/常量
+1f31ac9  2026-05-19  ui: 临时开启注册 tab(用于老师 OG 首次注册,完成后再关)
+2941ebe  2026-05-19  ui: 关闭注册 tab(平台限注册)
+46e73ab  2026-05-19  feat: 邀请码多 token 模型(同主站 48e7c11)
+1c959ad  2026-05-19  feat: Speak2GO.ai 初始部署(基于 well2go-site fork)</pre>
+</section>
+
+<div class="foot">speak2go Handoff &amp; Dump · 生成于 2026-05-30 · 自包含 HTML,双击即开</div>
+
+</div>
+</body>
+</html>
