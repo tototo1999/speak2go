@@ -6213,9 +6213,9 @@
         cacheControl: '3600', upsert: false, contentType: mimeType,
       })
       if (upErr) { showToast('Upload failed: ' + upErr.message); _setVoiceBtnState('idle'); return }
-      const { data: signed } = await sb.storage.from('chat-uploads')
-        .createSignedUrl(storage_path, 24 * 3600)
-      const url = signed?.signedUrl || ''
+      // chat-uploads 是公开桶 → 用永久公开链(原来 24h 签名链会在一天后 403,录音回放失效)
+      const { data: pub } = sb.storage.from('chat-uploads').getPublicUrl(storage_path)
+      const url = pub?.publicUrl || ''
       if (!url) { showToast('Storage URL failed'); _setVoiceBtnState('idle'); return }
       // 隐藏的 voice_input message — 前端 INSERT 处理器会跳过渲染,后端 worker 检测后转写回填
       const { error: insErr } = await sb.from('messages').insert({
