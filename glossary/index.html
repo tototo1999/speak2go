@@ -3521,6 +3521,8 @@ main.addEventListener('click', e => {
     });
     return;
   }
+  // 按完成度排序(原序 → 高到低 → 低到高 循环)
+  if (action === 'cat-sort') { cycleCatSort(btn.dataset.cat); return; }
   // 整组胶囊:重命名
   if (action === 'cat-rename') {
     const catId = btn.dataset.cat;
