@@ -113,6 +113,8 @@ nav.cats a.group-link:hover { opacity: 0.85; }
 .stage-pips .pip { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--accent); background: transparent; box-sizing: border-box; }
 .stage-pips .pip.on { background: var(--accent); }
 .stage-pips.is-done .pip { border-color: #f5a623; background: #f5a623; }
+/* 排序按钮激活态(完成度↓/↑) */
+.cat-tb-btn.is-on { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 /* ── Lesson capsules (NYC Global Center 按日期分组) ────────────────────── */
 .lessons-wrap { display: flex; flex-direction: column; gap: 12px; padding: 10px 0; }
@@ -2068,12 +2070,94 @@ function renderCategorySection(cat) {
     bar.className = 'cat-toolbar';
     bar.innerHTML =
       '<span class="cat-ttl">📋 ' + escapeHtml(cat.title) + '</span>' +
+      '<button class="cat-tb-btn" data-action="cat-sort" data-cat="' + cat.id + '">↕ 排序</button>' +
       '<button class="cat-tb-btn" data-action="cat-rename" data-cat="' + cat.id + '">✎ 改名</button>' +
       '<button class="cat-tb-btn" data-action="cat-new">➕ 新建表</button>' +
       '<button class="cat-tb-btn danger" data-action="cat-del" data-cat="' + cat.id + '">🗑 删除此表</button>';
     section.appendChild(bar);
   }
   section.appendChild(grid);
+  return section;
+}
+
+/* ── 排序(按记忆曲线完成度)+ 全部单词 胶囊 ─────────────────────────── */
+const ALL_CAT_ID = '__all__';
+const _catOrigOrder = new WeakMap();             // grid → 原始卡片顺序快照(原序还原)
+const SORT_CYCLE = ['', 'desc', 'asc'];          // 原序 → 完成度高到低 → 完成度低到高
+const SORT_LABEL = { '': '↕ 排序', desc: '完成度 ↓', asc: '完成度 ↑' };
+
+function cardReviewStage(card) {
+  const id = (card && card.dataset && card.dataset.id) || '';
+  const i = id.indexOf('::');
+  if (i < 0) return -1;
+  const catId = id.slice(0, i), en = id.slice(i + 2);
+  const u = (state.userTerms[catId] || []).find(t => (t.en || '').toLowerCase() === en.toLowerCase());
+  return u && typeof u.review_stage === 'number' ? u.review_stage : -1;
+}
+
+function applyCatSort(catId, mode) {
+  const section = document.getElementById('cat-' + catId);
+  if (!section) return;
+  const grid = section.querySelector('.terms');
+  if (!grid) return;
+  const cards = [...grid.querySelectorAll('.term')];
+  if (!_catOrigOrder.has(grid)) _catOrigOrder.set(grid, cards.slice());   // 首次排序前 = 原序
+  const orig = _catOrigOrder.get(grid);
+  const oidx = c => { const i = orig.indexOf(c); return i < 0 ? 1e9 : i; };
+  const ordered = cards.slice().sort((a, b) => {
+    if (mode) {
+      const sa = cardReviewStage(a), sb = cardReviewStage(b);
+      if (sa !== sb) return mode === 'asc' ? sa - sb : sb - sa;
+    }
+    return oidx(a) - oidx(b);                                             // 同分/原序:按原始顺序
+  });
+  const anchor = grid.querySelector('.add-term-btn');                     // 卡片排在「+ 加词」之前
+  ordered.forEach(c => grid.insertBefore(c, anchor));
+  section.dataset.sortMode = mode;
+  const btn = section.querySelector('[data-action="cat-sort"]');
+  if (btn) { btn.textContent = SORT_LABEL[mode]; btn.classList.toggle('is-on', !!mode); }
+}
+
+function cycleCatSort(catId) {
+  const section = document.getElementById('cat-' + catId);
+  const cur = (section && section.dataset.sortMode) || '';
+  applyCatSort(catId, SORT_CYCLE[(SORT_CYCLE.indexOf(cur) + 1) % SORT_CYCLE.length]);
+}
+
+// 全部单词:跨所有分类按英文词去重,取 review_stage 最高的实例
+function allWordsDeduped() {
+  const byEn = new Map();
+  DATA.forEach(cat => {
+    getMergedTerms(cat).forEach(([en, zh, hint]) => {
+      const key = (en || '').toLowerCase();
+      if (!key) return;
+      const u = (state.userTerms[cat.id] || []).find(t => (t.en || '').toLowerCase() === key);
+      const stage = u && typeof u.review_stage === 'number' ? u.review_stage : -1;
+      const prev = byEn.get(key);
+      if (!prev || stage > prev.stage) byEn.set(key, { en, zh, hint, catId: cat.id, stage });
+    });
+  });
+  return [...byEn.values()];
+}
+
+function rebuildAllWordsSection() {
+  const old = document.getElementById('cat-' + ALL_CAT_ID);
+  const section = document.createElement('section');
+  section.id = 'cat-' + ALL_CAT_ID;
+  section.dataset.cat = ALL_CAT_ID;
+  const bar = document.createElement('div');
+  bar.className = 'cat-toolbar';
+  bar.innerHTML = '<span class="cat-ttl">📋 全部单词</span>' +
+    '<button class="cat-tb-btn" data-action="cat-sort" data-cat="' + ALL_CAT_ID + '">↕ 排序</button>';
+  section.appendChild(bar);
+  const grid = document.createElement('div');
+  grid.className = 'terms';
+  const words = allWordsDeduped();
+  words.forEach(w => grid.appendChild(makeCard(w.en, w.zh, w.hint, w.catId)));
+  section.appendChild(grid);
+  if (old) old.replaceWith(section); else main.insertBefore(section, noResults);
+  const navA = catsNav.querySelector('a[data-cat="' + ALL_CAT_ID + '"]');
+  if (navA) navA.textContent = '全部单词 (' + words.length + ')';
   return section;
 }
 
@@ -2214,6 +2298,7 @@ function checkPracticeMastery() {
 
 // Top nav: each DATA entry = a top-level tab. Click → switch active cat.
 function setActiveCat(catId) {
+  if (catId === ALL_CAT_ID && typeof rebuildAllWordsSection === 'function') rebuildAllWordsSection();
   document.body.dataset.activeCat = catId;
   document.querySelectorAll('section[data-cat]').forEach(s => {
     s.classList.toggle('active-cat', s.dataset.cat === catId);
@@ -2224,6 +2309,18 @@ function setActiveCat(catId) {
   try { localStorage.setItem('glossary-active-cat', catId); } catch (e) {}
   // 收藏区按当前 tab 过滤,切 tab 时刷新
   if (typeof rebuildFavorites === 'function') rebuildFavorites();
+}
+
+// 「全部单词」胶囊 —— 第一个,聚合所有分类的去重词表
+{
+  const a = document.createElement('a');
+  a.href = '#';
+  a.className = 'group-link';
+  a.dataset.cat = ALL_CAT_ID;
+  a.textContent = '全部单词';
+  a.onclick = (e) => { e.preventDefault(); setActiveCat(ALL_CAT_ID); };
+  catsNav.appendChild(a);
+  rebuildAllWordsSection();   // 初次构建 + 刷新计数
 }
 
 DATA.forEach(cat => {
