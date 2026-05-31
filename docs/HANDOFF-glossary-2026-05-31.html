@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>超级单词卡 — Hand-off 2026-05-31</title>
+<style>
+  :root{ --accent:#1D9E75; --accent2:#2dd4a7; --ink:#1a1c1a; --dim:#5b625c; --bg:#f7f8f4; --surface:#fff; --border:#e5e8e0; --gold:#f5a623; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:
+      radial-gradient(900px 380px at 12% -8%, rgba(45,212,167,.16), transparent 60%),
+      radial-gradient(800px 360px at 100% 0%, rgba(29,158,117,.12), transparent 55%), var(--bg);
+    color:var(--ink); font:16px/1.7 -apple-system,"system-ui","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; }
+  .wrap{ max-width:860px; margin:0 auto; padding:48px 22px 90px; }
+  header.hero{ border:1px solid var(--border); border-radius:18px; padding:26px 28px;
+    background:linear-gradient(135deg, var(--surface), rgba(45,212,167,.05));
+    box-shadow:0 1px 0 rgba(0,0,0,.02), 0 14px 40px -28px rgba(29,158,117,.5); }
+  h1{ margin:0 0 4px; font-size:26px; letter-spacing:.2px; }
+  h1 .g{ color:var(--accent); }
+  .meta{ color:var(--dim); font-size:14px; margin-top:10px; display:flex; flex-wrap:wrap; gap:8px 16px; }
+  .meta b{ color:var(--ink); font-weight:600; }
+  .tag{ display:inline-block; font:600 12px/1 ui-monospace,monospace; color:#fff; background:var(--accent);
+    padding:5px 9px; border-radius:999px; }
+  .tag.alt{ background:#0f172a; }
+  h2{ font-size:19px; margin:42px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--accent);
+    display:inline-block; }
+  h3{ font-size:15px; color:var(--dim); margin:24px 0 8px; }
+  p,li{ color:#26302a; }
+  code{ font:13px ui-monospace,"SF Mono",monospace; background:#eef2ec; color:#0d5b41;
+    padding:2px 6px; border-radius:6px; }
+  pre{ background:#0f1a16; color:#cdeede; padding:14px 16px; border-radius:12px; overflow:auto;
+    font:13px/1.55 ui-monospace,monospace; border:1px solid #1c2b24; }
+  pre code{ background:none; color:inherit; padding:0; }
+  table{ border-collapse:collapse; width:100%; margin:10px 0 4px; font-size:14.5px; }
+  th,td{ border:1px solid var(--border); padding:9px 11px; text-align:left; vertical-align:top; }
+  th{ background:rgba(29,158,117,.08); color:var(--accent); font-weight:700; }
+  tr:nth-child(even) td{ background:rgba(0,0,0,.015); }
+  ul{ padding-left:22px; } li{ margin:5px 0; }
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:4px 22px 14px; margin:14px 0; }
+  .pip{ display:inline-block; width:9px; height:9px; border-radius:50%; border:1px solid var(--accent); vertical-align:middle; margin:0 1px; }
+  .pip.on{ background:var(--accent); } .pip.gold{ background:var(--gold); border-color:var(--gold); }
+  strong.red{ color:#ef4444; }
+  .foot{ margin-top:40px; color:var(--dim); font-size:13px; text-align:center; }
+  a{ color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>超级单词卡 — <span class="g">会话 Hand-off</span></h1>
+  <div class="meta">
+    <span><b>日期</b> 2026-05-31</span>
+    <span><b>产品</b> speak2go 超级单词卡 · <code>glossary/index.html</code></span>
+    <span><b>线上</b> <a href="https://speak2go.ai/glossary/">speak2go.ai/glossary</a></span>
+  </div>
+  <div class="meta" style="margin-top:12px;">
+    <span class="tag">speak2go-v1.0 · 基线/回滚锚点</span>
+    <span class="tag alt">release/v1.0 · 冻结分支</span>
+    <span class="tag" style="background:var(--gold);color:#1a1c1a;">本次快照 speak2go-20260531-eod = dcb21ee</span>
+  </div>
+  <p style="margin:14px 0 0;">进度示意:<span class="pip on"></span><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span><span class="pip"></span><span class="pip"></span> 掌握中(4/6) &nbsp;·&nbsp; <span class="pip on gold"></span><span class="pip on gold"></span><span class="pip on gold"></span><span class="pip on gold"></span><span class="pip on gold"></span><span class="pip on gold"></span> ✓掌握</p>
+</header>
+
+<h2>1. 这一周的工作模式</h2>
+<p><b>续改续上线 + 基线可回滚</b>:</p>
+<ul>
+  <li>日常小修补直接 commit 到 <code>main</code> → GitHub Pages 自动部署上线(online-first)。</li>
+  <li><code>speak2go-v1.0</code> 是回滚锚点;<code>release/v1.0</code> 是永不动的冻结分支。</li>
+  <li>本周只做小 bug 修复 / 体验微调,<b>不大改架构</b>;大改前先跟用户确认。</li>
+  <li>run 一周验稳后,cut 下一个语义版本 <code>speak2go-v1.1</code>。</li>
+</ul>
+<p><b>回滚步骤</b>(GH Pages 从 main 部署,回滚 = 把 main 退回基线):</p>
+<pre><code>git reset --hard speak2go-v1.0 &amp;&amp; git push --force-with-lease origin main</code></pre>
+
+<h2>2. 本次会话交付(4 特性 + 2 修复)</h2>
+<p>全部在单文件 <code>glossary/index.html</code>,纯前端、纯读现有数据,<b>无 DB/schema 改动</b>。</p>
+<table>
+  <tr><th>#</th><th>内容</th><th>commit</th></tr>
+  <tr><td>1</td><td><b>例句朗读防静默</b>:复习从 chat 直达 <code>?review=1</code> 零手势,浏览器 autoplay 拦掉 TTS。三层:<code>speakTerm</code> 加 <code>resume()</code> + 防 <code>cancel/speak</code> 竞态 + <code>not-allowed</code> 不静默;首张卡被拦挂一次性手势补播;🔊 <code>needs-tap</code> 脉冲提示</td><td><code>89df826</code></td></tr>
+  <tr><td>2</td><td><b>每词掌握进度小点</b>:词表卡 + 默写卡显示 6 格小点(<code>review_stage</code>/6),满格转金</td><td><code>69b11af</code> / <code>95827e7</code></td></tr>
+  <tr><td>3</td><td><b>默写错题 AB 对照</b>:<strong class="red">你的</strong>(逐字母标红)vs 正确(<code>syllabify</code> 断词、整词单色)。类名 <code>qab-*</code> 避开造句 <code>.ab-*</code></td><td><code>83aacab</code> / <code>527d656</code></td></tr>
+  <tr><td>4</td><td><b>全部单词胶囊 + 按完成度排序</b>:顶部「全部单词」胶囊(跨课按词去重取最高 stage);每分类「↕ 排序」循环 原序→完成度↓→完成度↑</td><td><code>ded3a00</code> / <code>dcb21ee</code></td></tr>
+</table>
+
+<h2>3. 关键技术点 / 坑</h2>
+<ul>
+  <li><b>Web Speech 受 autoplay 门控</b>:无手势 <code>speak()</code> 会 <code>not-allowed</code> 静默失败。Chrome 按域名累积 <b>Media Engagement Index</b>,用多了放行 → 「时好时坏 / 修了又复发」,养高的浏览器复现不出。<b>TTS 自动播不能赌成功,必须手势兜底。</b></li>
+  <li><b>类名命名空间</b>:造句已占全局 <code>.ab-*</code>(带 #666 背景),新功能要避让(本次 <code>qab-*</code>),否则标签变暗方块。</li>
+  <li>复习/测验例句 = <b>纯 TTS</b>,不是录音片段(录音是卡片 🎙 跟读)。</li>
+  <li>排序:重排 <code>.term</code> DOM 读 <code>review_stage</code>;<code>+加词</code> 留末尾;原序用首次排序前 WeakMap 快照还原;会话内有效、各分类独立。</li>
+  <li>全部单词:同词跨课只留最高完成度那张;点进去实时重建保证最新。</li>
+</ul>
+
+<h2>4. 验证状态(均线上实测)</h2>
+<ul>
+  <li>例句防静默:端到端验过「被拦 → onBlocked → 手势补播正确卡 → 提示清除」。</li>
+  <li>进度小点:14 词 pip 数 = stage(新词0/6、5分1/6、1时2/6…),未跟踪词不显示。</li>
+  <li>AB:<code>你的 re<strong style="color:#ef4444">z</strong>o</code> / <code>正确 re·po</code>,大小写保留、未作答兜底。</li>
+  <li>排序:<code>原序 0,0,2,2,2,2 → ↓ 2,2,2,2,0,0 → ↑ 0,0,2,2,2,2 → 还原=原序</code>。</li>
+  <li>全部单词:46 实例 → 42 唯一词,DOM 0 重复。</li>
+</ul>
+
+<h2>5. 已知限制 / 下一步</h2>
+<ul>
+  <li>排序第一条件只做<b>完成度</b>;循环结构已预留可扩「字母序 / 加入时间」。</li>
+  <li>排序状态不持久化(刷新回原序)—— 需要可存 localStorage。</li>
+  <li>AB「你的」逐位对比(非编辑距离),缺字母会把其后都标红。</li>
+  <li>默写卡进度小点是进卡那刻 stage;答对 +1 要等下张卡更新(可加「亮一格」动画,暂缓)。</li>
+  <li>更大闭环 backlog(造句优化、默写驱动艾宾浩斯、句型库、已记住毕业库、PWA 离线)见 chat2go <code>docs/TODO.md</code> 2026-05-28 段。</li>
+</ul>
+
+<h2>6. 速查</h2>
+<ul>
+  <li>唯一真文件:<code>glossary/index.html</code>(单文件,内联 JS+CSS)。</li>
+  <li>提交前语法自检:<code>node -e '...new Function(inlineScript)...'</code>,0 错再推。</li>
+  <li>部署:<code>git push origin main</code> → GH Pages ~45–60s 上线;轮询 <code>curl …/glossary/?cb=$RANDOM | grep &lt;新符号&gt;</code>。</li>
+</ul>
+
+<div class="foot">超级单词卡 · speak2go-20260531-eod · 生成于 2026-05-31</div>
+
+</div>
+</body>
+</html>
