@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Speak2GO.ai · Spoken English AI Lab</title>
+  <script>
+    // well2go.ai 自适应 brand + 静态 UI 中文化
+    (function() {
+      const host = location.hostname.toLowerCase();
+      const isW2g = host.includes('well2go');
+      if (!isW2g) return;
+      const BRAND_SWAP = s => s
+        .replace(/Speak2GO\.ai/g, 'Well2GO.ai')
+        .replace(/Speak2(<span)/g, 'Well2$1')
+        .replace(/Speak2GO/g, 'Well2GO')
+        .replace(/Spoken English AI Lab/g, '健康健身 AI 工作室')
+        .replace(/Spoken English/g, '健身训练')
+        .replace(/English Teacher/g, '健身教练')
+        .replace(/Teacher/g, '健身教练');
+      const TEXT_MAP = {
+        'Login': '登录',
+        'Register': '注册',
+        'Get started': '立即开始',
+        'Try the demo': '试用 Demo',
+        'beta': 'beta',
+        // 健康 / 健身 / 拉伸主题(替换原英文教学 4 卡)
+        'speaking': '健身训练',
+        'listening': '拉伸放松',
+        'writing': '营养建议',
+        'test prep': '体测评估',
+        'Ready Go…': '敬请期待…',
+        'Ready Go...': '敬请期待…',
+        // slogan 拆开节点(原 div.tagline 文本节点是两段)
+        'AI Engineers × Frontier LLMs =': 'AI 工程师 × 顶级大模型 =',
+        'Your Personal AI Assistant': '你的私人健康助理',
+        'AI Engineers × Frontier LLMs = Your Personal AI Assistant.': 'AI 工程师 × 顶级大模型 = 你的私人健康助理',
+      };
+      const apply = () => {
+        document.title = BRAND_SWAP(document.title);
+        document.querySelectorAll('.logo, .card-logo, .expert-name, .back-link, footer p, h1, h2, h3').forEach(el => {
+          if (el.innerHTML.includes('Speak2') || el.innerHTML.includes('Spoken English')) el.innerHTML = BRAND_SWAP(el.innerHTML);
+        });
+        document.querySelectorAll('[placeholder], [title], [alt]').forEach(el => {
+          for (const attr of ['placeholder', 'title', 'alt']) {
+            const v = el.getAttribute(attr);
+            if (!v) continue;
+            const t = TEXT_MAP[v.trim()];
+            if (t) el.setAttribute(attr, t);
+          }
+        });
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+        const targets = [];
+        while (walker.nextNode()) targets.push(walker.currentNode);
+        targets.forEach(node => {
+          const v = node.nodeValue;
+          if (!v || !v.trim()) return;
+          const t = TEXT_MAP[v.trim()];
+          if (t) {
+            const lead = v.match(/^\s*/)[0];
+            const trail = v.match(/\s*$/)[0];
+            node.nodeValue = lead + t + trail;
+          }
+        });
+      };
+      if (document.readyState !== 'loading') apply();
+      else document.addEventListener('DOMContentLoaded', apply);
+    })();
+  </script>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23DC2626'/%3E%3Ctext x='32' y='44' font-family='Helvetica,Arial,sans-serif' font-size='30' font-weight='800' text-anchor='middle' fill='%23fff'%3EGO%3C/text%3E%3C/svg%3E">
+  <meta name="description" content="AI Engineers × Frontier LLMs = Your Personal AI Assistant.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal:    #f97316;
+      --teal-50: #fff7ed;
+      --teal-600:#ea580c;
+      --bg:      #FAFAF8;
+      --bg2:     #DDDCD6;
+      --border:  rgba(60,58,54,0.12);
+      --border2: rgba(60,58,54,0.22);
+      --text:    #1a1a18;
+      --text2:   #5f5e5a;
+      --text3:   #888780;
+    }
+
+    html { background: var(--bg2); }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      max-width: 800px;
+      margin: 0 auto;
+      border-left: 0.5px solid var(--border);
+      border-right: 0.5px solid var(--border);
+      min-height: 100vh;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 2rem;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .logo {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.3px;
+    }
+    .logo span { color: var(--teal); }
+    .logo .logo-tld { font-size: 0.65em; font-weight: 500; letter-spacing: 0; }
+    .btn-login, .btn-logout {
+      padding: 6px 14px;
+      font-size: 12px;
+      font-family: inherit;
+      border: 0.5px solid var(--border2);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-login:hover, .btn-logout:hover { background: var(--bg2); color: var(--text); }
+    .nav-right { display: flex; align-items: center; gap: 8px; }
+    .nav-user {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px 3px 3px;
+      border-radius: 999px;
+      background: #fff;
+      border: 0.5px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      text-decoration: none;
+      color: var(--text);
+      font-size: 12px;
+      transition: background .15s, transform .12s;
+    }
+    .nav-user:hover { transform: translateY(-1px); background: var(--teal-50); }
+    .user-av {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--teal);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Main: tagline row on top, four cards below */
+    main {
+      padding: 1.75rem 2rem 4rem;
+    }
+    .tagline {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: -0.3px;
+      margin-bottom: 1.5rem;
+    }
+    .tagline em { color: var(--teal); font-style: normal; font-weight: 600; }
+
+    .expert-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 0.5px solid var(--border);
+    }
+    .expert-card {
+      background: var(--bg);
+      padding: 2rem 1.75rem;
+      cursor: pointer;
+      transition: background .2s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+    }
+    .expert-card:hover {
+      background: var(--bg2);
+    }
+    .expert-card:hover .expert-arrow { transform: translateX(4px); color: var(--teal); }
+    .expert-card.disabled {
+      cursor: default;
+      color: var(--text3);
+    }
+    .expert-card.disabled:hover { background: var(--bg); }
+    .expert-card.disabled .expert-arrow { display: none; }
+    .expert-card.disabled .expert-tag { opacity: 0.55; }
+    .expert-card.disabled .expert-name { opacity: 0.55; }
+    .expert-tag {
+      font-size: 11px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--text3);
+      font-weight: 500;
+      margin-bottom: 1.25rem;
+    }
+    .expert-name {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.4rem;
+    }
+    .expert-desc {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.65;
+      flex: 1;
+    }
+    .expert-arrow {
+      align-self: flex-end;
+      font-size: 18px;
+      color: var(--text3);
+      transition: transform .2s, color .2s;
+      margin-top: 1rem;
+    }
+    /* Follow pill: left half ♥ (follow) + right half count (open follower list); burgundy red matching the GO button */
+    .follow-pill {
+      align-self: flex-start;
+      margin-top: auto;
+      display: inline-flex;
+      align-items: stretch;
+      background: #CB3D4A;
+      color: #fff;
+      border-radius: 999px;
+      overflow: hidden;
+      font-family: inherit;
+      font-size: 11px;
+      line-height: 1;
+      box-shadow: 0 1px 2px rgba(0,0,0,.06);
+    }
+    .follow-pill button {
+      background: transparent;
+      color: inherit;
+      border: 0;
+      padding: 4px 8px;
+      font: inherit;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .follow-pill button:hover { background: rgba(255,255,255,.18); }
+    .follow-pill button:disabled { opacity: 0.6; cursor: default; }
+    .follow-pill .pf-heart { font-size: 11px; padding: 4px 7px; }
+    .follow-pill .pf-divider {
+      width: 0.5px;
+      background: rgba(255,255,255,.32);
+      align-self: stretch;
+    }
+    .follow-pill .pf-count { min-width: 20px; text-align: center; font-variant-numeric: tabular-nums; }
+    /* Followed: pill becomes subtle, whole card is clickable */
+    .follow-pill.joined { background: transparent; color: var(--text3); border: 0.5px solid var(--border2); }
+    .follow-pill.joined .pf-divider { background: var(--border); }
+    .expert-card.joined { position: relative; }
+    .expert-card.joined::after {
+      content: 'Following · Open chat →';
+      position: absolute;
+      top: 18px; right: 22px;
+      font-size: 10px; letter-spacing: .5px;
+      color: var(--teal);
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .expert-card.joined:hover::after { opacity: 1; }
+
+    /* follower list modal */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.32);
+      display: none;
+      align-items: center; justify-content: center;
+      z-index: 50;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-card {
+      background: var(--bg);
+      border-radius: 12px;
+      width: min(380px, 92vw);
+      max-height: 70vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+      border: 0.5px solid var(--border);
+    }
+    .modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 0.5px solid var(--border);
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .modal-close {
+      background: none; border: 0; cursor: pointer;
+      color: var(--text3); font-size: 18px; line-height: 1;
+      padding: 4px 8px;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { overflow-y: auto; padding: 8px 0; }
+    .follower-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 18px;
+      font-size: 13px;
+    }
+    .follower-row:hover { background: var(--bg2); }
+    .follower-av {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--teal-50);
+      color: var(--teal-600);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600;
+    }
+    .follower-name { flex: 1; color: var(--text); }
+    .follower-empty { padding: 24px 18px; color: var(--text3); text-align: center; font-size: 13px; }
+
+    footer {
+      padding: 1.5rem 2rem;
+      border-top: 0.5px solid var(--border);
+      font-size: 11px;
+      color: var(--text3);
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+
+    /* Lang toggle pill (中/EN) */
+    .lang-toggle {
+      background: var(--bg);
+      border: 0.5px solid var(--border2);
+      color: var(--text2);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      margin-right: 8px;
+    }
+    .lang-toggle:hover { background: var(--teal-50); color: var(--teal-600); border-color: var(--teal-600); }
+
+    @media (max-width: 640px) {
+      body { border: none; }
+      main { padding: 2.5rem 1.25rem 3rem; }
+      .tagline { font-size: 19px; }
+      .expert-grid { grid-template-columns: 1fr; }
+      .expert-card { padding: 1.75rem 1.5rem; min-height: 160px; }
+      .expert-name { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/Codex-speak2go/" class="logo">Speak2<span>GO</span><span class="logo-tld">.ai</span></a>
+    <div class="nav-right" id="navRight" style="visibility:hidden;">
+      <button class="lang-toggle" id="langToggle" onclick="toggleLang()" title="切换中英 / Toggle EN/中">中文</button>
+      <button class="btn-login" onclick="location.href='/Codex-speak2go/login.html'" data-i18n="login">Login</button>
+    </div>
+  </nav>
+
+  <main>
+    <div class="expert-grid">
+      <div class="expert-card" onclick="location.href='/Codex-speak2go/chat.html'" style="cursor:pointer;">
+        <div class="expert-tag" data-i18n="speaking">speaking</div>
+        <div class="expert-name">Speak2<span style="color:var(--teal)">GO</span><span class="logo-tld" style="color:var(--text3); margin-left:0.4em;">beta</span></div>
+      </div>
+
+      <div class="expert-card disabled">
+        <div class="expert-tag" data-i18n="listening">listening</div>
+        <div class="expert-name" data-i18n="ready_go">Ready Go…</div>
+      </div>
+
+      <div class="expert-card disabled">
+        <div class="expert-tag" data-i18n="writing">writing</div>
+        <div class="expert-name" data-i18n="ready_go">Ready Go…</div>
+      </div>
+
+      <div class="expert-card disabled">
+        <div class="expert-tag" data-i18n="test_prep">test prep</div>
+        <div class="expert-name" data-i18n="ready_go">Ready Go…</div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    © 2026 Speak2GO.ai
+  </footer>
+
+  <div class="modal-backdrop" id="followersModal" onclick="if(event.target===this)closeFollowers()">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span data-i18n="followers">Followers</span>
+        <button class="modal-close" onclick="closeFollowers()">×</button>
+      </div>
+      <div class="modal-body" id="followersBody"></div>
+    </div>
+  </div>
+
+  <script src="/Codex-speak2go/vendor/supabase.js"
+          onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'"></script>
+  <script src="/Codex-speak2go/assets/systems.js"></script>
+  <script>
+    const SUPABASE_URL = 'https://qjnagbzqhoansixqharb.supabase.co'
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqbmFnYnpxaG9hbnNpeHFoYXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDIxODIsImV4cCI6MjA5MzkxODE4Mn0.GpMUVTk6JvqeciXagXQiJunc8TLFMHg3_b9reIjJ2Y8'
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    // ── i18n (中/EN 切换) ─────────────────────────────────────────────
+    const I18N_ZH = {
+      login: '登录',
+      logout: '登出',
+      enter_training: '进入课堂',
+      speaking: '口语',
+      listening: '听力',
+      writing: '写作',
+      test_prep: '应试',
+      ready_go: '即将上线…',
+      followers: '关注者',
+      no_followers: '暂无关注者',
+      login_to_view: '登录查看关注者',
+      log_in: '登录',
+      loading: '加载中…',
+      load_failed: '加载失败',
+      following_open: 'Following · Open chat →',  // 英文版默认
+      following_open_zh: '已关注 · 进入聊天 →',
+      learner: '学员',
+      tagline_en: 'Spoken English AI Lab',
+      tagline_zh: '英语口语 AI 工作室',
+      title_en: 'Speak2GO.ai · Spoken English AI Lab',
+      title_zh: 'Speak2GO.ai · 英语口语 AI 工作室',
+    }
+    const I18N_EN = {
+      login: 'Login',
+      logout: 'Logout',
+      enter_training: 'Enter training',
+      speaking: 'speaking',
+      listening: 'listening',
+      writing: 'writing',
+      test_prep: 'test prep',
+      ready_go: 'Ready Go…',
+      followers: 'Followers',
+      no_followers: 'No followers yet',
+      login_to_view: 'Log in to view followers',
+      log_in: 'Log in',
+      loading: 'Loading…',
+      load_failed: 'Failed to load',
+      learner: 'Learner',
+    }
+    function getLang() {
+      return localStorage.getItem('speak2go-lang') || 'en'
+    }
+    function t(key) {
+      const lang = getLang()
+      return (lang === 'zh' ? I18N_ZH[key] : I18N_EN[key]) || I18N_EN[key] || key
+    }
+    function applyLang() {
+      const lang = getLang()
+      document.documentElement.lang = (lang === 'zh' ? 'zh-CN' : 'en')
+      document.title = (lang === 'zh' ? I18N_ZH.title_zh : I18N_ZH.title_en)
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n
+        const val = (lang === 'zh' ? I18N_ZH[key] : I18N_EN[key])
+        if (val) el.textContent = val
+      })
+      const tog = document.getElementById('langToggle')
+      if (tog) tog.textContent = (lang === 'zh' ? 'EN' : '中文')
+      // Rerender dynamic nav user / followed cards
+      if (typeof renderNav === 'function') renderNav()
+      document.querySelectorAll('.expert-card.joined').forEach(card => {
+        card.style.setProperty('--following-text', '"' + (lang === 'zh' ? I18N_ZH.following_open_zh : I18N_ZH.following_open) + '"')
+      })
+    }
+    function toggleLang() {
+      const cur = getLang()
+      localStorage.setItem('speak2go-lang', cur === 'zh' ? 'en' : 'zh')
+      applyLang()
+    }
+
+    async function resolveTrainingPath(session) {
+      if (!session?.user?.id || !window.SYSTEMS || !window.resolveSystemId) return '/Codex-speak2go/chat.html'
+      try {
+        const { data: profile } = await sb
+          .from('profiles')
+          .select('system')
+          .eq('user_id', session.user.id)
+          .maybeSingle()
+        const sysId = window.resolveSystemId(location.hostname, profile?.system)
+        const sys = window.SYSTEMS[sysId] || window.SYSTEMS.speak2go
+        return sys?.path || '/Codex-speak2go/chat.html'
+      } catch (e) {
+        console.warn('[resolveTrainingPath]', e)
+        return '/Codex-speak2go/chat.html'
+      }
+    }
+
+    async function renderNav() {
+      const right = document.getElementById('navRight')
+      const { data: { session } } = await sb.auth.getSession()
+      const lang = getLang()
+      const toggleLabel = (lang === 'zh' ? 'EN' : '中文')
+      const langBtn = `<button class="lang-toggle" id="langToggle" onclick="toggleLang()" title="切换中英 / Toggle EN/中">${toggleLabel}</button>`
+      if (session) {
+        const email = (session.user.email || '').replace(/"/g, '&quot;')
+        const initial = (session.user.email || '?').charAt(0).toUpperCase()
+        const trainingPath = await resolveTrainingPath(session)
+        right.innerHTML =
+          langBtn
+          + `<a class="nav-user" href="${trainingPath}" title="${email}">`
+          + `<span class="user-av">${initial}</span>`
+          + `<span>${t('enter_training')}</span>`
+          + `</a>`
+          + `<button class="btn-logout" onclick="handleLogout()">${t('logout')}</button>`
+      } else {
+        right.innerHTML =
+          langBtn
+          + `<button class="btn-login" onclick="location.href='/Codex-speak2go/login.html'">${t('login')}</button>`
+      }
+      right.style.visibility = 'visible'
+    }
+
+    function expertIdFromEl(el) {
+      return el.closest('.expert-card')?.dataset.expertId
+    }
+
+    async function followExpert(btnEl) {
+      const expertId = expertIdFromEl(btnEl)
+      if (!expertId) return
+      btnEl.disabled = true
+      const original = btnEl.innerHTML
+      btnEl.textContent = '...'
+      const { data: { session } } = await sb.auth.getSession()
+      if (!session) { location.href = '/Codex-speak2go/login.html'; return }
+      const { data: room, error: e1 } = await sb
+        .from('rooms').select('id').eq('expert_id', expertId).limit(1).maybeSingle()
+      if (e1 || !room) { alert("Coach's chat not found"); btnEl.disabled = false; btnEl.innerHTML = original; return }
+      const { error: e2 } = await sb.from('room_members').insert({
+        room_id: room.id, user_id: session.user.id,
+      })
+      if (e2 && e2.code !== '23505') { alert('Failed to join: ' + e2.message); btnEl.disabled = false; btnEl.innerHTML = original; return }
+      location.href = `/Codex-speak2go/chat.html?room=${room.id}`
+    }
+
+    async function loadFollowerCounts() {
+      const cards = document.querySelectorAll('.expert-card[data-expert-id]')
+      await Promise.all([...cards].map(async card => {
+        const expertId = card.dataset.expertId
+        const countEl = card.querySelector('.pf-count')
+        if (!countEl) return
+        const { data, error } = await sb.rpc('get_expert_follower_count', { p_expert_id: expertId })
+        countEl.textContent = error ? '·' : (data ?? 0)
+      }))
+    }
+
+    // Followed coaches: whole card clickable → open chat
+    async function applyFollowedCardLinks() {
+      const { data: { session } } = await sb.auth.getSession()
+      if (!session) return
+      const cards = document.querySelectorAll('.expert-card[data-expert-id]')
+      await Promise.all([...cards].map(async card => {
+        const expertId = card.dataset.expertId
+        const { data: room } = await sb
+          .from('rooms').select('id').eq('expert_id', expertId).limit(1).maybeSingle()
+        if (!room) return
+        const { data: mem } = await sb
+          .from('room_members').select('user_id')
+          .eq('room_id', room.id).eq('user_id', session.user.id).maybeSingle()
+        if (!mem) return
+        card.classList.add('joined')
+        card.dataset.roomId = room.id
+        card.addEventListener('click', e => {
+          if (e.target.closest('.follow-pill')) return
+          location.href = `/Codex-speak2go/chat.html?room=${room.id}`
+        })
+        const pill = card.querySelector('.follow-pill')
+        if (pill) pill.classList.add('joined')
+        const heart = pill?.querySelector('.pf-heart')
+        if (heart) heart.title = 'Following'
+      }))
+    }
+
+    async function openFollowers(btnEl) {
+      const expertId = expertIdFromEl(btnEl)
+      if (!expertId) return
+      const modal = document.getElementById('followersModal')
+      const body = document.getElementById('followersBody')
+      body.innerHTML = `<div class="follower-empty">${t('loading')}</div>`
+      modal.classList.add('open')
+      const { data: { session } } = await sb.auth.getSession()
+      if (!session) {
+        body.innerHTML = `<div class="follower-empty">${t('login_to_view')}<br><br><a href="/Codex-speak2go/login.html" style="color:var(--teal)">${t('log_in')}</a></div>`
+        return
+      }
+      const { data, error } = await sb.rpc('get_expert_followers', { p_expert_id: expertId })
+      if (error) { body.innerHTML = `<div class="follower-empty">${t('load_failed')}: ${error.message}</div>`; return }
+      if (!data || !data.length) { body.innerHTML = `<div class="follower-empty">${t('no_followers')}</div>`; return }
+      body.innerHTML = data.map(f => {
+        const name = (f.display_name || t('learner')).replace(/</g, '&lt;')
+        const initial = (f.display_name || '?').charAt(0).toUpperCase()
+        return `<div class="follower-row"><span class="follower-av">${initial}</span><span class="follower-name">${name}</span></div>`
+      }).join('')
+    }
+
+    function closeFollowers() {
+      document.getElementById('followersModal').classList.remove('open')
+    }
+
+    async function handleLogout() {
+      await sb.auth.signOut()
+      location.reload()
+    }
+
+    applyLang()  // i18n — must run before renderNav so dynamic text picks correct lang
+    loadFollowerCounts()
+    applyFollowedCardLinks()
+  </script>
+</body>
+</html>

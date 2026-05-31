@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Romanizer · 罗曼驭词师 Demo</title>
+<style>
+:root {
+  --bg: #0a0a14;
+  --bg2: #13132a;
+  --surface: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.08);
+  --text: #e8e8f5;
+  --dim: #7878a0;
+  --neon: #00ffe5;
+  --gold: #ffd700;
+  --pink: #ff4be8;
+  --red: #ff3b6b;
+  --good: #5cffaa;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+body {
+  font-family: 'SF Mono', 'JetBrains Mono', 'Menlo', monospace;
+  background:
+    radial-gradient(ellipse at top, rgba(0,255,229,0.06), transparent 50%),
+    radial-gradient(ellipse at bottom, rgba(255,75,232,0.04), transparent 50%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; padding: 20px 16px 40px;
+  overflow-x: hidden;
+}
+.title {
+  font-size: 13px; font-weight: 500;
+  color: var(--dim); letter-spacing: 6px;
+  margin-bottom: 4px;
+}
+.title .accent { color: var(--neon); text-shadow: 0 0 10px var(--neon); }
+.subtitle { font-size: 10px; color: var(--dim); margin-bottom: 24px; letter-spacing: 3px; }
+
+.stage {
+  width: 100%; max-width: 760px;
+  background: var(--surface);
+  border: 1px solid rgba(0,255,229,0.12);
+  border-radius: 18px;
+  padding: 28px 22px;
+  box-shadow: 0 0 80px rgba(0,255,229,0.04), inset 0 0 60px rgba(0,255,229,0.02);
+  display: flex; flex-direction: column;
+  gap: 22px;
+}
+
+/* ---- screens ---- */
+.screen { display: none; flex-direction: column; gap: 22px; }
+.screen.show { display: flex; }
+
+/* ---- intro ---- */
+.intro-stat {
+  text-align: center;
+  font-size: 10px; letter-spacing: 4px;
+  color: var(--dim);
+}
+.intro-stat .big {
+  font-family: -apple-system, sans-serif;
+  font-size: 48px; font-weight: 800;
+  color: var(--gold); margin-top: 6px;
+  text-shadow: 0 0 20px rgba(255,215,0,0.4);
+}
+.intro-stat .big.empty { color: var(--red); text-shadow: 0 0 20px rgba(255,59,107,0.4); }
+.manual-input {
+  display: flex; gap: 8px; justify-content: center;
+}
+.manual-input input {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit; font-size: 14px;
+  padding: 10px 14px; border-radius: 8px;
+  width: 220px; outline: none;
+}
+.manual-input input:focus { border-color: var(--neon); box-shadow: 0 0 12px rgba(0,255,229,0.2); }
+.word-picker {
+  display: none;
+  flex-wrap: wrap; gap: 6px;
+  justify-content: center;
+  max-height: 180px; overflow-y: auto;
+  padding: 8px; border-top: 1px dashed var(--border);
+}
+.word-picker.show { display: flex; }
+.word-picker .pick {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: inherit; font-size: 12px;
+  padding: 5px 11px; border-radius: 6px;
+  cursor: pointer;
+}
+.word-picker .pick:hover { background: rgba(0,255,229,0.1); border-color: var(--neon); color: var(--neon); }
+
+/* ---- battle ---- */
+.word-info { text-align: center; }
+.word-info .label {
+  font-size: 10px; letter-spacing: 4px; color: var(--dim);
+}
+.word-info .word {
+  font-family: -apple-system, sans-serif;
+  font-size: 32px; font-weight: 700;
+  color: var(--text); margin-top: 6px;
+}
+.word-info .zh { font-size: 13px; color: var(--dim); margin-top: 2px; }
+
+.countdown {
+  text-align: center;
+  font-size: 56px; font-weight: 900;
+  color: var(--neon);
+  text-shadow: 0 0 30px var(--neon);
+  height: 70px; line-height: 70px;
+}
+.countdown:empty { display: none; }
+
+.step-label {
+  font-size: 11px; color: var(--dim);
+  letter-spacing: 3px;
+  text-align: center;
+  margin-bottom: -10px;
+}
+.letter-row {
+  display: flex; flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0; padding: 8px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 10px;
+  user-select: none;
+}
+.letter-row .letter {
+  font-family: 'SF Mono', monospace;
+  font-size: 26px; font-weight: 700;
+  color: var(--text);
+  padding: 6px 8px;
+  min-width: 28px; text-align: center;
+}
+.letter-row .gap {
+  background: transparent; border: none;
+  color: var(--dim);
+  font-size: 18px;
+  padding: 8px 4px;
+  cursor: pointer;
+  font-family: inherit;
+  min-width: 14px;
+  transition: color 0.1s;
+}
+.letter-row .gap:hover { color: var(--neon); }
+.letter-row .gap.active {
+  color: var(--neon);
+  text-shadow: 0 0 12px var(--neon);
+  font-weight: 900;
+}
+.preview-row {
+  display: flex; flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 10px;
+  min-height: 80px;
+  padding: 14px;
+  background: rgba(0,255,229,0.03);
+  border: 1px dashed rgba(0,255,229,0.2);
+  border-radius: 10px;
+}
+.preview-row .hint-empty {
+  font-size: 11px; color: var(--dim);
+  letter-spacing: 2px;
+  display: flex; align-items: center;
+}
+.preview-row .syl-slot {
+  display: flex; flex-direction: column;
+  gap: 4px; min-width: 76px;
+}
+.preview-row .syl-card {
+  position: relative;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: 'SF Mono', monospace;
+  font-size: 22px; font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+}
+.preview-row .syl-card:hover { border-color: var(--neon); }
+.preview-row .syl-card.stress {
+  background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,107,0,0.12));
+  border-color: var(--gold);
+  color: var(--gold);
+  text-transform: uppercase;
+  font-size: 24px;
+  font-weight: 800;
+  box-shadow: 0 0 18px rgba(255,215,0,0.4);
+}
+.preview-row .romaji {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text);
+  font-family: 'SF Mono', monospace;
+  font-size: 13px;
+  text-align: center;
+  padding: 6px 4px;
+  border-radius: 6px;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+  transition: border-color 0.1s;
+}
+.preview-row .romaji:focus { border-color: var(--neon); box-shadow: 0 0 8px rgba(0,255,229,0.2); }
+.preview-row .romaji:disabled { opacity: 0.6; cursor: default; }
+.preview-row .romaji::placeholder { color: var(--dim); opacity: 0.6; }
+.compare-cards .c-syl-slot {
+  display: flex; flex-direction: column; gap: 3px;
+  align-items: stretch; min-width: 70px;
+}
+.compare-cards .c-romaji {
+  font-size: 11px; color: var(--dim);
+  font-family: 'SF Mono', monospace;
+  text-align: center;
+  padding: 3px 4px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 4px;
+}
+.compare-cards .c-romaji.empty { color: rgba(255,255,255,0.2); }
+
+/* result comparison */
+.compare-block {
+  display: flex; flex-direction: column;
+  gap: 12px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 12px;
+  padding: 14px;
+}
+.compare-row {
+  display: flex; flex-direction: column;
+  gap: 6px;
+}
+.compare-label {
+  font-size: 10px; color: var(--dim); letter-spacing: 2px;
+}
+.compare-cards {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.compare-cards .c-syl {
+  font-family: 'SF Mono', monospace;
+  font-size: 16px; font-weight: 600;
+  padding: 8px 14px; border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text);
+}
+.compare-cards .c-syl.match { border-color: var(--good); color: var(--good); background: rgba(92,255,170,0.08); }
+.compare-cards .c-syl.miss { border-color: var(--red); color: var(--red); background: rgba(255,59,107,0.08); opacity: 0.7; }
+.compare-cards .c-syl.stress {
+  background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,107,0,0.15));
+  border-color: var(--gold); color: var(--gold);
+  font-weight: 800; text-transform: uppercase;
+}
+.compare-cards .c-syl.stress.miss { background: rgba(255,59,107,0.1); border-color: var(--red); color: var(--red); }
+.score-breakdown {
+  font-size: 11px; color: var(--dim);
+  letter-spacing: 1px; line-height: 1.7;
+  padding-top: 6px; border-top: 1px dashed var(--border);
+}
+.score-breakdown .row { display: flex; justify-content: space-between; }
+.score-breakdown .row .val { font-family: -apple-system, sans-serif; font-weight: 600; }
+.score-breakdown .row .val.pos { color: var(--good); }
+.score-breakdown .row .val.neg { color: var(--red); }
+.score-breakdown .row.total { color: var(--text); font-size: 13px; padding-top: 6px; border-top: 1px solid var(--border); margin-top: 6px; }
+
+.syllable-track {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: 110px;
+  padding-bottom: 26px;
+}
+.syl {
+  position: relative;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 20px 18px;
+  font-family: 'SF Mono', monospace;
+  font-size: 24px; font-weight: 600;
+  color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+  min-width: 64px;
+  transition: transform 0.12s, background 0.12s, box-shadow 0.12s;
+}
+.syl.stress {
+  background: linear-gradient(135deg, rgba(255,215,0,0.18), rgba(255,107,0,0.12));
+  border-color: var(--gold);
+  color: var(--gold);
+  font-size: 30px;
+  font-weight: 800;
+  box-shadow: 0 0 18px rgba(255,215,0,0.25);
+  text-transform: uppercase;
+}
+.syl.active {
+  transform: scale(1.12);
+  background: rgba(0,255,229,0.18);
+  border-color: var(--neon);
+  box-shadow: 0 0 32px rgba(0,255,229,0.5);
+}
+.syl.active.stress {
+  background: linear-gradient(135deg, rgba(255,215,0,0.4), rgba(255,107,0,0.25));
+  box-shadow: 0 0 48px rgba(255,215,0,0.7);
+}
+.syl.hit-perfect { animation: hit-p 0.5s; }
+.syl.hit-good { animation: hit-g 0.5s; }
+.syl.hit-miss { animation: hit-m 0.5s; opacity: 0.35; }
+.syl .judge {
+  position: absolute; bottom: -22px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+  white-space: nowrap;
+  opacity: 0;
+  animation: judge-pop 0.9s forwards;
+  pointer-events: none;
+}
+.syl .judge.perfect { color: var(--gold); text-shadow: 0 0 8px var(--gold); }
+.syl .judge.good { color: var(--good); text-shadow: 0 0 8px var(--good); }
+.syl .judge.miss { color: var(--red); }
+@keyframes hit-p {
+  0% { background: rgba(255,215,0,0.7); box-shadow: 0 0 60px var(--gold); }
+  100% {}
+}
+@keyframes hit-g {
+  0% { background: rgba(92,255,170,0.5); }
+  100% {}
+}
+@keyframes hit-m {
+  0% { background: rgba(255,59,107,0.4); }
+  100% {}
+}
+@keyframes judge-pop {
+  0% { opacity: 0; transform: translateX(-50%) translateY(0) scale(0.8); }
+  20% { opacity: 1; transform: translateX(-50%) translateY(-2px) scale(1.1); }
+  60% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-12px) scale(1); }
+}
+
+.progress-bar {
+  height: 3px; background: rgba(255,255,255,0.08);
+  border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--neon), var(--pink));
+  width: 0%; transition: width 0.05s linear;
+  box-shadow: 0 0 8px var(--neon);
+}
+
+.scoreboard {
+  display: flex; justify-content: space-around;
+  font-size: 10px; color: var(--dim); letter-spacing: 3px;
+  text-align: center;
+}
+.scoreboard .col { flex: 1; }
+.scoreboard .val {
+  display: block;
+  font-family: -apple-system, sans-serif;
+  font-size: 28px; font-weight: 800;
+  color: var(--text);
+  margin-top: 4px;
+  letter-spacing: 0;
+}
+.scoreboard .val.gold { color: var(--gold); text-shadow: 0 0 12px rgba(255,215,0,0.4); }
+.scoreboard .val.neon { color: var(--neon); text-shadow: 0 0 12px rgba(0,255,229,0.4); }
+.scoreboard .val.pink { color: var(--pink); }
+
+.tap-zone {
+  width: 100%;
+  padding: 22px 16px;
+  background: rgba(0,255,229,0.04);
+  border: 2px dashed rgba(0,255,229,0.35);
+  border-radius: 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--neon);
+  letter-spacing: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.06s, background 0.1s;
+  font-weight: 600;
+}
+.tap-zone:active { transform: scale(0.97); background: rgba(0,255,229,0.18); }
+.tap-zone .hint {
+  display: block;
+  font-size: 10px; color: var(--dim); margin-top: 6px;
+  letter-spacing: 2px; font-weight: 400;
+}
+
+/* ---- result ---- */
+.rank-display { text-align: center; }
+.rank-display .rank {
+  font-family: -apple-system, sans-serif;
+  font-size: 96px; font-weight: 900;
+  line-height: 1; letter-spacing: -4px;
+}
+.rank-display .rank.s { color: var(--gold); text-shadow: 0 0 30px var(--gold); }
+.rank-display .rank.a { color: var(--neon); text-shadow: 0 0 28px var(--neon); }
+.rank-display .rank.b { color: var(--good); text-shadow: 0 0 20px var(--good); }
+.rank-display .rank.c { color: var(--pink); }
+.rank-display .rank.d { color: var(--red); }
+.rank-display .summary {
+  font-size: 11px; color: var(--dim); letter-spacing: 3px;
+  margin-top: 14px;
+}
+
+/* ---- buttons ---- */
+.controls {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  justify-content: center;
+}
+button.action {
+  background: rgba(0,255,229,0.08);
+  color: var(--neon);
+  border: 1px solid rgba(0,255,229,0.5);
+  border-radius: 8px;
+  padding: 11px 22px;
+  font-family: inherit;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+button.action:hover { background: rgba(0,255,229,0.2); box-shadow: 0 0 16px rgba(0,255,229,0.4); }
+button.action.primary {
+  background: var(--neon); color: var(--bg);
+  border-color: var(--neon);
+  box-shadow: 0 0 22px rgba(0,255,229,0.5);
+}
+button.action.primary:hover { background: #66fff0; }
+button.action.dim { color: var(--dim); border-color: var(--border); background: transparent; }
+
+footer {
+  font-size: 10px; color: var(--dim);
+  margin-top: 24px; letter-spacing: 2px;
+  text-align: center; max-width: 600px;
+}
+footer a { color: var(--neon); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="title"><span class="accent">⬢</span> ROMANIZER <span class="accent">⬢</span></div>
+<div class="subtitle">罗曼驭词师 · DEMO v0</div>
+
+<div class="stage">
+
+  <!-- ============ INTRO ============ -->
+  <div class="screen show" id="introScreen">
+    <div class="intro-stat">
+      收藏中的词
+      <div class="big" id="favCount">0</div>
+    </div>
+    <div class="controls">
+      <button class="action primary" id="startBtn">▶ 随机抽词</button>
+      <button class="action" id="pickBtn">📋 选词</button>
+    </div>
+    <div class="manual-input">
+      <input type="text" id="manualInput" placeholder="或输入任意词…" autocomplete="off" autocapitalize="none" autocorrect="off">
+      <button class="action" id="manualBtn">挑战</button>
+    </div>
+    <div class="word-picker" id="wordPicker"></div>
+    <div class="controls">
+      <a href="./" style="color:var(--dim);font-size:11px;letter-spacing:2px;text-decoration:none;">← 回词表</a>
+    </div>
+  </div>
+
+  <!-- ============ BATTLE ============ -->
+  <div class="screen" id="battleScreen">
+    <div class="word-info">
+      <div class="label">TARGET</div>
+      <div class="word" id="battleWord">—</div>
+      <div class="zh" id="battleZh"></div>
+    </div>
+
+    <div class="step-label">① 点字母之间的 · 切分音节</div>
+    <div class="letter-row" id="letterRow"></div>
+
+    <div class="step-label">② 点音节卡标记重音(金色) · ③ 在下面方框写罗马音</div>
+    <div class="preview-row" id="previewRow">
+      <div class="hint-empty">先切分上面的字母,这里会自动显示音节</div>
+    </div>
+
+    <div class="controls">
+      <button class="action dim" id="hintBtn">🔊 听一次 -30</button>
+      <button class="action dim" id="resetBtn">↺ 重切</button>
+      <button class="action primary" id="submitBtn">▶ 提交答案</button>
+    </div>
+    <div class="controls">
+      <button class="action dim" id="quitBtn">× 放弃</button>
+    </div>
+  </div>
+
+  <!-- ============ RESULT ============ -->
+  <div class="screen" id="resultScreen">
+    <div class="word-info">
+      <div class="label">CLEARED</div>
+      <div class="word" id="resultWord">—</div>
+      <div class="zh" id="resultZh"></div>
+    </div>
+    <div class="rank-display">
+      <div class="rank" id="resultRank">—</div>
+      <div class="summary" id="resultSummary"></div>
+    </div>
+    <div class="compare-block">
+      <div class="compare-row">
+        <div class="compare-label">你的拆分</div>
+        <div class="compare-cards" id="yourCards"></div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-label">参考答案 <span id="answerSource" style="color:var(--neon);opacity:0.7;font-weight:600;"></span></div>
+        <div class="compare-cards" id="answerCards"></div>
+      </div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+    </div>
+    <div class="controls">
+      <button class="action" id="replayBtn">🔊 听标准读音</button>
+      <button class="action primary" id="nextBtn">▶ 再来一词</button>
+      <button class="action dim" id="backBtn">← 选词</button>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  启发式 G2P · 音节拆分 + 重音定位准确率 ~70% · 教学 demo · 用 Web Speech API 播报
+  <br>
+  <a href="./">← 回词表挑收藏</a>
+</footer>
+
+<script src="romanizer-dict.js"></script>
+<script>
+/* ============================================================
+   HEURISTIC G2P — syllable split + stress
+   ============================================================ */
+const VOWELS = 'aeiouy';
+const DIGRAPHS = ['ch','sh','th','ph','wh','ng','ck','qu','gh'];
+
+function syllabify(word) {
+  const w = word.toLowerCase().replace(/[^a-z]/g, '');
+  if (!w) return [];
+  // group consecutive same-type chars (V vs C)
+  const groups = [];
+  let cur = '', state = null;
+  for (const ch of w) {
+    const t = VOWELS.includes(ch) ? 'V' : 'C';
+    if (state && t === state) cur += ch;
+    else { if (cur) groups.push({t: state, s: cur}); cur = ch; state = t; }
+  }
+  if (cur) groups.push({t: state, s: cur});
+
+  const syls = [];
+  let buf = '';
+  for (let i = 0; i < groups.length; i++) {
+    const g = groups[i];
+    if (g.t === 'V') {
+      // merge vowel into current syllable (buf = onset consonants)
+      buf += g.s;
+    } else {
+      const next = groups[i+1];
+      if (!next) {
+        // word-final coda — sticks to last syllable
+        buf += g.s;
+      } else if (!buf) {
+        // word-initial cluster — all goes with first vowel
+        buf = g.s;
+      } else if (g.s.length === 1) {
+        // VCV → V|CV
+        syls.push(buf);
+        buf = g.s;
+      } else {
+        // multi-consonant cluster — VC|CV (digraph aware)
+        const ending = g.s.slice(-2);
+        if (DIGRAPHS.includes(ending) && g.s.length === 2) {
+          // digraph stays as onset of next syllable
+          syls.push(buf);
+          buf = g.s;
+        } else if (g.s.length >= 3 && DIGRAPHS.includes(g.s.slice(-2))) {
+          // VC|CCV(digraph)
+          buf += g.s.slice(0, -2);
+          syls.push(buf);
+          buf = g.s.slice(-2);
+        } else {
+          buf += g.s[0];
+          syls.push(buf);
+          buf = g.s.slice(1);
+        }
+      }
+    }
+  }
+  if (buf) syls.push(buf);
+
+  // post: silent-e merger (e.g., "make" → "make" not "ma|ke")
+  if (syls.length >= 2) {
+    const last = syls[syls.length-1];
+    if (/^[bcdfghjklmnpqrstvwxz]e$/.test(last) || last === 'e') {
+      syls[syls.length-2] += last;
+      syls.pop();
+    }
+  }
+  // post: if last syllable has no vowel, merge backwards
+  while (syls.length >= 2 && !/[aeiouy]/.test(syls[syls.length-1])) {
+    syls[syls.length-2] += syls[syls.length-1];
+    syls.pop();
+  }
+  return syls.length ? syls : [w];
+}
+
+const UNSTRESSED_PREFIXES = ['de','re','dis','pre','mis','ex','en','com','con','ob','be','sub'];
+
+function pickStress(syls, full) {
+  const n = syls.length;
+  if (n <= 1) return 0;
+  const lower = full.toLowerCase();
+  // antepenultimate-stress suffixes (-ity, -ical)
+  if (n >= 3 && /(ity|ical|ically|opathy|ography|ology|onomy|ocracy)$/.test(lower)) return n - 3;
+  // -ate/-ize/-ify (3+) → antepenult
+  if (n >= 3 && /(ate|ize|ise|ify)$/.test(lower)) return n - 3;
+  // penultimate-stress suffixes (-tion, -sion, -ic, -ial, -ious, -eous)
+  if (/(tion|sion|cian|cial|tial|cious|tious|gious|ious|eous|ic|ial|ient|ience|graphy)$/.test(lower)) return Math.max(0, n - 2);
+  // self-stressing suffixes
+  if (/(ee|eer|ese|esque|ique|aire|oon|een)$/.test(lower)) return n - 1;
+  // Unstressed-prefix rule: 2-3 syll words starting with de/re/dis/etc → stress on idx 1
+  // (debounce, decide, return, observe, compete, component, prevent, expand…)
+  if (n >= 2 && n <= 3 && UNSTRESSED_PREFIXES.includes(syls[0].toLowerCase())) return 1;
+  // 2-syllable: default first (most nouns/adj)
+  if (n === 2) return 0;
+  // 3-syllable: default first
+  if (n === 3) return 0;
+  // 4+: default second
+  return 1;
+}
+
+/* IPA → stress index: count vowel clusters before primary-stress mark ˈ */
+function parseStressFromIPA(ipa, maxIdx) {
+  if (!ipa) return null;
+  const inner = String(ipa).replace(/[\/\[\]]/g, '').trim();
+  if (!inner.includes('ˈ')) return null;
+  const before = inner.split('ˈ')[0];
+  // IPA vowels (rough set)
+  const clusters = before.match(/[aeiouɪɛæɑɒɔʊʌəɜɚyøœɨɯ]+/gi);
+  const idx = clusters ? clusters.length : 0;
+  return Math.min(idx, maxIdx);
+}
+
+/* ============================================================
+   TTS — Web Speech API
+   ============================================================ */
+let _voice = null;
+function pickVoice() {
+  if (typeof speechSynthesis === 'undefined') return;
+  const voices = speechSynthesis.getVoices();
+  _voice = voices.find(v => /en[-_]US/i.test(v.lang) && /female|samantha|google/i.test(v.name)) ||
+           voices.find(v => /en[-_]US/i.test(v.lang)) ||
+           voices.find(v => /^en/i.test(v.lang)) || null;
+}
+if (typeof speechSynthesis !== 'undefined') {
+  speechSynthesis.addEventListener('voiceschanged', pickVoice);
+  pickVoice();
+}
+function speak(text, rate = 0.85) {
+  return new Promise(resolve => {
+    if (typeof speechSynthesis === 'undefined') { setTimeout(resolve, 800); return; }
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    u.rate = rate;
+    if (_voice) u.voice = _voice;
+    u.onend = u.onerror = () => resolve();
+    speechSynthesis.speak(u);
+    setTimeout(resolve, text.length * 100 + 1500); // safety timeout
+  });
+}
+
+/* ============================================================
+   SAMPLE WORDS — fallback when no favorites
+   ============================================================ */
+const SAMPLE_WORDS = [
+  ['Component', '组件'],
+  ['Specificity', '优先级'],
+  ['Hydration', '注水/激活'],
+  ['Asynchronous', '异步的'],
+  ['Polyfill', '兼容垫片'],
+  ['Idempotent', '幂等'],
+  ['Authentication', '认证'],
+  ['Serialization', '序列化'],
+  ['Encapsulation', '封装'],
+  ['Throttle', '节流'],
+  ['Debounce', '防抖'],
+  ['Closure', '闭包'],
+  ['Singleton', '单例'],
+  ['Observable', '可观察对象'],
+];
+
+/* ============================================================
+   FAVORITES — read from glossary localStorage
+   ============================================================ */
+function getFavoritePool() {
+  try {
+    const ids = JSON.parse(localStorage.getItem('glossary-favorites') || '[]');
+    if (!ids.length) return [];
+    const edits = JSON.parse(localStorage.getItem('glossary-edits') || '{}');
+    return ids.map(id => {
+      const parts = id.split('::');
+      const en = parts[1] || parts[0];
+      const edit = edits[id] || {};
+      return { en, zh: edit.zh || '', cat: parts[0] || '', phonetic: edit.phonetic || '' };
+    });
+  } catch (e) { return []; }
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  current: null,
+  letters: [],
+  answerSyls: [],
+  answerStressIdx: 0,
+  answerBounds: [],     // boundary positions in answer (after letter index)
+  playerBounds: new Set(), // boundary positions player has clicked
+  playerStressIdx: -1,  // -1 = not set
+  playerRomaji: [],     // string per syllable index
+  hintsUsed: 0,
+  submitted: false
+};
+
+/* ============================================================
+   ELEMENTS
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const introScreen = $('introScreen');
+const battleScreen = $('battleScreen');
+const resultScreen = $('resultScreen');
+
+function showScreen(name) {
+  introScreen.classList.toggle('show', name === 'intro');
+  battleScreen.classList.toggle('show', name === 'battle');
+  resultScreen.classList.toggle('show', name === 'result');
+}
+
+/* ============================================================
+   INTRO
+   ============================================================ */
+function refreshIntro() {
+  const pool = getFavoritePool();
+  const big = $('favCount');
+  big.textContent = pool.length;
+  big.classList.toggle('empty', pool.length === 0);
+  $('pickBtn').textContent = pool.length ? '📋 选词 (' + pool.length + ')' : '📋 示例词';
+}
+
+function buildPicker() {
+  const wp = $('wordPicker');
+  if (wp.classList.contains('show')) { wp.classList.remove('show'); return; }
+  let pool = getFavoritePool();
+  if (!pool.length) pool = SAMPLE_WORDS.map(([en, zh]) => ({ en, zh }));
+  wp.innerHTML = '';
+  pool.forEach(w => {
+    const p = document.createElement('button');
+    p.className = 'pick';
+    p.textContent = w.en;
+    p.onclick = () => startBattle(w);
+    wp.appendChild(p);
+  });
+  wp.classList.add('show');
+}
+
+function randomBattle() {
+  let pool = getFavoritePool();
+  if (!pool.length) pool = SAMPLE_WORDS.map(([en, zh]) => ({ en, zh }));
+  const w = pool[Math.floor(Math.random() * pool.length)];
+  startBattle(w);
+}
+
+function manualBattle() {
+  const input = $('manualInput');
+  const en = input.value.trim();
+  if (!en) return;
+  startBattle({ en, zh: '' });
+}
+
+/* ============================================================
+   BATTLE — player splits + marks stress, then compares
+   ============================================================ */
+function syllablesToBounds(syls) {
+  // boundary position k = split after letter index k (0-indexed)
+  const bounds = [];
+  let acc = 0;
+  for (let i = 0; i < syls.length - 1; i++) {
+    acc += syls[i].length;
+    bounds.push(acc - 1);
+  }
+  return bounds;
+}
+
+function getPlayerSyllables() {
+  const word = state.current.en;
+  const letters = word.split('');
+  const sorted = [...state.playerBounds].sort((a, b) => a - b);
+  const syls = [];
+  let cur = '';
+  for (let i = 0; i < letters.length; i++) {
+    cur += letters[i];
+    if (sorted.includes(i) && i < letters.length - 1) {
+      syls.push(cur);
+      cur = '';
+    }
+  }
+  if (cur) syls.push(cur);
+  return syls;
+}
+
+function dictKey(en) {
+  return String(en).toLowerCase().replace(/[^a-z]/g, '');
+}
+
+function lookupDict(en) {
+  const dict = (typeof window !== 'undefined' && window.ROMAJI_DICT) || {};
+  return dict[dictKey(en)] || null;
+}
+
+function startBattle(word) {
+  state.current = word;
+  state.letters = word.en.split('');
+  // Source priority: 字典 > IPA > 启发式
+  const dictEntry = lookupDict(word.en);
+  if (dictEntry) {
+    state.answerSyls = dictEntry.syls.slice();
+    state.answerRomaji = dictEntry.romaji.slice();
+    state.answerStressIdx = dictEntry.romaji.findIndex(r => r === r.toUpperCase() && /[A-Z]/.test(r));
+    if (state.answerStressIdx < 0) state.answerStressIdx = 0;
+    state.answerSource = 'dict';
+  } else {
+    state.answerSyls = syllabify(word.en);
+    const ipaIdx = parseStressFromIPA(word.phonetic, state.answerSyls.length - 1);
+    state.answerStressIdx = (ipaIdx !== null) ? ipaIdx : pickStress(state.answerSyls, word.en);
+    state.answerRomaji = state.answerSyls.map((s, i) => i === state.answerStressIdx ? s.toUpperCase() : s.toLowerCase());
+    state.answerSource = (ipaIdx !== null) ? 'ipa' : 'heuristic';
+  }
+  state.answerBounds = syllablesToBounds(state.answerSyls);
+  state.playerBounds = new Set();
+  state.playerStressIdx = -1;
+  state.playerRomaji = [];
+  state.hintsUsed = 0;
+  state.submitted = false;
+
+  $('battleWord').textContent = word.en;
+  $('battleZh').textContent = word.zh || '';
+  $('hintBtn').textContent = '🔊 听一次 -30';
+
+  renderLetterRow();
+  renderPreview();
+  showScreen('battle');
+}
+
+function renderLetterRow() {
+  const row = $('letterRow');
+  row.innerHTML = '';
+  state.letters.forEach((ch, i) => {
+    const letterEl = document.createElement('span');
+    letterEl.className = 'letter';
+    letterEl.textContent = ch;
+    row.appendChild(letterEl);
+    if (i < state.letters.length - 1) {
+      const gap = document.createElement('button');
+      const isActive = state.playerBounds.has(i);
+      gap.className = 'gap' + (isActive ? ' active' : '');
+      gap.textContent = isActive ? '|' : '·';
+      gap.dataset.i = i;
+      gap.disabled = state.submitted;
+      gap.onclick = () => toggleSplit(i);
+      row.appendChild(gap);
+    }
+  });
+}
+
+function toggleSplit(i) {
+  if (state.submitted) return;
+  if (state.playerBounds.has(i)) state.playerBounds.delete(i);
+  else state.playerBounds.add(i);
+  // Reset stress (indices change when split changes)
+  state.playerStressIdx = -1;
+  renderLetterRow();
+  renderPreview();
+}
+
+function renderPreview() {
+  const preview = $('previewRow');
+  preview.innerHTML = '';
+  const syls = getPlayerSyllables();
+  if (syls.length === 1 && state.playerBounds.size === 0) {
+    const hint = document.createElement('div');
+    hint.className = 'hint-empty';
+    hint.textContent = '先切分上面的字母 · ' + state.letters.length + ' 个字母,你猜几个音节?';
+    preview.appendChild(hint);
+    return;
+  }
+  syls.forEach((s, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'syl-slot';
+    const card = document.createElement('button');
+    card.className = 'syl-card' + (i === state.playerStressIdx ? ' stress' : '');
+    card.textContent = s;
+    card.dataset.i = i;
+    card.disabled = state.submitted;
+    card.onclick = () => toggleStress(i);
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'romaji';
+    input.placeholder = '罗马音';
+    input.value = state.playerRomaji[i] || '';
+    input.disabled = state.submitted;
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    input.oninput = e => { state.playerRomaji[i] = e.target.value; };
+    slot.appendChild(card);
+    slot.appendChild(input);
+    preview.appendChild(slot);
+  });
+}
+
+function toggleStress(i) {
+  if (state.submitted) return;
+  state.playerStressIdx = (state.playerStressIdx === i) ? -1 : i;
+  renderPreview();
+}
+
+function submitAnswer() {
+  if (state.submitted) return;
+  state.submitted = true;
+  const playerSyls = getPlayerSyllables();
+  const playerBounds = syllablesToBounds(playerSyls);
+  const answerBoundsSet = new Set(state.answerBounds);
+  const playerBoundsSet = new Set(playerBounds);
+
+  const correctBounds = [...playerBoundsSet].filter(b => answerBoundsSet.has(b));
+  const extraBounds = [...playerBoundsSet].filter(b => !answerBoundsSet.has(b));
+  const missedBounds = [...answerBoundsSet].filter(b => !playerBoundsSet.has(b));
+
+  // scoring
+  const boundPoints = correctBounds.length * 30;
+  const extraPenalty = extraBounds.length * 15;
+  const missedPenalty = missedBounds.length * 10;
+  const stressOK = (playerSyls.length === state.answerSyls.length) &&
+                   (state.playerStressIdx === state.answerStressIdx);
+  const stressPoints = stressOK ? 60 : 0;
+  const perfect = (correctBounds.length === state.answerBounds.length &&
+                   extraBounds.length === 0 && stressOK);
+  const perfectBonus = perfect ? 40 : 0;
+  const romajiFilled = state.playerRomaji.slice(0, playerSyls.length).filter(r => r && r.trim()).length;
+  const romajiPoints = romajiFilled * 10;
+  const hintPenalty = state.hintsUsed * 30;
+  const total = Math.max(0, boundPoints - extraPenalty - missedPenalty + stressPoints + perfectBonus + romajiPoints - hintPenalty);
+
+  // rank by ratio
+  const maxPossible = state.answerBounds.length * 30 + 60 + 40;
+  const ratio = maxPossible > 0 ? total / maxPossible : 0;
+  let rank = 'D';
+  if (ratio >= 0.95) rank = 'S';
+  else if (ratio >= 0.80) rank = 'A';
+  else if (ratio >= 0.60) rank = 'B';
+  else if (ratio >= 0.40) rank = 'C';
+
+  renderResult({
+    rank, total, playerSyls, playerBounds, playerStress: state.playerStressIdx,
+    answerSyls: state.answerSyls, answerStress: state.answerStressIdx,
+    correctBounds, extraBounds, missedBounds, stressOK, perfect,
+    boundPoints, extraPenalty, missedPenalty, stressPoints, perfectBonus, romajiPoints, romajiFilled, hintPenalty
+  });
+}
+
+function renderResult(r) {
+  $('resultWord').textContent = state.current.en;
+  $('resultZh').textContent = state.current.zh || '';
+  const rk = $('resultRank');
+  rk.textContent = r.rank;
+  rk.className = 'rank ' + r.rank.toLowerCase();
+  $('resultSummary').textContent = 'SCORE ' + r.total;
+
+  // your cards with romaji label
+  const yc = $('yourCards');
+  yc.innerHTML = '';
+  r.playerSyls.forEach((s, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'c-syl-slot';
+    const c = document.createElement('div');
+    c.className = 'c-syl';
+    const isExactMatch = state.answerSyls[i] && s.toLowerCase() === state.answerSyls[i].toLowerCase();
+    if (isExactMatch) c.classList.add('match');
+    if (i === r.playerStress) c.classList.add('stress');
+    if (i === r.playerStress && !r.stressOK) c.classList.add('miss');
+    c.textContent = s;
+    slot.appendChild(c);
+    const rj = document.createElement('div');
+    rj.className = 'c-romaji';
+    const txt = (state.playerRomaji[i] || '').trim();
+    if (txt) rj.textContent = txt;
+    else { rj.textContent = '—'; rj.classList.add('empty'); }
+    slot.appendChild(rj);
+    yc.appendChild(slot);
+  });
+
+  // answer cards (orthographic syllable + romaji from dict/heuristic)
+  const ac = $('answerCards');
+  ac.innerHTML = '';
+  state.answerSyls.forEach((s, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'c-syl-slot';
+    const c = document.createElement('div');
+    c.className = 'c-syl';
+    if (i === state.answerStressIdx) c.classList.add('stress');
+    c.textContent = s;
+    slot.appendChild(c);
+    const rj = document.createElement('div');
+    rj.className = 'c-romaji';
+    rj.textContent = state.answerRomaji[i] || s.toLowerCase();
+    if (state.answerSource !== 'dict') rj.classList.add('empty');
+    slot.appendChild(rj);
+    ac.appendChild(slot);
+  });
+  $('answerSource').textContent =
+    state.answerSource === 'dict' ? '· 标准答案(字典)' :
+    state.answerSource === 'ipa'  ? '· 依据你填的 IPA' :
+                                    '· 启发式估算,可能错(去词表填 IPA 修正)';
+
+  // breakdown
+  const sb = $('scoreBreakdown');
+  const rows = [
+    ['切分正确 (' + r.correctBounds.length + '/' + state.answerBounds.length + ')', '+' + r.boundPoints, 'pos'],
+  ];
+  if (r.extraPenalty > 0) rows.push(['多余切分 ×' + r.extraBounds.length, '-' + r.extraPenalty, 'neg']);
+  if (r.missedPenalty > 0) rows.push(['漏切 ×' + r.missedBounds.length, '-' + r.missedPenalty, 'neg']);
+  rows.push(['重音 ' + (r.stressOK ? '✓' : '✗'), (r.stressOK ? '+' : '') + r.stressPoints, r.stressOK ? 'pos' : '']);
+  if (r.romajiPoints) rows.push(['罗马音填写 ×' + r.romajiFilled, '+' + r.romajiPoints, 'pos']);
+  if (r.perfectBonus) rows.push(['完美 bonus', '+' + r.perfectBonus, 'pos']);
+  if (r.hintPenalty) rows.push(['听读音 ×' + state.hintsUsed, '-' + r.hintPenalty, 'neg']);
+  sb.innerHTML = rows.map(([k, v, cls]) =>
+    '<div class="row"><span>' + k + '</span><span class="val ' + cls + '">' + v + '</span></div>'
+  ).join('') + '<div class="row total"><span>TOTAL</span><span class="val">' + r.total + '</span></div>';
+
+  setTimeout(() => showScreen('result'), 350);
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+$('startBtn').addEventListener('click', randomBattle);
+$('pickBtn').addEventListener('click', buildPicker);
+$('manualBtn').addEventListener('click', manualBattle);
+$('manualInput').addEventListener('keydown', e => { if (e.key === 'Enter') manualBattle(); });
+$('replayBtn').addEventListener('click', () => speak(state.current.en, 0.7));
+$('hintBtn').addEventListener('click', () => {
+  if (!state.current || state.submitted) return;
+  state.hintsUsed = (state.hintsUsed || 0) + 1;
+  $('hintBtn').textContent = '🔊 听一次 -30 (×' + state.hintsUsed + ')';
+  speak(state.current.en, 0.75);
+});
+$('resetBtn').addEventListener('click', () => {
+  if (state.submitted) return;
+  state.playerBounds = new Set();
+  state.playerStressIdx = -1;
+  renderLetterRow();
+  renderPreview();
+});
+$('submitBtn').addEventListener('click', submitAnswer);
+$('quitBtn').addEventListener('click', () => {
+  if (!confirm('放弃这一词?')) return;
+  refreshIntro();
+  showScreen('intro');
+  if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+});
+$('nextBtn').addEventListener('click', randomBattle);
+$('backBtn').addEventListener('click', () => {
+  state.ended = true;
+  if (state.rafId) cancelAnimationFrame(state.rafId);
+  if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+  refreshIntro();
+  showScreen('intro');
+});
+
+document.addEventListener('keydown', e => {
+  // 不抢输入框 (含 IME 候选选择) / 不抢输入法 composition 中的回车
+  const tag = e.target && e.target.tagName;
+  const inInput = tag === 'INPUT' || tag === 'TEXTAREA';
+  if (e.isComposing || e.keyCode === 229) return;
+  if (e.code === 'Enter' && battleScreen.classList.contains('show') && !state.submitted) {
+    if (inInput) return;
+    e.preventDefault();
+    submitAnswer();
+  } else if (e.code === 'Escape' && battleScreen.classList.contains('show')) {
+    if (inInput) { e.target.blur(); return; }
+    if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+    refreshIntro();
+    showScreen('intro');
+  }
+});
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+refreshIntro();
+</script>
+
+</body>
+</html>
