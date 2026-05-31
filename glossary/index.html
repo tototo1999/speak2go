@@ -971,6 +971,11 @@ footer {
 .quiz-q-meta { text-align: center; color: var(--text-dim); font-size: 15px; margin-bottom: 24px; }
 .quiz-q-meta .qm-ph { font-family: ui-monospace, monospace; }
 .quiz-q-meta .qm-pos { margin-left: 8px; opacity: .8; }
+/* 默写卡上的掌握进度(跟单词卡同款小点 + 文字),居中、稍大一点 */
+.quiz-q-progress { display: flex; align-items: center; justify-content: center; gap: 9px; margin: -8px 0 18px; }
+.quiz-q-progress .stage-pips { margin: 0; gap: 4px; }
+.quiz-q-progress .stage-pips .pip { width: 9px; height: 9px; }
+.quiz-q-progress .qp-label { font-size: 13px; color: var(--text-dim); }
 .quiz-input {
   width: 100%; box-sizing: border-box; font-size: 22px; text-align: center;
   padding: 14px; border: 2px solid var(--border); border-radius: 12px;
@@ -2616,12 +2621,26 @@ function quizShowNext(fbHtml) {
 function renderQuizDictation() {
   const w = quizState.words[quizState.idx];
   const pos = quizPosOf(w.hint);
+  // 当前词的掌握进度(跟单词卡同源:从 state.userTerms 取 review_stage),刷的时候也看得到完成度
+  const qStage = (function () {
+    const u = (state.userTerms[w.catId] || []).find(t => (t.en || '').toLowerCase() === (w.en || '').toLowerCase());
+    return u && typeof u.review_stage === 'number' ? u.review_stage : -1;
+  })();
+  const qProgress = qStage >= 0
+    ? '<div class="quiz-q-progress">' +
+        '<span class="stage-pips' + (qStage >= 6 ? ' is-done' : '') + '" aria-hidden="true">' +
+          Array.from({ length: 6 }, (_, i) => '<i class="pip' + (i < qStage ? ' on' : '') + '"></i>').join('') +
+        '</span>' +
+        '<span class="qp-label">' + (qStage >= 6 ? '✓ 已掌握' : qStage === 0 ? '新词' : qStage + '/6 掌握中') + '</span>' +
+      '</div>'
+    : '';
   quizBody.innerHTML =
     '<div class="quiz-q-zh">' + escapeHtml(w.zh) + '</div>' +
     '<div class="quiz-q-meta">' +
       (w.phonetic ? '<span class="qm-ph">' + escapeHtml(w.phonetic) + '</span>' : '') +
       (pos ? '<span class="qm-pos">' + escapeHtml(pos) + '</span>' : '') +
     '</div>' +
+    qProgress +
     '<div style="text-align:center;margin-bottom:18px;"><button type="button" class="quiz-play-ex" data-action="quiz-play-ex" title="听例句">🔊 听例句</button></div>' +
     '<input type="text" class="quiz-input" id="quizDictInput" placeholder="拼出英文…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">' +
     '<div class="quiz-slots" id="quizDictSlots"></div>' +
