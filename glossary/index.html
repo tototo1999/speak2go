@@ -3418,7 +3418,7 @@ main.addEventListener('click', e => {
   if (action === 'cat-new') {
     const name = (prompt('新建表格 — 起个名字:', '') || '').trim();
     if (!name) return;
-    let base = 'cat-' + name.toLowerCase().replace(/[^a-z0-9一-鿿]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+    let base = 'cat-' + name.toLowerCase().replace(/[^a-z0-9一-鿿가-힣]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
     if (!base || base === 'cat-') base = 'cat';
     let nid = base, k = 2;
     while (DATA.find(c => c.id === nid)) { nid = base + '-' + k++; }
@@ -3859,7 +3859,7 @@ rebuildFavorites();
   // 目标 cat(只算 id,先不创建 —— 用户确认勾选后才建)
   let catId;
   if (lessonLabel) {
-    catId = 'lesson-' + lessonLabel.toLowerCase().replace(/[^a-z0-9一-鿿]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+    catId = 'lesson-' + lessonLabel.toLowerCase().replace(/[^a-z0-9一-鿿가-힣]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
   } else { catId = 'nyc-global-center'; }
 
   // 候选 = 解析出的词里"还没在该分类"的新词(去重),让用户勾选
