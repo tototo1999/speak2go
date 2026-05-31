@@ -1766,26 +1766,35 @@ function _shadowNorm(s) {
 // holder:每个 renderShadow 实例传入自己的 {audio} 容器,片段播放互不干扰
 function _shadowPlayClip(d, holder) {
   holder = holder || {};
-  // 没课堂录音 → TTS 朗读例句当原声
-  if (!d.audioUrl || d.audioStart == null) {
-    if (typeof speechSynthesis !== 'undefined') {
-      try { speechSynthesis.cancel(); } catch (e) {}
-      const u = new SpeechSynthesisUtterance(_shadowSentence(d));
-      u.lang = 'en-US'; u.rate = 0.85;
-      const v = (typeof pickEnVoice === 'function') ? pickEnVoice() : null; if (v) u.voice = v;
-      try { speechSynthesis.speak(u); } catch (e) {}
-    }
-    return;
-  }
+  // TTS 朗读例句当原声(无课堂录音、或录音 URL 失效/加载播放失败时兜底,别让「原句」变哑钮)
+  const ttsFallback = () => {
+    if (typeof speechSynthesis === 'undefined') return;
+    try { speechSynthesis.cancel(); } catch (e) {}
+    const u = new SpeechSynthesisUtterance(_shadowSentence(d));
+    u.lang = 'en-US'; u.rate = 0.85;
+    const v = (typeof pickEnVoice === 'function') ? pickEnVoice() : null; if (v) u.voice = v;
+    try { speechSynthesis.speak(u); } catch (e) {}
+  };
+  if (!d.audioUrl || d.audioStart == null) { ttsFallback(); return; }
   try { if (holder.audio) { holder.audio.pause(); } } catch (e) {}
   if (holder.stopTimer) { clearTimeout(holder.stopTimer); holder.stopTimer = null; }   // 清上次的自动停定时器,避免叠加/关闭后仍 fire
-  const audio = new Audio(); audio.preload = 'none'; audio.src = d.audioUrl; holder.audio = audio;
+  if (holder.loadTimer) { clearTimeout(holder.loadTimer); holder.loadTimer = null; }
+  const audio = new Audio(); audio.preload = 'auto'; audio.src = d.audioUrl; holder.audio = audio;
   const start = Math.max(0, d.audioStart - 0.5);
-  const go = () => { if (holder.audio !== audio) return;   // 连点已被新实例取代 → 这个旧 audio 不再播
+  let done = false;
+  const fail = () => { if (done || holder.audio !== audio) return; done = true;
+    if (holder.loadTimer) { clearTimeout(holder.loadTimer); holder.loadTimer = null; }
+    ttsFallback();   // 录音加载不出 / 播不了 → 念例句兜底
+  };
+  const go = () => { if (done || holder.audio !== audio) return;   // 连点已被新实例取代 → 这个旧 audio 不再播
+    done = true;
+    if (holder.loadTimer) { clearTimeout(holder.loadTimer); holder.loadTimer = null; }
     try { audio.currentTime = start; } catch (e) {} audio.play().then(() => {
     holder.stopTimer = setTimeout(() => { try { audio.pause(); } catch (e) {} }, SHADOW_CLIP_SECONDS * 1000);
-  }).catch(() => {}); };
+  }).catch(fail); };
   audio.onloadedmetadata = go;   // 赋值式而非 addEventListener,换源/重播不叠加监听
+  audio.onerror = fail;          // URL 404 / CORS / blob 已死 → 立刻兜底
+  holder.loadTimer = setTimeout(fail, 3000);   // 3s 还没出元数据(URL 失效/网络挂)→ 兜底
   audio.load();
 }
 
