@@ -996,6 +996,15 @@ footer {
 .quiz-fb .fb-bad { color: #ef4444; font-weight: 700; }
 .quiz-fb .fb-answer { display: block; margin-top: 8px; font-family: var(--en-font); font-size: 22px; font-weight: 700; }
 .quiz-fb .fb-answer .miss { color: #ef4444; text-decoration: underline; }
+/* 默写错题 AB 对照:你的(错处红)vs 正确(断词单色,保持整词) */
+.quiz-fb .fb-ab { margin-top: 10px; display: inline-flex; flex-direction: column; gap: 6px; }
+.quiz-fb .ab-row { display: flex; align-items: baseline; gap: 10px; }
+.quiz-fb .ab-label { font-size: 12px; color: var(--text-dim); width: 2.6em; flex: none; text-align: right; }
+.quiz-fb .ab-you, .quiz-fb .ab-correct { font-family: var(--en-font); font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+.quiz-fb .ab-you .ab-wrong { color: #ef4444; }
+.quiz-fb .ab-empty { color: var(--text-dim); font-weight: 400; font-size: 15px; }
+.quiz-fb .ab-correct { color: var(--accent); }
+.quiz-fb .ab-correct .ab-dot { color: var(--text-dim); margin: 0 1px; font-weight: 400; }
 .quiz-tip { text-align: center; color: var(--text-dim); font-size: 12px; margin-top: 14px; }
 .quiz-play-ex {
   padding: 9px 18px; border-radius: 999px; border: 1px solid var(--accent);
@@ -2755,6 +2764,40 @@ function quizDiffSpell(correct, attempt) {
   return html;
 }
 
+// 你的(错答):逐位对比,错/多出来的字母标红,对的正常色
+function quizAttemptDiff(correct, attempt) {
+  const c = String(correct || '').toLowerCase(), a = String(attempt || '');
+  if (!a) return '<span class="ab-empty">(未作答)</span>';
+  let html = '';
+  for (let i = 0; i < a.length; i++) {
+    const ok = c[i] != null && a[i].toLowerCase() === c[i];
+    html += ok ? escapeHtml(a[i]) : '<span class="ab-wrong">' + escapeHtml(a[i]) + '</span>';
+  }
+  return html;
+}
+
+// 正确:自然拼读断词(syllabify)、· 连接、整词单色,保持单词完整。用音节长度切回原词保留大小写
+function quizSyllableSpell(word) {
+  const raw = String(word || '');
+  const syls = (typeof syllabify === 'function') ? syllabify(raw) : [raw.toLowerCase()];
+  const letters = raw.replace(/[^a-zA-Z]/g, '');
+  const total = syls.reduce((n, s) => n + s.length, 0);
+  let parts = syls;
+  if (letters.length === total) {            // 纯字母词:切回原词保留大小写
+    parts = []; let p = 0;
+    for (const s of syls) { parts.push(letters.slice(p, p + s.length)); p += s.length; }
+  }
+  return parts.map(escapeHtml).join('<span class="ab-dot">·</span>');
+}
+
+// 默写错题 AB 对照:你的(标红错处) vs 正确(断词单色)
+function quizABCompare(correct, attempt) {
+  return '<div class="fb-ab">' +
+    '<div class="ab-row"><span class="ab-label">你的</span><span class="ab-you">' + quizAttemptDiff(correct, attempt) + '</span></div>' +
+    '<div class="ab-row"><span class="ab-label">正确</span><span class="ab-correct">' + quizSyllableSpell(correct) + '</span></div>' +
+  '</div>';
+}
+
 function submitQuizDictation() {
   if (quizState.awaitingNext) return;
   const w = quizState.words[quizState.idx];
@@ -2765,7 +2808,7 @@ function submitQuizDictation() {
   if (inp) inp.disabled = true;
   const fb = correct
     ? '<span class="fb-ok">✓ 正确</span>'
-    : '<span class="fb-bad">✗ 再记一下</span><span class="fb-answer">' + quizDiffSpell(w.en, val) + '</span>';
+    : '<span class="fb-bad">✗ 再记一下</span>' + quizABCompare(w.en, val);
   quizShowNext(fb);
 }
 
