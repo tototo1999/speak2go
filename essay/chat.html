@@ -3423,19 +3423,19 @@
 
   function _loadCatTerms(catId) {
     try {
-      const all = JSON.parse(localStorage.getItem('glossary-user-terms') || '{}')
+      const all = JSON.parse(localStorage.getItem('essaycard-user-terms') || '{}')
       const arr = all[catId] || []
       // 跟词库保持同步:过滤掉在词库里被删除的词(glossary-deleted 存 `catId::en`)
-      const deleted = new Set(JSON.parse(localStorage.getItem('glossary-deleted') || '[]'))
+      const deleted = new Set(JSON.parse(localStorage.getItem('essaycard-deleted') || '[]'))
       return deleted.size ? arr.filter(w => !deleted.has(catId + '::' + (w.en || ''))) : arr
     } catch (e) { return [] }
   }
 
   function _saveCatTerms(catId, arr) {
     try {
-      const all = JSON.parse(localStorage.getItem('glossary-user-terms') || '{}')
+      const all = JSON.parse(localStorage.getItem('essaycard-user-terms') || '{}')
       all[catId] = arr
-      localStorage.setItem('glossary-user-terms', JSON.stringify(all))
+      localStorage.setItem('essaycard-user-terms', JSON.stringify(all))
     } catch (e) { console.warn('[sidebar] save failed', e) }
   }
 
@@ -3443,7 +3443,7 @@
     // 返回所有要在 sidebar 显示的 cat:动态 lesson cats + 老 nyc-global-center
     const all = []
     try {
-      const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]')
+      const dyn = JSON.parse(localStorage.getItem('essaycard-dynamic-cats') || '[]')
       dyn.forEach(c => { if (c && c.id) all.push({ id: c.id, title: c.title || c.id }) })
     } catch (e) {}
     all.push({ id: 'nyc-global-center', title: '📦 NYC Global Center 历史' })
@@ -3592,7 +3592,7 @@
 
   // 跨 tab 同步:glossary tab 改了词 / 加了新 lesson cat,这边自动 reload sidebar
   window.addEventListener('storage', (e) => {
-    if ((e.key === 'glossary-user-terms' || e.key === 'glossary-dynamic-cats' || e.key === 'glossary-deleted') &&
+    if ((e.key === 'essaycard-user-terms' || e.key === 'essaycard-dynamic-cats' || e.key === 'essaycard-deleted') &&
         location.hostname.includes('speak2go')) {
       renderSidebarLessons()
       _checkReviewReminder()
@@ -3614,11 +3614,11 @@
   function _scanDueReviewWords() {
     if (!location.hostname.includes('speak2go')) return []
     try {
-      const all = JSON.parse(localStorage.getItem('glossary-user-terms') || '{}')
+      const all = JSON.parse(localStorage.getItem('essaycard-user-terms') || '{}')
       // 删词只加墓碑、不物理删(词仍留在 glossary-user-terms)。复习扫描必须尊重墓碑,
       // 否则已删的词(整组或单词)还会被当到期词推进复习。
-      const deleted = new Set(JSON.parse(localStorage.getItem('glossary-deleted') || '[]'))
-      const deadCats = new Set(JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]'))
+      const deleted = new Set(JSON.parse(localStorage.getItem('essaycard-deleted') || '[]'))
+      const deadCats = new Set(JSON.parse(localStorage.getItem('essaycard-deleted-cats') || '[]'))
       const now = Date.now()
       const due = []
       Object.entries(all).forEach(([catId, terms]) => {
@@ -3680,7 +3680,7 @@
 
   function _startReviewSession(dueWords) {
     // 跳到单词表的「做题」模式:这批到期词 = 临时题库,做完按对错推进艾宾浩斯阶段(pass)
-    try { localStorage.setItem('glossary-review-queue', JSON.stringify(dueWords)) } catch (e) {}
+    try { localStorage.setItem('essaycard-review-queue', JSON.stringify(dueWords)) } catch (e) {}
     window.open('/essay/glossary/?review=1', 'essayGlossary')
   }
 
@@ -3698,7 +3698,7 @@
   function _applyReviewResults(content) {
     const results = _parseReviewMarkers(content)
     if (results.length === 0) return false
-    const all = JSON.parse(localStorage.getItem('glossary-user-terms') || '{}')
+    const all = JSON.parse(localStorage.getItem('essaycard-user-terms') || '{}')
     const now = Date.now()
     let changed = false
     Object.values(all).forEach(terms => {
@@ -3717,7 +3717,7 @@
       })
     })
     if (changed) {
-      localStorage.setItem('glossary-user-terms', JSON.stringify(all))
+      localStorage.setItem('essaycard-user-terms', JSON.stringify(all))
       try { renderSidebarLessons() } catch (e) {}
       console.log('[review] applied', results.length, 'results')
     }
@@ -3871,7 +3871,7 @@
     window.open('https://speak2go.ai/essay/glossary/', 'essayGlossary')
   }
   function hideGlossaryTab() {
-    document.body.classList.remove('glossary-tab')
+    document.body.classList.remove('essaycard-tab')
     document.getElementById('glossaryBtn').classList.remove('active')
   }
 
