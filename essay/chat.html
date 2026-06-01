@@ -2825,18 +2825,18 @@
   // EXCEPT well2go.ai which is forced to 'well2go' to preserve current domain behavior.
   // These start at the hostname-derived defaults so first paint (before init) matches today;
   // init() overrides currentSystem + the three derived vars below from the profile before loadRooms().
-  const _IS_WELL2GO = location.hostname.toLowerCase().includes('well2go')
-  let currentSystem = window.SYSTEMS[_IS_WELL2GO ? 'well2go' : 'speak2go'] || window.SYSTEMS.speak2go
+  // 作文系统:硬绑 essay,不再依赖运行时 profiles.system。这样作文系统用自己的
+  // product(essay)+ essay 房间,彻底跟单词系统(speak2go 房间)分家。
+  const _IS_WELL2GO = false
+  let currentSystem = window.SYSTEMS.essay || window.SYSTEMS.speak2go
   let DEMO_INDUSTRY = currentSystem.industry
   let DEMO_PRODUCT = currentSystem.product
   // Singleton room model: one room for the whole system, every account joins it on login
   let SPEAK2GO_SINGLETON_ROOM_ID = currentSystem.roomId
 
-  // Apply the resolved system to all derived routing vars. Called from init() after the
-  // profile loads. well2go.ai stays forced to 'well2go' via resolveSystemId().
+  // 作文系统恒为 essay;忽略 profile 传入的 system。
   function applySystem(profileSystem) {
-    const sysId = window.resolveSystemId(location.hostname, profileSystem)
-    currentSystem = window.SYSTEMS[sysId] || window.SYSTEMS.speak2go
+    currentSystem = window.SYSTEMS.essay || window.SYSTEMS.speak2go
     DEMO_INDUSTRY = currentSystem.industry
     DEMO_PRODUCT = currentSystem.product
     SPEAK2GO_SINGLETON_ROOM_ID = currentSystem.roomId
@@ -3681,7 +3681,7 @@
   function _startReviewSession(dueWords) {
     // 跳到单词表的「做题」模式:这批到期词 = 临时题库,做完按对错推进艾宾浩斯阶段(pass)
     try { localStorage.setItem('glossary-review-queue', JSON.stringify(dueWords)) } catch (e) {}
-    window.open('/glossary/?review=1', 'speak2goGlossary')
+    window.open('/essay/glossary/?review=1', 'essayGlossary')
   }
 
   function _parseReviewMarkers(content) {
@@ -3868,7 +3868,7 @@
     // 用 named target 让同一 button 反复点击 focus 同一 tab(浏览器允许的话)
     // 这样 user 在 chat 这边接着对话,glossary tab 后台静默接收新词
     // 2026-05-29:统一指向线上单词表(本地副本暂不启用),本地打开 chat 也跳线上
-    window.open('https://speak2go.ai/glossary/', 'speak2goGlossary')
+    window.open('https://speak2go.ai/essay/glossary/', 'essayGlossary')
   }
   function hideGlossaryTab() {
     document.body.classList.remove('glossary-tab')

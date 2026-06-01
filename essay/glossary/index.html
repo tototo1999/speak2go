@@ -1119,88 +1119,11 @@ footer {
         onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'"></script>
 <script>
 // 2026-05-28:DATA 改 let,初始化后会从 localStorage 加载动态 lesson cats(每个录音 = 一个 tab)
+// 作文系统:清空内置示例词库,只保留一个空的默认收纳分类,等导入新录音课。
 let DATA = [
   {
-    id: 'vibe-coding', title: 'Vibe Coding', terms: [
-      ['Framework', '框架', '提供完整结构和约定的库,如 React/Vue/Angular', 'React is a popular framework for building web apps.'],
-      ['Library', '库', '提供具体功能的代码包,你主动调它', 'We use a charting library to draw the graphs.'],
-      ['Component', '组件', 'UI 的可复用单元,React/Vue 的核心概念', 'Each button on the page is a reusable component.'],
-      ['State', '状态', '组件内部可变数据,变了就重渲', 'The component re-renders when its state changes.'],
-      ['Hook', '钩子', 'React 函数组件里复用状态/副作用的函数', 'The useState hook lets you add state to a component.'],
-      ['Render', '渲染', '把数据变成页面元素的过程', 'React will render the list when the data loads.'],
-      ['DOM', '文档对象模型', '浏览器把 HTML 解析成的树形结构', 'JavaScript can update the page by changing the DOM.'],
-      ['Hydration', '注水/激活', '服务端 HTML 在客户端被 JS 接管', 'Hydration makes the server-rendered page interactive.'],
-      ['SPA', '单页应用', '一次加载,路由切换不刷新页面', 'A SPA loads once and never refreshes the whole page.'],
-      ['Selector', '选择器', 'CSS 指定元素 / 状态管理取数据', 'This CSS selector targets every button on the page.'],
-      ['Responsive', '响应式', '根据屏幕宽度自适应布局', 'A responsive layout looks good on phones and laptops.'],
-      ['Bundle', '打包产物', '所有依赖合并后的 JS 文件', 'The bundler packs all our code into one bundle.'],
-      ['Build', '构建', '把源码转成可部署产物的过程', 'Run the build command before you deploy the site.'],
-      ['Module', '模块', '一个文件 = 一个模块,ESM/CommonJS', 'Each file is a module that exports its own functions.'],
-      ['Package', '包', '一个项目的可分发单元(npm/pip 等)', 'Install the package with npm before you import it.'],
-      ['Dependency', '依赖', '项目用到的外部库', 'This project has only one external dependency.'],
-      ['Closure', '闭包', '函数携带其定义时的作用域', 'A closure remembers the variables from its outer scope.'],
-      ['Scope', '作用域', '变量可访问的范围', 'The variable is only visible inside this function scope.'],
-      ['Promise', '承诺', '异步操作的最终结果占位', 'A promise represents a value that will arrive later.'],
-      ['Async', '异步', '不阻塞地执行任务,Async/Await 是 Promise 语法糖', 'We use async functions to fetch data without blocking.'],
-      ['Callback', '回调', '传给别人,完成后被调的函数', 'Pass a callback that runs when the file finishes loading.'],
-      ['Interface', '接口', '定义对象形状的契约', 'The interface defines what shape the object must have.'],
-      ['Server', '服务器', '提供服务的程序/机器', 'The server sends the data back to the browser.'],
-      ['Client', '客户端', '发请求的一方,浏览器/App', 'The client sends a request to the server.'],
-      ['Endpoint', '接口端点', '一个 URL + 方法的具体入口', 'This endpoint returns a list of all users.'],
-      ['Route', '路由', 'URL → 处理函数的映射', 'Each route maps a URL to a handler function.'],
-      ['Middleware', '中间件', '请求处理链上的拦截层', 'The middleware checks the token before the request continues.'],
-      ['REST', 'REST 风格', '资源 + HTTP 动词的 API 设计', 'A REST API uses HTTP verbs to work with resources.'],
-      ['Webhook', 'Web 钩子', '事件发生时回调你提供的 URL', 'The webhook calls our URL whenever a payment succeeds.'],
-      ['Throttle', '节流', 'N 毫秒最多触发一次', 'We throttle the scroll handler to run once per second.'],
-      ['Debounce', '防抖', '停止操作 N 毫秒后才执行', 'We debounce the search box so it waits until you stop typing.'],
-      ['Schema', '模式/架构', '数据库结构定义', 'The schema defines every column in the table.'],
-      ['Query', '查询', 'SELECT 类只读操作', 'This query selects all the orders from last week.'],
-      ['Migration', '迁移', '版本化的 schema 变更脚本', 'Run the migration to add the new column.'],
-      ['Index', '索引', '加速查询的数据结构', 'Adding an index makes this query much faster.'],
-      ['Authentication', '认证', '你是谁(登录)', 'Authentication confirms who the user really is.'],
-      ['Token', '令牌', '代表身份/权限的字符串', 'The server returns a token after you log in.'],
-      ['JWT', 'JSON Web Token', '可签名验证的紧凑 token', 'The app stores a JWT to remember that you are signed in.'],
-      ['Hash', '哈希', '不可逆的固定长度摘要', 'The password is stored as a hash, not as plain text.'],
-      ['CORS', '跨域资源共享', '跨域请求的浏览器规则', 'CORS rules decide which sites can call this API.'],
-      ['Deploy', '部署', '把代码放到运行环境上线', 'We deploy the new version every Friday afternoon.'],
-      ['Container', '容器', '隔离的应用运行环境(Docker)', 'The app runs inside a Docker container.'],
-      ['Pipeline', '流水线', '自动化的构建/测试/部署链', 'The pipeline builds and tests the code automatically.'],
-      ['Serverless', '无服务器', '不管服务器,按调用付费', 'A serverless function only runs when it is called.'],
-      ['CDN', '内容分发网络', '边缘缓存静态资源', 'The images load fast because they come from a CDN.'],
-      ['Prompt', '提示词', '给模型的输入指令', 'A clear prompt gives the model a better answer.'],
-      ['LLM', '大语言模型', 'Large Language Model', 'An LLM can write and explain code for you.'],
-      ['RAG', '检索增强生成', '先检索再让 LLM 基于结果回答', 'RAG lets the model answer using your own documents.'],
-      ['Agent', '智能体', '能用工具、做规划、自主行动的 LLM', 'An agent can use tools and plan its own steps.'],
-      ['Commit', '提交', '一次代码快照', 'Write a clear message for every commit you make.'],
-    ]
-  },
-  {
-    id: 'claude-code', title: 'Claude Code', terms: [
-      ['Plan mode', '计划模式', 'Read-only 规划阶段 — Claude 探索代码、写 plan 文件,需用户批准后才能改文件', 'In plan mode, Claude explores the code before it changes anything.'],
-      ['/init', '初始化', '让 Claude 扫描项目生成 CLAUDE.md(项目级持久指令)', 'Run /init to create a CLAUDE.md for your project.'],
-      ['/compact', '压缩上下文', '对话太长 token 紧张时,把历史摘要压缩成短上下文继续跑', 'Use /compact when the conversation gets too long.'],
-      ['/resume', '继续会话', '恢复上次中断的 Claude Code 会话,带原 context', 'Type /resume to continue your last session.'],
-      ['/clear', '清屏', '清掉当前 context 重新开始一段对话', 'Use /clear to start a fresh conversation.'],
-      ['CLAUDE.md', 'Claude 指令文件', '放项目根目录的持久指令,Claude 每次启动自动读取', 'Put your project rules in the CLAUDE.md file.'],
-      ['MCP', 'Model Context Protocol', 'Claude/Cursor 共用的扩展工具协议 — 接外部 API/数据库/服务', 'MCP lets Claude connect to external tools and data.'],
-      ['Subagent', '子 agent', '把独立任务委派给隔离的 sub-Claude 跑,主对话不被污染', 'Claude sends the search task to a subagent.'],
-      ['Hook', '钩子', '工具调用前后自动跑的命令(PreToolUse/PostToolUse/Stop 等)', 'A hook can run a command before each tool call.'],
-      ['Worktree', '隔离工作树', 'Git worktree 让 agent 在独立分支上跑,不污染主分支', 'The agent works in a separate git worktree.'],
-      ['Slash command', '斜杠命令', '用 / 开头的内置命令的总称(/init /compact /clear /agents 等)', 'Type a slash command to control Claude Code.'],
-      ['Permission', '权限', 'Claude 调工具前要批准 — Allow / Deny / Allow always', 'Claude asks for permission before it runs a command.'],
-      ['Allowlist', '允许列表', 'settings.json 里配自动批准的工具调用,减少弹窗', 'Add the command to the allowlist to skip the prompt.'],
-      ['Sandbox', '沙箱', '隔离的安全执行环境,防止误操作扩散到系统', 'The code runs safely inside a sandbox.'],
-      ['Plan file', '计划文件', 'Plan mode 产出的 .md 文档,描述要做什么', 'Claude writes the steps into a plan file.'],
-      ['Memory', '持久记忆', '跨会话保留的笔记(用户偏好 / 项目状态 / 反馈规则)', 'Claude saves your preferences in its memory.'],
-      ['Tool use', '工具调用', 'Claude 主动调用 Read/Edit/Bash/Grep 等工具', 'Tool use lets Claude read and edit your files.'],
-      ['Settings', '设置', 'settings.json 配置文件 — 权限/钩子/env 都在里面', 'You can change the hooks in the settings file.'],
-      ['Context window', '上下文窗口', 'Claude 一次能看到的 token 上限(Opus 4.7 是 1M)', 'The context window is how much Claude can read at once.'],
-      ['Artifact', '制品', '会话产出的可分享代码 / 文档 / 图表', 'Claude saved the chart as an artifact.'],
-    ]
-  },
-  {
-    id: 'nyc-global-center', title: 'NYC Global Center', terms: [
-      // 老历史词 + 没带 date 的导入会落在这里;每节录音课会创建独立动态 tab(见下方 loadDynamicLessonCats)
+    id: 'nyc-global-center', title: '作文素材', terms: [
+      // 导入的作文课词/句会落在这里;每节录音课会创建独立动态 tab(见下方 loadDynamicLessonCats)
     ]
   },
 ];
@@ -1208,7 +1131,7 @@ let DATA = [
 // 从 localStorage 加载动态 lesson cats(每个录音 = 一个独立 top-level tab)
 (function loadDynamicLessonCats() {
   try {
-    const arr = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]');
+    const arr = JSON.parse(localStorage.getItem('essaycard-dynamic-cats') || '[]');
     arr.forEach(cat => {
       if (cat && cat.id && !DATA.find(d => d.id === cat.id)) {
         DATA.push({ id: cat.id, title: cat.title || cat.id, terms: [], dynamic: true });
@@ -1220,7 +1143,7 @@ let DATA = [
 // 过滤掉用户整体删除过的表(内置 + 动态都记在 glossary-deleted-cats,刷新后仍生效)
 (function removeDeletedCats() {
   try {
-    const dead = new Set(JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]'));
+    const dead = new Set(JSON.parse(localStorage.getItem('essaycard-deleted-cats') || '[]'));
     if (!dead.size) return;
     for (let i = DATA.length - 1; i >= 0; i--) {
       if (dead.has(DATA[i].id)) DATA.splice(i, 1);
@@ -1231,7 +1154,7 @@ let DATA = [
 // 应用用户改过的表名(内置 + 动态都记在 glossary-cat-titles,刷新后仍生效)
 (function applyCatTitleOverrides() {
   try {
-    const map = JSON.parse(localStorage.getItem('glossary-cat-titles') || '{}');
+    const map = JSON.parse(localStorage.getItem('essaycard-cat-titles') || '{}');
     DATA.forEach(cat => { if (map[cat.id]) cat.title = map[cat.id]; });
   } catch (e) { console.warn('[glossary] cat title overrides failed:', e); }
 })();
@@ -1249,18 +1172,18 @@ function _gjParse(key, fb) { try { const v = localStorage.getItem(key); if (v ==
 function _gjArr(key) { const v = _gjParse(key, []); return Array.isArray(v) ? v : []; }
 function _gjObj(key) { const v = _gjParse(key, {}); return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {}; }
 const state = {
-  favorites: new Set(_gjArr('glossary-favorites')),
-  deleted: new Set(_gjArr('glossary-deleted')),
-  edits: _gjObj('glossary-edits'),
-  userTerms: _gjObj('glossary-user-terms'),
+  favorites: new Set(_gjArr('essaycard-favorites')),
+  deleted: new Set(_gjArr('essaycard-deleted')),
+  edits: _gjObj('essaycard-edits'),
+  userTerms: _gjObj('essaycard-user-terms'),
   query: ''
 };
 
 function save() {
-  localStorage.setItem('glossary-favorites', JSON.stringify([...state.favorites]));
-  localStorage.setItem('glossary-deleted', JSON.stringify([...state.deleted]));
-  localStorage.setItem('glossary-edits', JSON.stringify(state.edits));
-  localStorage.setItem('glossary-user-terms', JSON.stringify(state.userTerms));
+  localStorage.setItem('essaycard-favorites', JSON.stringify([...state.favorites]));
+  localStorage.setItem('essaycard-deleted', JSON.stringify([...state.deleted]));
+  localStorage.setItem('essaycard-edits', JSON.stringify(state.edits));
+  localStorage.setItem('essaycard-user-terms', JSON.stringify(state.userTerms));
 }
 
 function getMergedTerms(cat) {
@@ -2306,7 +2229,7 @@ function setActiveCat(catId) {
   document.querySelectorAll('nav.cats a.group-link').forEach(a => {
     a.classList.toggle('inactive', a.dataset.cat !== catId);
   });
-  try { localStorage.setItem('glossary-active-cat', catId); } catch (e) {}
+  try { localStorage.setItem('essaycard-active-cat', catId); } catch (e) {}
   // 收藏区按当前 tab 过滤,切 tab 时刷新
   if (typeof rebuildFavorites === 'function') rebuildFavorites();
 }
@@ -2654,7 +2577,7 @@ const QUIZ_REVIEW_INTERVALS = [5*60*1000, 60*60*1000, 24*60*60*1000, 3*24*60*60*
 // 复习模式:从到期词建临时题库,只做「默写」一遍,做完按对错推进艾宾浩斯阶段(pass)
 function startReviewQuiz(due) {
   // 防御:即使队列里混进了已删的词/分类(墓碑),复习也不放它们进来
-  const deadCats = new Set(_gjArr('glossary-deleted-cats'));
+  const deadCats = new Set(_gjArr('essaycard-deleted-cats'));
   const words = (due || []).filter(d =>
     d && d.en && !state.deleted.has(d.catId + '::' + d.en) && !deadCats.has(d.catId)
   ).map(d => {
@@ -2963,7 +2886,7 @@ function finishQuiz() {
     });
     recordQuizHistory(qs);   // 复习也留做题记录(只有默写分,p/s 记 null)
     save();
-    try { localStorage.removeItem('glossary-review-queue'); } catch (e) {}
+    try { localStorage.removeItem('essaycard-review-queue'); } catch (e) {}
     if (!valid) valid = qs.n;   // 兜底:全查不到时仍显示总数,避免 0/0
     qbPhase.textContent = '复习完成'; qbProg.textContent = ''; qbScore.textContent = ''; qbFill.style.width = '100%';
     quizBody.innerHTML =
@@ -3535,14 +3458,14 @@ main.addEventListener('click', e => {
     cat.title = t;
     // 持久化表名覆盖(内置 + 动态通用,刷新后仍生效)
     try {
-      const map = JSON.parse(localStorage.getItem('glossary-cat-titles') || '{}');
+      const map = JSON.parse(localStorage.getItem('essaycard-cat-titles') || '{}');
       map[catId] = t;
-      localStorage.setItem('glossary-cat-titles', JSON.stringify(map));
+      localStorage.setItem('essaycard-cat-titles', JSON.stringify(map));
     } catch (err) {}
     try {
-      const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]');
+      const dyn = JSON.parse(localStorage.getItem('essaycard-dynamic-cats') || '[]');
       const e = dyn.find(c => c.id === catId);
-      if (e) { e.title = t; localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn)); }
+      if (e) { e.title = t; localStorage.setItem('essaycard-dynamic-cats', JSON.stringify(dyn)); }
     } catch (err) {}
     updateCatNavCount(catId);                 // 刷新顶部 tab 文字
     // renderCategorySection 内部已 remove 旧 section,直接 insertBefore 重新插入
@@ -3566,19 +3489,19 @@ main.addEventListener('click', e => {
     const di = DATA.findIndex(c => c.id === catId);
     if (di >= 0) DATA.splice(di, 1);
     try {
-      const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]').filter(c => c.id !== catId);
-      localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn));
+      const dyn = JSON.parse(localStorage.getItem('essaycard-dynamic-cats') || '[]').filter(c => c.id !== catId);
+      localStorage.setItem('essaycard-dynamic-cats', JSON.stringify(dyn));
     } catch (err) {}
     // 记入已删名单 — 内置表写死在源码,靠这个名单刷新后仍保持删除
     try {
-      const dead = JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]');
+      const dead = JSON.parse(localStorage.getItem('essaycard-deleted-cats') || '[]');
       if (!dead.includes(catId)) dead.push(catId);
-      localStorage.setItem('glossary-deleted-cats', JSON.stringify(dead));
+      localStorage.setItem('essaycard-deleted-cats', JSON.stringify(dead));
     } catch (err) {}
     // 清掉改过的表名,避免日后同 id 复用时残留旧名
     try {
-      const tm = JSON.parse(localStorage.getItem('glossary-cat-titles') || '{}');
-      if (tm[catId]) { delete tm[catId]; localStorage.setItem('glossary-cat-titles', JSON.stringify(tm)); }
+      const tm = JSON.parse(localStorage.getItem('essaycard-cat-titles') || '{}');
+      if (tm[catId]) { delete tm[catId]; localStorage.setItem('essaycard-cat-titles', JSON.stringify(tm)); }
     } catch (err) {}
     save();
     const navA = catsNav.querySelector('a[data-cat="' + catId + '"]'); if (navA) navA.remove();
@@ -3598,11 +3521,11 @@ main.addEventListener('click', e => {
     const ncat = { id: nid, title: name, terms: [], dynamic: true };
     DATA.push(ncat);
     try {
-      const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]');
+      const dyn = JSON.parse(localStorage.getItem('essaycard-dynamic-cats') || '[]');
       dyn.push({ id: nid, title: name });
-      localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn));
-      const dead = JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]').filter(x => x !== nid);
-      localStorage.setItem('glossary-deleted-cats', JSON.stringify(dead));
+      localStorage.setItem('essaycard-dynamic-cats', JSON.stringify(dyn));
+      const dead = JSON.parse(localStorage.getItem('essaycard-deleted-cats') || '[]').filter(x => x !== nid);
+      localStorage.setItem('essaycard-deleted-cats', JSON.stringify(dead));
     } catch (err) {}
     if (typeof makeCatTab === 'function') { catsNav.appendChild(makeCatTab(ncat)); }
     else { const a = document.createElement('a'); a.href='#'; a.className='group-link'; a.textContent = name + ' (0)'; a.dataset.cat = nid; a.onclick = (ev)=>{ev.preventDefault(); setActiveCat(nid);}; catsNav.appendChild(a); }
@@ -4097,7 +4020,7 @@ function doImportWords(chosen, ctx) {
     const cat = { id: catId, title, terms: [] };
     if (catId !== 'nyc-global-center') {
       cat.dynamic = true;
-      try { const dyn = JSON.parse(localStorage.getItem('glossary-dynamic-cats') || '[]'); if (!dyn.find(c => c.id === catId)) { dyn.push({ id: catId, title }); localStorage.setItem('glossary-dynamic-cats', JSON.stringify(dyn)); } } catch (e) {}
+      try { const dyn = JSON.parse(localStorage.getItem('essaycard-dynamic-cats') || '[]'); if (!dyn.find(c => c.id === catId)) { dyn.push({ id: catId, title }); localStorage.setItem('essaycard-dynamic-cats', JSON.stringify(dyn)); } } catch (e) {}
     }
     DATA.push(cat);
     const a = document.createElement('a');
@@ -4108,7 +4031,7 @@ function doImportWords(chosen, ctx) {
     if (noResults && main) main.insertBefore(sec, noResults);
   }
   // 之前整组删过 → 导入即恢复
-  try { const dead = JSON.parse(localStorage.getItem('glossary-deleted-cats') || '[]'); if (dead.includes(catId)) localStorage.setItem('glossary-deleted-cats', JSON.stringify(dead.filter(x => x !== catId))); } catch (e) {}
+  try { const dead = JSON.parse(localStorage.getItem('essaycard-deleted-cats') || '[]'); if (dead.includes(catId)) localStorage.setItem('essaycard-deleted-cats', JSON.stringify(dead.filter(x => x !== catId))); } catch (e) {}
   if (!state.userTerms[catId]) state.userTerms[catId] = [];
   const seen = new Set(state.userTerms[catId].map(t => (t.en || '').toLowerCase()));
   let added = 0;
@@ -4140,7 +4063,7 @@ function doImportWords(chosen, ctx) {
 // Set initial active group (restore from localStorage, default Vibe Coding)
 // 校验存的 active-cat 还在(否则它指向已删分类 → 无 section 匹配 → 内容区全空白)
 (function initActiveCat() {
-  const saved = localStorage.getItem('glossary-active-cat');
+  const saved = localStorage.getItem('essaycard-active-cat');
   const target = (saved && DATA.find(c => c.id === saved)) ? saved : (DATA.find(c => c.id === 'vibe-coding') ? 'vibe-coding' : (DATA[0] && DATA[0].id));
   if (target) setActiveCat(target);
 })();
@@ -4150,8 +4073,8 @@ function doImportWords(chosen, ctx) {
   const p = new URLSearchParams(location.search);
   if (p.get('review') !== '1') return;
   let q = [];
-  try { q = JSON.parse(localStorage.getItem('glossary-review-queue') || '[]'); } catch (e) {}
-  try { localStorage.removeItem('glossary-review-queue'); } catch (e) {}   // 读取即消费:中途退出也不留陈旧队列被重放
+  try { q = JSON.parse(localStorage.getItem('essaycard-review-queue') || '[]'); } catch (e) {}
+  try { localStorage.removeItem('essaycard-review-queue'); } catch (e) {}   // 读取即消费:中途退出也不留陈旧队列被重放
   history.replaceState({}, '', location.pathname);   // 清 URL,避免刷新重开
   if (Array.isArray(q) && q.length) setTimeout(() => startReviewQuiz(q), 250);
 })();
@@ -4161,15 +4084,15 @@ function doImportWords(chosen, ctx) {
    ============================================================ */
 function reloadFromStorage() {
  try {
-  state.favorites = new Set(_gjArr('glossary-favorites'));
-  state.deleted = new Set(_gjArr('glossary-deleted'));
-  state.edits = _gjObj('glossary-edits');
-  const newUserTerms = _gjObj('glossary-user-terms');
+  state.favorites = new Set(_gjArr('essaycard-favorites'));
+  state.deleted = new Set(_gjArr('essaycard-deleted'));
+  state.edits = _gjObj('essaycard-edits');
+  const newUserTerms = _gjObj('essaycard-user-terms');
 
   // —— 分类增删改名同步(另一个 tab 新建/删组/改名)——
-  const dynCats = _gjArr('glossary-dynamic-cats');
-  const deadCats = new Set(_gjArr('glossary-deleted-cats'));
-  const titleMap = _gjObj('glossary-cat-titles');
+  const dynCats = _gjArr('essaycard-dynamic-cats');
+  const deadCats = new Set(_gjArr('essaycard-deleted-cats'));
+  const titleMap = _gjObj('essaycard-cat-titles');
   // 新增:dynamic-cats 里有、本 tab DATA 里没有、且没被删的 → 建 tab + section
   dynCats.forEach(c => {
     if (!c || !c.id || deadCats.has(c.id) || DATA.find(d => d.id === c.id)) return;
@@ -4222,15 +4145,15 @@ function reloadFromStorage() {
  } catch (e) { console.warn('[glossary] reloadFromStorage failed:', e); }
 }
 window.addEventListener('storage', e => {
-  if (e.key && e.key.startsWith('glossary-')) reloadFromStorage();
+  if (e.key && e.key.startsWith('essaycard-')) reloadFromStorage();
 });
 
 // ============ 账号同步:词典跟账号走(Supabase per-account)============
 // 未登录 → 纯本地;有 session → 加载时拉云端并集合并、本地变更防抖推回。
 // 合并保证「删掉的词不复活」:删除恒留墓碑(glossary-deleted),并集后被墓碑压住。
 const _GLOSSARY_SYNC_KEYS = [
-  'glossary-user-terms', 'glossary-deleted', 'glossary-deleted-cats',
-  'glossary-dynamic-cats', 'glossary-cat-titles', 'glossary-edits', 'glossary-favorites'
+  'essaycard-user-terms', 'essaycard-deleted', 'essaycard-deleted-cats',
+  'essaycard-dynamic-cats', 'essaycard-cat-titles', 'essaycard-edits', 'essaycard-favorites'
 ];
 const _glossarySync = (() => {
   let sb = null, uid = null, pushTimer = null, applying = false, started = false;
@@ -4299,13 +4222,13 @@ const _glossarySync = (() => {
   function merge(server, local) {
     server = server || {}; local = local || {};
     return {
-      'glossary-user-terms': mergeUserTerms(server['glossary-user-terms'], local['glossary-user-terms']),
-      'glossary-deleted': uniqArr([...(server['glossary-deleted'] || []), ...(local['glossary-deleted'] || [])]),
-      'glossary-deleted-cats': uniqArr([...(server['glossary-deleted-cats'] || []), ...(local['glossary-deleted-cats'] || [])]),
-      'glossary-favorites': uniqArr([...(server['glossary-favorites'] || []), ...(local['glossary-favorites'] || [])]),
-      'glossary-dynamic-cats': mergeDynCats(server['glossary-dynamic-cats'], local['glossary-dynamic-cats']),
-      'glossary-cat-titles': { ...(server['glossary-cat-titles'] || {}), ...(local['glossary-cat-titles'] || {}) },
-      'glossary-edits': mergeEdits(server['glossary-edits'], local['glossary-edits']),
+      'essaycard-user-terms': mergeUserTerms(server['essaycard-user-terms'], local['essaycard-user-terms']),
+      'essaycard-deleted': uniqArr([...(server['essaycard-deleted'] || []), ...(local['essaycard-deleted'] || [])]),
+      'essaycard-deleted-cats': uniqArr([...(server['essaycard-deleted-cats'] || []), ...(local['essaycard-deleted-cats'] || [])]),
+      'essaycard-favorites': uniqArr([...(server['essaycard-favorites'] || []), ...(local['essaycard-favorites'] || [])]),
+      'essaycard-dynamic-cats': mergeDynCats(server['essaycard-dynamic-cats'], local['essaycard-dynamic-cats']),
+      'essaycard-cat-titles': { ...(server['essaycard-cat-titles'] || {}), ...(local['essaycard-cat-titles'] || {}) },
+      'essaycard-edits': mergeEdits(server['essaycard-edits'], local['essaycard-edits']),
     };
   }
 
@@ -4336,7 +4259,9 @@ const _glossarySync = (() => {
 
   async function start() {
     if (started) return; started = true;
-    if (!window.supabase || !window.supabase.createClient) { console.warn('[glossary-sync] supabase-js 未加载,纯本地模式'); return; }
+    // 作文系统:关闭 glossary_state 云同步,纯本地,避免污染单词系统的云端那一行。
+    return;
+    if (!window.supabase || !window.supabase.createClient) { console.warn('[essaycard-sync] supabase-js 未加载,纯本地模式'); return; }
     sb = window.supabase.createClient(_GLOSSARY_SB_URL, _GLOSSARY_ANON);
     let session = null;
     try { const r = await sb.auth.getSession(); session = r.data && r.data.session; } catch (e) {}
@@ -4358,9 +4283,9 @@ const themeBtn = document.getElementById('themeBtn');
 function setTheme(t) {
   document.documentElement.dataset.theme = t;
   themeBtn.textContent = t === 'dark' ? '☀️ 浅色' : '🌙 暗色';
-  localStorage.setItem('glossary-theme', t);
+  localStorage.setItem('essaycard-theme', t);
 }
-setTheme(localStorage.getItem('glossary-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+setTheme(localStorage.getItem('essaycard-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 themeBtn.addEventListener('click', () => {
   setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
 });
