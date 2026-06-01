@@ -178,6 +178,7 @@
 
   <script src="/vendor/supabase.js"
           onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'"></script>
+  <script src="/assets/systems.js"></script>
   <script>
     const SUPABASE_URL = 'https://qjnagbzqhoansixqharb.supabase.co'
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqbmFnYnpxaG9hbnNpeHFoYXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDIxODIsImV4cCI6MjA5MzkxODE4Mn0.GpMUVTk6JvqeciXagXQiJunc8TLFMHg3_b9reIjJ2Y8'
@@ -204,6 +205,35 @@
       document.getElementById('form-register').style.display = tab === 'register' ? 'flex' : 'none'
     }
 
+    function pathForSystem(sysId) {
+      const systems = window.SYSTEMS || {}
+      const sys = systems[sysId] || systems.speak2go
+      return sys?.path || '/chat.html'
+    }
+
+    function requestedSystemId() {
+      const requested = new URLSearchParams(location.search).get('system')
+      return window.resolveSystemId
+        ? window.resolveSystemId(location.hostname, requested)
+        : (requested || 'speak2go')
+    }
+
+    async function resolveLoginPath(userId) {
+      if (!userId || !window.SYSTEMS || !window.resolveSystemId) return pathForSystem(requestedSystemId())
+      try {
+        const { data: profile } = await sb
+          .from('profiles')
+          .select('system')
+          .eq('user_id', userId)
+          .maybeSingle()
+        const sysId = window.resolveSystemId(location.hostname, profile?.system)
+        return pathForSystem(sysId)
+      } catch (e) {
+        console.warn('[resolveLoginPath]', e)
+        return pathForSystem(requestedSystemId())
+      }
+    }
+
     async function handleLogin() {
       clearMsg()
       const email = document.getElementById('login-email').value.trim()
@@ -215,7 +245,8 @@
       btn.disabled = false; btn.textContent = 'Login'
       if (error) { showMsg('Login failed: ' + (error.message === 'Invalid login credentials' ? 'Incorrect email or password' : error.message), 'error'); return }
       showMsg('Logged in! Redirecting…', 'success')
-      setTimeout(() => { window.location.href = '/chat.html' }, 1000)
+      const target = await resolveLoginPath(data?.user?.id)
+      setTimeout(() => { window.location.href = target }, 600)
     }
 
     async function handleRegister() {
@@ -231,13 +262,13 @@
       const btn = document.querySelector('#form-register .submit-btn')
       btn.disabled = true; btn.textContent = 'Creating account…'
       try {
-        const target = role === 'expert' ? '/chat.html' : '/chat.html'
+        const sysId = requestedSystemId()
+        const target = role === 'expert' ? '/chat.html' : pathForSystem(sysId)
         // Optional ?system= binds the new account to a learning system; absent → trigger
         // defaults to 'speak2go'. Validated against the known set; unknown values omitted.
-        const sysParam = new URLSearchParams(location.search).get('system')
-        const VALID_SYSTEMS = ['speak2go', 'essay', 'korean', 'well2go']
+        const VALID_SYSTEMS = ['speak2go', 'essay', 'well2go']
         const signupData = { role, nickname }
-        if (sysParam && VALID_SYSTEMS.includes(sysParam)) signupData.system = sysParam
+        if (VALID_SYSTEMS.includes(sysId)) signupData.system = sysId
         const { data, error } = await sb.auth.signUp({
           email, password,
           options: {
@@ -247,13 +278,16 @@
         })
         btn.disabled = false; btn.textContent = 'Create account'
         if (error) { showMsg('Sign-up failed: ' + error.message, 'error'); return }
+        let signedInUserId = data?.session?.user?.id || data?.user?.id
         // Skip email verification — sign in directly after sign-up
         if (!data.session) {
           const r = await sb.auth.signInWithPassword({ email, password })
           if (r.error) { showMsg('Account created, but auto sign-in failed: ' + r.error.message, 'error'); return }
+          signedInUserId = r.data?.user?.id || signedInUserId
         }
         showMsg('Account created! Redirecting…', 'success')
-        setTimeout(() => { window.location.href = target }, 800)
+        const redirectTarget = role === 'expert' ? target : await resolveLoginPath(signedInUserId)
+        setTimeout(() => { window.location.href = redirectTarget }, 600)
       } catch (e) {
         btn.disabled = false; btn.textContent = 'Create account'
         showMsg('Sign-up error: ' + (e?.message || e), 'error')
@@ -263,8 +297,8 @@
 
     // If already signed in, redirect to chat
     if (window.supabase) {
-      sb.auth.getSession().then(({ data: { session } }) => {
-        if (session) window.location.href = '/chat.html'
+      sb.auth.getSession().then(async ({ data: { session } }) => {
+        if (session) window.location.href = await resolveLoginPath(session.user.id)
       })
     }
   </script>
